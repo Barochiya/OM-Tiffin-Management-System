@@ -1,0 +1,133 @@
+const mongoose = require("mongoose");
+
+const tiffinSchema = new mongoose.Schema(
+{
+    customerName: {
+        type: String,
+        required: true,
+    },
+
+    phone: {
+        type: String,
+        required: true,
+    },
+
+    address: {
+        type: String,
+        required: true,
+    },
+
+    mealType: {
+        type: String,
+        enum: ["Lunch", "Dinner", "Both"],
+        default: "Lunch",
+    },
+
+    price: {
+    type: Number,
+    default: 0,
+    },
+
+    status: {
+        type: String,
+        enum: ["Active", "Inactive"],
+        default: "Active",
+    },
+
+    // ==========================
+    // Payment Information
+    // ==========================
+
+    paymentStatus: {
+        type: String,
+        enum: ["Paid", "Pending"],
+        default: "Pending",
+    },
+
+    paymentDate: {
+        type: Date,
+        default: null,
+    },
+
+    pendingAmount: {
+        type: Number,
+        default: 0,
+    },
+
+    paymentMonth: {
+        type: String,
+        default: () => {
+            const months = [
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+            ];
+
+            return months[new Date().getMonth()];
+        },
+    },
+
+    // ==========================
+    // Customer Pricing
+    // ==========================
+
+    pricing: {
+        pricingType: {
+            type: String,
+            enum: ["default", "custom"],
+            default: "default",
+        },
+
+        breakfastPrice: {
+            type: Number,
+            default: 0,
+        },
+
+        lunchPrice: {
+            type: Number,
+            default: 0,
+        },
+
+        dinnerPrice: {
+            type: Number,
+            default: 0,
+        },
+
+        extraCharge: {
+            type: Number,
+            default: 0,
+        },
+
+        extraReason: {
+            type: String,
+            default: "",
+        },
+
+        discountType: {
+            type: String,
+            enum: ["fixed", "percentage"],
+            default: "fixed",
+        },
+
+        discount: {
+            type: Number,
+            default: 0,
+        },
+    },
+
+},
+{
+    timestamps: true,
+}
+);
+
+module.exports = mongoose.model("Tiffin", tiffinSchema);

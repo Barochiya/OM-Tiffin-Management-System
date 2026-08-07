@@ -74,6 +74,8 @@ const openWhatsApp = (customer) => {
 
   }
 
+  
+
   const message = `👋 Hello ${customer.customerName},
 
 Welcome to *OM TIFFIN SERVICE* 🍱
@@ -98,7 +100,54 @@ useEffect(() => {
 
 }, []);
 
- 
+
+const sendBulkReminder = () => {
+
+  const pendingCustomers = customers.filter(
+    (c) => c.paymentStatus !== "Paid" && c.phone
+  );
+
+  if (pendingCustomers.length === 0) {
+
+    alert("No pending payment customers found.");
+
+    return;
+
+  }
+
+  const confirmSend = window.confirm(
+    `Open WhatsApp for ${pendingCustomers.length} pending customers?`
+  );
+
+  if (!confirmSend) return;
+
+  pendingCustomers.forEach((customer, index) => {
+
+    setTimeout(() => {
+
+      const phone = customer.phone.replace(/\D/g, "");
+
+      const message = `🍱 *OM TIFFIN SERVICE*
+
+Hello ${customer.customerName},
+
+💰 This is a friendly reminder that your payment is pending.
+
+Please complete your payment at your earliest convenience.
+
+Thank you 🙏`;
+
+      window.open(
+        `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`,
+        "_blank"
+      );
+
+    }, index * 1200);
+
+  });
+
+};
+
     // ==========================
   // FILTERED CUSTOMERS
   // ==========================
@@ -184,19 +233,24 @@ useEffect(() => {
 
           </div>
 
-          <Link
+        <div className="flex gap-3 flex-wrap">
 
-            to="/add-customer"
+  <button
+    onClick={sendBulkReminder}
+    className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-semibold"
+  >
+    📢 Bulk Reminder
+  </button>
 
-            className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 w-fit"
+  <Link
+    to="/add-customer"
+    className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2"
+  >
+    <FaUserPlus />
+    Add Customer
+  </Link>
 
-          >
-
-            <FaUserPlus />
-
-            Add Customer
-
-          </Link>
+</div>
 
         </div>
 

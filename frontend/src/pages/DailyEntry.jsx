@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 
 import Sidebar from "../components/Sidebar";
-import Topbar from "../components/Topbar";
+import Navbar from "../components/Navbar";
 
 import {
   getCustomersForEntry,
@@ -419,9 +419,9 @@ export default function DailyEntry() {
 
       <div className="lg:ml-64">
 
-        <Topbar />
+    <Navbar />
 
-        <div className="p-4 lg:p-8">
+    <div className="p-4 lg:p-8">
 
           {/* Header */}
 

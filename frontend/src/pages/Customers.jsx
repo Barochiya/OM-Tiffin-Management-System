@@ -1,385 +1,555 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import StatusBadge from "../components/StatusBadge";
 import {
-  getCustomers,
-  deleteCustomer,
-  markPaymentPaid,
-} from "../services/customerService";
+  FaUserPlus,
+  FaUsers,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaSearch,
+  FaEye,
+  FaEdit,
+  FaMoneyBillWave,
+  FaTrash,
+} from "react-icons/fa";
+
+import { getCustomers } from "../services/customerService";
 
 export default function Customers() {
+
+  // ==========================
+  // STATES
+  // ==========================
+
   const [customers, setCustomers] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("All");
+
+  const [statusFilter, setStatusFilter] = useState("All");
 
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
- useEffect(() => {
-  loadCustomers();
-}, [page, search, status]);
+  const pageSize = 10;
 
-const loadCustomers = async () => {
-  try {
-    setLoading(true);
+  // ==========================
+  // LOAD CUSTOMERS
+  // ==========================
 
-    const res = await getCustomers(
-      page,
-      5,
-      search,
-      status
-    );
+  const loadCustomers = async () => {
 
-    setCustomers(res.data || []);
-    setTotalPages(res.totalPages || 1);
+    try {
 
-  } catch (err) {
-    console.log(err);
-    alert("Failed to load customers");
-  } finally {
-    setLoading(false);
-  }
-};
+      setLoading(true);
 
-const handleDelete = async (id, customerName) => {
-  const confirmDelete = window.confirm(
-    `Are you sure you want to delete "${customerName}"?`
-  );
+      const res = await getCustomers();
 
-  if (!confirmDelete) return;
+      console.log(res.data);
 
-  try {
-    await deleteCustomer(id);
+      setCustomers(res.data || []);
 
-    alert("✅ Customer deleted successfully");
+    } catch (err) {
+
+      console.log(err);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+  useEffect(() => {
 
     loadCustomers();
 
-  } catch (error) {
-    console.error(error);
+  }, []);
+    // ==========================
+  // FILTERED CUSTOMERS
+  // ==========================
 
-    alert("❌ Failed to delete customer");
-  }
-};
+  const filteredCustomers = useMemo(() => {
 
-const handlePayment = async (id, customerName) => {
-  const confirmPay = window.confirm(
-    `Mark payment as PAID for "${customerName}"?`
+    return customers.filter((customer) => {
+
+      const matchesSearch =
+        customer.customerName
+          ?.toLowerCase()
+          .includes(search.toLowerCase()) ||
+
+        customer.phone
+          ?.includes(search);
+
+      const matchesStatus =
+        statusFilter === "All"
+          ? true
+          : customer.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
+
+    });
+
+  }, [customers, search, statusFilter]);
+
+  // ==========================
+  // PAGINATION
+  // ==========================
+
+  const totalPages = Math.ceil(
+    filteredCustomers.length / pageSize
   );
 
-  if (!confirmPay) return;
-
-  try {
-    await markPaymentPaid(id);
-
-    alert("✅ Payment marked as Paid");
-
-    loadCustomers();
-
-  } catch (error) {
-    console.error(error);
-
-    alert(
-      error.response?.data?.message ||
-      "❌ Failed to update payment"
+  const paginatedCustomers =
+    filteredCustomers.slice(
+      (page - 1) * pageSize,
+      page * pageSize
     );
-  }
-};
+
+  // ==========================
+  // SUMMARY
+  // ==========================
+
+  const activeCustomers =
+    customers.filter(
+      (c) => c.status === "Active"
+    ).length;
+
+  const inactiveCustomers =
+    customers.filter(
+      (c) => c.status !== "Active"
+    ).length;
+
+  // ==========================
+  // UI
+  // ==========================
 
   return (
-  <div className="p-8">
 
-    {/* Header */}
-    <div className="flex justify-between items-center mb-8">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800">
-          Customers
-        </h1>
+    <div className="min-h-screen bg-slate-100 p-4 lg:p-8">
 
-        <p className="text-gray-500">
-          Manage all tiffin customers
-        </p>
-      </div>
+      <div className="max-w-7xl mx-auto">
 
-      <Link
-        to="/add-customer"
-        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg"
-      >
-        + Add Customer
-      </Link>
-    </div>
+        {/* Header */}
 
-          {/* Search + Filter */}
-          <div className="bg-white rounded-xl shadow-md p-5 mb-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
 
-            <div className="flex flex-col md:flex-row gap-4 justify-between">
+          <div>
 
-              <input
-                type="text"
-                placeholder="🔍 Search Customer..."
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="border rounded-lg px-4 py-3 w-full md:w-96"
-              />
+            <h1 className="text-3xl font-bold text-slate-800">
 
-              <select
-                value={status}
-                onChange={(e) => {
-                  setStatus(e.target.value);
-                  setPage(1);
-                }}
-                className="border rounded-lg px-4 py-3 w-full md:w-56"
-              >
-                <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
+              👥 Customers
+
+            </h1>
+
+            <p className="text-gray-500 mt-2">
+
+              Manage all tiffin customers
+
+            </p>
+
+          </div>
+
+          <Link
+
+            to="/add-customer"
+
+            className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 w-fit"
+
+          >
+
+            <FaUserPlus />
+
+            Add Customer
+
+          </Link>
+
+        </div>
+
+        {/* Summary Cards */}
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+
+            <div className="flex justify-between items-center">
+
+              <div>
+
+                <p className="text-gray-500">
+
+                  Total Customers
+
+                </p>
+
+                <h2 className="text-3xl font-bold">
+
+                  {customers.length}
+
+                </h2>
+
+              </div>
+
+              <FaUsers className="text-blue-600 text-4xl"/>
 
             </div>
 
           </div>
 
-          {/* Table */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
 
-          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="flex justify-between items-center">
 
-            {loading ? (
+              <div>
 
-              <div className="text-center p-10">
-                Loading...
+                <p className="text-gray-500">
+
+                  Active
+
+                </p>
+
+                <h2 className="text-3xl font-bold text-green-600">
+
+                  {activeCustomers}
+
+                </h2>
+
               </div>
 
-            ) : customers.length === 0 ? (
+              <FaCheckCircle className="text-green-600 text-4xl"/>
 
-              <div className="text-center p-10">
-                No Customers Found
-              </div>
-
-            ) : (
-
-              <>
-                <table className="w-full">
-
-                  <thead className="bg-blue-600 text-white">
-
-                    <tr>
-                      <th className="p-4 text-left">
-                        Customer
-                      </th>
-
-                      <th className="p-4 text-left">
-                        Phone
-                      </th>
-
-                      <th className="p-4 text-left">
-                        Meal
-                      </th>
-
-                      <th className="p-4 text-left">
-                        Price
-                        </th>
-
-                        <th className="p-4 text-left">
-                        Payment
-                        </th>
-
-                        <th className="p-4 text-left">
-                        Status
-                        </th>
-
-                      <th className="p-4 text-center">
-                        Action
-                      </th>
-
-                    </tr>
-
-                  </thead>
-
-                  <tbody>
-
-                    {customers.map((customer) => (
-
-                      <tr
-                        key={customer._id}
-                        className="border-b hover:bg-slate-50"
-                      >
-
-                        <td className="p-4 font-semibold">
-                          {customer.customerName}
-                        </td>
-
-                        <td className="p-4">
-                          {customer.phone}
-                        </td>
-
-                        <td className="p-4">
-                          {customer.mealType}
-                        </td>
-
-                        <td className="p-4">
-  {customer.pricing?.pricingType === "custom" ? (
-    <div className="text-sm space-y-1">
-      <div className="font-bold text-green-600">
-        🟢 Custom Pricing
-      </div>
-
-      <div>
-        🍳 Breakfast : ₹{customer.pricing.breakfastPrice}
-      </div>
-
-      <div>
-        🍛 Lunch : ₹{customer.pricing.lunchPrice}
-      </div>
-
-      <div>
-        🍽 Dinner : ₹{customer.pricing.dinnerPrice}
-      </div>
-
-      {customer.pricing.extraCharge > 0 && (
-        <div className="text-blue-600">
-          ➕ Extra : ₹{customer.pricing.extraCharge}
-        </div>
-      )}
-
-      {customer.pricing.discount > 0 && (
-        <div className="text-red-600">
-          ➖ Discount : {customer.pricing.discount}
-          {customer.pricing.discountType === "percentage"
-            ? "%"
-            : " ₹"}
-        </div>
-      )}
-    </div>
-  ) : (
-    <span className="font-semibold text-green-600">
-      ₹{customer.latestBill?.totalAmount || 0}
-    </span>
-  )}
-</td>
-
-<td className="p-4">
-  {customer.latestBill?.status === "Paid" ? (
-    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
-      ✅ Paid
-    </span>
-  ) : (
-    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">
-      ❌ Pending
-    </span>
-  )}
-</td>
-
-<td className="p-4">
-  <StatusBadge
-    status={customer.status}
-  />
-</td>
-
-                        <td className="p-4">
-
-                          <div className="flex justify-center gap-2">
-
-  <Link
-    to={`/customer/${customer._id}`}
-    className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded transition"
-    title="View Customer"
-  >
-    👁
-  </Link>
-
-  <Link
-    to={`/edit-customer/${customer._id}`}
-    className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1 rounded transition"
-    title="Edit Customer"
-  >
-    ✏
-  </Link>
-
-<button
-  onClick={() =>
-    handlePayment(
-      customer.latestBill?._id,
-      customer.customerName
-    )
-  }
-  disabled={
-    !customer.latestBill ||
-    customer.latestBill.status === "Paid"
-  }
-  className={`px-3 py-1 rounded transition ${
-    !customer.latestBill ||
-    customer.latestBill.status === "Paid"
-      ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-      : "bg-green-100 hover:bg-green-200 text-green-700"
-  }`}
-  title={
-    customer.latestBill?.status === "Paid"
-      ? "Already Paid"
-      : "Mark as Paid"
-  }
->
-  💰
-</button>
-
-  <button
-    onClick={() =>
-      handleDelete(customer._id, customer.customerName)
-    }
-    className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1 rounded transition"
-    title="Delete Customer"
-  >
-    🗑
-  </button>
-
-</div>
-
-                        </td>
-
-                      </tr>
-
-                    ))}
-
-                  </tbody>
-
-                </table>
-
-                {/* Pagination */}
-
-                <div className="flex justify-between items-center p-5 border-t bg-gray-50">
-
-                  <button
-                    disabled={page === 1}
-                    onClick={() => setPage(page - 1)}
-                    className="bg-gray-200 px-4 py-2 rounded disabled:opacity-50"
-                  >
-                    ◀ Previous
-                  </button>
-
-                  <p className="font-semibold">
-                    Page {page} of {totalPages}
-                  </p>
-
-                  <button
-                    disabled={page === totalPages}
-                    onClick={() => setPage(page + 1)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-                  >
-                    Next ▶
-                  </button>
-
-                </div>
-
-              </>
-            )}
+            </div>
 
           </div>
 
-        </div>      
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+
+            <div className="flex justify-between items-center">
+
+              <div>
+
+                <p className="text-gray-500">
+
+                  Inactive
+
+                </p>
+
+                <h2 className="text-3xl font-bold text-red-600">
+
+                  {inactiveCustomers}
+
+                </h2>
+
+              </div>
+
+              <FaTimesCircle className="text-red-600 text-4xl"/>
+
+            </div>
+
+          </div>
+
+        </div>
+                {/* Search & Filter */}
+
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+            {/* Search */}
+
+            <div className="relative lg:col-span-2">
+
+              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+
+              <input
+                type="text"
+                placeholder="Search customer by name or phone..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full pl-12 pr-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+            </div>
+
+            {/* Status Filter */}
+
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+            >
+
+              <option value="All">
+
+                All Status
+
+              </option>
+
+              <option value="Active">
+
+                Active
+
+              </option>
+
+              <option value="Inactive">
+
+                Inactive
+
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+        {/* Customers Table */}
+
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+
+          <div className="overflow-x-auto">
+
+            <table className="min-w-full">
+
+              <thead className="bg-blue-700 text-white">
+
+                <tr>
+
+                  <th className="px-4 py-4 text-left">
+                    Customer
+                  </th>
+
+                  <th className="px-4 py-4 text-left">
+                    Phone
+                  </th>
+
+                  <th className="px-4 py-4 text-left">
+                    Meal
+                  </th>
+
+                  <th className="px-4 py-4 text-left">
+                    Price
+                  </th>
+
+                  <th className="px-4 py-4 text-left">
+                    Payment
+                  </th>
+
+                  <th className="px-4 py-4 text-left">
+                    Status
+                  </th>
+
+                  <th className="px-4 py-4 text-center">
+                    Actions
+                  </th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {loading ? (
+
+                  <tr>
+
+                    <td
+                      colSpan="7"
+                      className="text-center py-10"
+                    >
+
+                      Loading...
+
+                    </td>
+
+                  </tr>
+
+                ) : paginatedCustomers.length === 0 ? (
+
+                  <tr>
+
+                    <td
+                      colSpan="7"
+                      className="text-center py-10 text-gray-500"
+                    >
+
+                      No Customers Found
+
+                    </td>
+
+                  </tr>
+
+                ) : (
+
+                  paginatedCustomers.map((customer) => (
+
+                    <tr
+                      key={customer._id}
+                      className="border-b hover:bg-slate-50"
+                    >
+
+                      <td className="px-4 py-4 font-semibold">
+
+                        {customer.customerName}
+
+                      </td>
+
+                      <td className="px-4 py-4">
+
+                        {customer.phone}
+
+                      </td>
+
+                      <td className="px-4 py-4">
+
+                        {customer.mealType}
+
+                      </td>
+
+                      <td className="px-4 py-4 font-bold text-green-600">
+
+                        ₹{customer.price}
+
+                      </td>
+
+                      <td className="px-4 py-4">
+                                                <span
+                          className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            customer.paymentStatus === "Paid"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {customer.paymentStatus || "Pending"}
+                        </span>
+
+                      </td>
+
+                      {/* Status */}
+
+                      <td className="px-4 py-4">
+
+                        <span
+                          className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                            customer.status === "Active"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-gray-200 text-gray-600"
+                          }`}
+                        >
+                          {customer.status}
+                        </span>
+
+                      </td>
+
+                      {/* Actions */}
+
+                      <td className="px-4 py-4">
+
+                        <div className="flex items-center justify-center gap-2">
+
+                          <Link
+                            to={`/customer/${customer._id}`}
+                            className="bg-blue-100 hover:bg-blue-200 text-blue-700 p-2 rounded-lg"
+                          >
+                            <FaEye />
+                          </Link>
+
+                          <Link
+                            to={`/edit-customer/${customer._id}`}
+                            className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-2 rounded-lg"
+                          >
+                            <FaEdit />
+                          </Link>
+
+                          <Link
+                            to="/payments"
+                            className="bg-green-100 hover:bg-green-200 text-green-700 p-2 rounded-lg"
+                          >
+                            <FaMoneyBillWave />
+                          </Link>
+
+                          <button
+                            className="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-lg"
+                            onClick={() => {
+
+                              if (
+                                window.confirm(
+                                  "Delete this customer?"
+                                )
+                              ) {
+
+                                alert(
+                                  "Delete API will be connected next."
+                                );
+
+                              }
+
+                            }}
+                          >
+                            <FaTrash />
+                          </button>
+
+                        </div>
+
+                      </td>
+
+                    </tr>
+
+                  ))
+
+                )}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+          {/* Pagination */}
+
+          <div className="flex justify-between items-center p-6 border-t">
+
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(page - 1)}
+              className="bg-slate-200 disabled:opacity-40 px-5 py-2 rounded-lg"
+            >
+
+              ◀ Previous
+
+            </button>
+
+            <span className="font-semibold">
+
+              Page {page} of {totalPages || 1}
+
+            </span>
+
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage(page + 1)}
+              className="bg-blue-600 text-white disabled:opacity-40 px-5 py-2 rounded-lg"
+            >
+
+              Next ▶
+
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
   );
+
 }

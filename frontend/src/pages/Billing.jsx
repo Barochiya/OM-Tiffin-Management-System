@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from "react";
 import QRCode from "react-qr-code";
 import { useReactToPrint } from "react-to-print";
+import { FaUsers, FaFileInvoice, FaCalendarAlt, FaMoneyBillWave } from "react-icons/fa";
+
 import logo from "../assets/logo.png";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
 
 import { getCustomersForEntry } from "../services/dailyEntryService";
 import { generateBill } from "../services/billService";
@@ -11,7 +11,7 @@ import { generateBill } from "../services/billService";
 export default function Billing() {
 
   // =====================================
-  // States
+  // STATES
   // =====================================
 
   const [customers, setCustomers] = useState([]);
@@ -33,7 +33,7 @@ export default function Billing() {
   const billRef = useRef(null);
 
   // =====================================
-  // Print
+  // PRINT
   // =====================================
 
   const handlePrint = useReactToPrint({
@@ -41,22 +41,21 @@ export default function Billing() {
     documentTitle: `Bill-${month}-${year}`,
   });
 
-
-
   // =====================================
-  // Load Customers
+  // LOAD CUSTOMERS
   // =====================================
 
   useEffect(() => {
+
     loadCustomers();
+
   }, []);
 
   const loadCustomers = async () => {
+
     try {
 
       const res = await getCustomersForEntry();
-
-      console.log("Customers API:", res.data);
 
       setCustomers(res.data || []);
 
@@ -65,10 +64,11 @@ export default function Billing() {
       console.log(error);
 
     }
+
   };
 
   // =====================================
-  // Generate Bill
+  // GENERATE BILL
   // =====================================
 
   const handleGenerate = async () => {
@@ -76,6 +76,7 @@ export default function Billing() {
     if (!customer) {
 
       alert("Please Select Customer");
+
       return;
 
     }
@@ -85,15 +86,14 @@ export default function Billing() {
       const res = await generateBill({
 
         customer,
+
         month,
+
         year,
+
         cycle,
 
       });
-
-      console.log("Bill Response:", res);
-
-      console.log("Bill Data:", res.data);
 
       setBill(res.data);
 
@@ -107,599 +107,682 @@ export default function Billing() {
 
         error.response?.data?.message ||
 
-        "Failed to Generate Bill"
+        "Failed To Generate Bill"
 
       );
 
     }
 
   };
-
-  // =====================================
-  // Billing Period
+    // =====================================
+  // BILLING PERIOD
   // =====================================
 
   const getBillingPeriod = () => {
 
-    if (!bill) return "";
+    if (cycle === "1") {
 
-    const mm = String(bill.month).padStart(2, "0");
-
-    if (bill.cycle === "1") {
-
-      return `01-${mm}-${bill.year} to 15-${mm}-${bill.year}`;
+      return "1 - 15";
 
     }
 
-    const lastDay = new Date(
-
-      bill.year,
-
-      bill.month,
-
-      0
-
-    ).getDate();
-
-    return `16-${mm}-${bill.year} to ${lastDay}-${mm}-${bill.year}`;
+    return "16 - End";
 
   };
 
-// =====================================
-// Current Customer Data
-// =====================================
+  // =====================================
+  // CUSTOMER DATA
+  // =====================================
 
-const customerData = bill
-  ? customers.find((c) => c._id === bill.customer)
-  : null;
-
-  console.log("Customer Data:", customerData);
+  const customerData =
+    customers.find(
+      (c) => c._id === customer
+    );
 
   // =====================================
-  // JSX
+  // UI
   // =====================================
 
   return (
 
-    <div className="flex">
+    <div className="min-h-screen bg-slate-100 p-4 lg:p-8">
 
-      <Sidebar />
+      <div className="max-w-7xl mx-auto">
 
-      <div className="ml-64 w-full min-h-screen bg-slate-100">
+        {/* Header */}
 
-        <Navbar />
+        <div className="mb-8">
 
-        <div className="p-8">
+          <h1 className="text-3xl font-bold text-slate-800">
 
-          <h1 className="text-3xl font-bold">
-            Monthly Billing
+            🧾 Billing Management
+
           </h1>
 
           <p className="text-gray-500 mt-2">
-            Generate monthly bill for customers
+
+            Generate professional invoices for customers.
+
           </p>
 
-                    {/* ===================================== */}
-          {/* Billing Form */}
-          {/* ===================================== */}
+        </div>
 
-          <div className="bg-white rounded-xl shadow-md p-6 mt-8">
+        {/* Summary Cards */}
 
-            <div className="grid grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
 
-              {/* Customer */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
 
-              <div>
-
-                <label className="block mb-2 font-semibold">
-                  Customer
-                </label>
-
-                <select
-                  value={customer}
-                  onChange={(e) => setCustomer(e.target.value)}
-                  className="w-full border rounded-lg p-3"
-                >
-
-                  <option value="">
-                    Select Customer
-                  </option>
-
-                  {customers.map((c) => (
-
-                    <option
-                      key={c._id}
-                      value={c._id}
-                    >
-
-                      {c.customerName}
-
-                    </option>
-
-                  ))}
-
-                </select>
-
-              </div>
-
-              {/* Month */}
+            <div className="flex justify-between items-center">
 
               <div>
 
-                <label className="block mb-2 font-semibold">
-                  Month
-                </label>
+                <p className="text-gray-500">
 
-                <input
-                  type="number"
-                  min="1"
-                  max="12"
-                  value={month}
-                  onChange={(e) =>
-                    setMonth(Number(e.target.value))
-                  }
-                  className="w-full border rounded-lg p-3"
-                />
+                  Customers
+
+                </p>
+
+                <h2 className="text-3xl font-bold">
+
+                  {customers.length}
+
+                </h2>
 
               </div>
 
-              {/* Year */}
-
-              <div>
-
-                <label className="block mb-2 font-semibold">
-                  Year
-                </label>
-
-                <input
-                  type="number"
-                  value={year}
-                  onChange={(e) =>
-                    setYear(Number(e.target.value))
-                  }
-                  className="w-full border rounded-lg p-3"
-                />
-
-              </div>
-
-              {/* Billing Cycle */}
-
-              <div>
-
-                <label className="block mb-2 font-semibold">
-                  Billing Cycle
-                </label>
-
-                <select
-                  value={cycle}
-                  onChange={(e) =>
-                    setCycle(e.target.value)
-                  }
-                  className="w-full border rounded-lg p-3"
-                >
-
-                  <option value="1">
-                    1 - 15
-                  </option>
-
-                  <option value="2">
-                    16 - Month End
-                  </option>
-
-                </select>
-
-              </div>
-
-              {/* Button */}
-
-              <div className="flex items-end">
-
-                <button
-                  onClick={handleGenerate}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
-                >
-
-                  Generate Bill
-
-                </button>
-
-              </div>
+              <FaUsers className="text-4xl text-blue-600"/>
 
             </div>
 
           </div>
 
-                    {/* ===================================== */}
-          {/* Bill */}
-          {/* ===================================== */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
 
-          {bill && (
+            <div className="flex justify-between items-center">
 
-            <div
-  id="bill-print"
-  ref={billRef}
-  className="relative bg-white rounded-xl shadow-lg mt-8 p-8 overflow-hidden"
->
-{/* Watermark */}
+              <div>
 
-<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <p className="text-gray-500">
 
-  <h1
-    className={`text-[170px] font-extrabold rotate-[-30deg] opacity-[0.05]
-      ${
-        bill.status === "Paid"
-          ? "text-green-700"
-          : bill.status === "Partial"
-          ? "text-yellow-600"
-          : "text-red-600"
-      }`}
-  >
-    {bill.status.toUpperCase()}
-  </h1>
+                  Month
 
-</div>
-              {/* Header */}
+                </p>
 
-              <div className="flex justify-between items-center border-b-2 border-blue-600 pb-6 mb-6">
+                <h2 className="text-3xl font-bold">
 
- <div className="flex items-center gap-5">
+                  {month}
 
-  <img
-    src={logo}
-    alt="Logo"
-    className="w-20 h-20 rounded-full"
-  />
+                </h2>
 
-  <div>
+              </div>
 
-    <h1 className="text-4xl font-bold text-blue-700">
-      OM TIFFIN SERVICE
-    </h1>
+              <FaCalendarAlt className="text-4xl text-orange-500"/>
 
-    <p className="text-gray-600 mt-2">
-🍱 Fresh • Healthy • Homemade Food
-</p>
+            </div>
 
-<p className="text-gray-500 mt-1">
-📍 Gandhinagar, Gujarat
-</p>
+          </div>
 
-<p className="text-gray-500 mt-1">
-📞 +91 7016297983
-</p>
+          <div className="bg-white rounded-2xl shadow-lg p-6">
 
+            <div className="flex justify-between items-center">
 
-  </div>
+              <div>
 
-</div>
+                <p className="text-gray-500">
 
-  <div className="text-right">
+                  Year
 
-    <h2 className="text-3xl font-bold text-gray-800">
-      INVOICE
-    </h2>
+                </p>
 
-    <div className="mt-3">
+                <h2 className="text-3xl font-bold">
 
-  <p className="text-gray-500 text-sm">
-    Invoice Number
-  </p>
+                  {year}
 
-  <h2 className="text-3xl font-extrabold text-blue-700 tracking-widest">
-    {bill?.invoiceNo || "OMTS-202608-0001"}
-  </h2>
+                </h2>
 
-</div>
+              </div>
 
-<p className="text-xl mt-2">
-  <strong>Date :</strong>{" "}
-  {new Date().toLocaleDateString("en-GB")}
-</p>
+              <FaFileInvoice className="text-4xl text-green-600"/>
 
-<p className="mt-2 text-lg">
-  <strong>Due Date :</strong>{" "}
-  {bill.cycle === "1"
-    ? `15/${String(bill.month).padStart(2, "0")}/${bill.year}`
-    : `${new Date(bill.year, bill.month, 0).getDate()}/${String(
-        bill.month
-      ).padStart(2, "0")}/${bill.year}`}
-</p>
+            </div>
 
-  <div className="flex justify-end mt-5">
+          </div>
 
-  {bill.status === "Paid" && (
+          <div className="bg-white rounded-2xl shadow-lg p-6">
 
-   <span className="bg-green-600 text-white px-6 py-3 rounded-full text-lg font-bold shadow-lg">
-    ✅ PAID
-</span>
-  )}
+            <div className="flex justify-between items-center">
 
-  {bill.status === "Pending" && (
+              <div>
 
-    <span className="bg-red-600 text-white px-5 py-2 rounded-full font-bold">
-      ❌ PENDING
-    </span>
+                <p className="text-gray-500">
 
-  )}
+                  Status
 
-  {bill.status === "Partial" && (
+                </p>
 
-    <span className="bg-orange-500 text-white px-5 py-2 rounded-full font-bold">
-      ⚠ PARTIAL
-    </span>
+                <h2 className="text-xl font-bold">
 
-  )}
+                  {bill ? bill.status : "Ready"}
 
+                </h2>
 
+              </div>
 
-</div>
+              <FaMoneyBillWave className="text-4xl text-purple-600"/>
 
-  </div>
+            </div>
 
-</div>
+          </div>
 
-              {/* Customer Info */}
+        </div>
 
-              <div className="grid grid-cols-2 gap-8 bg-gray-50 p-8 rounded-xl border border-gray-200 shadow-sm mb-8">
+        {/* Billing Form */}
 
-  <div>
+        <div className="bg-white rounded-2xl shadow-lg p-6">
 
-  <p className="text-gray-500">
-    Customer Name
-  </p>
+          <h2 className="text-2xl font-bold mb-6">
 
-  <h3 className="text-2xl font-bold">
-    {customerData?.customerName}
-  </h3>
+            Generate New Bill
 
-  <p className="text-gray-500 mt-3">
-    Mobile
-  </p>
+          </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-  <p className="font-medium">
-    {customerData?.phone}
-  </p>
+            {/* Customer */}
 
-  <p className="text-gray-500 mt-3">
-    Address
-  </p>
+            <div>
 
-  <p className="font-medium">
-    {customerData?.address}
-  </p>
+              <label className="block mb-2 font-semibold">
+                Customer
+              </label>
 
-</div>
+              <select
+                value={customer}
+                onChange={(e) => setCustomer(e.target.value)}
+                className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+              >
 
-  <div>
+                <option value="">
+                  Select Customer
+                </option>
 
-    <p className="text-gray-500">
-      Billing Period
-    </p>
+                {customers.map((c) => (
 
-    <h3 className="text-xl font-semibold">
+                  <option
+                    key={c._id}
+                    value={c._id}
+                  >
 
-      {getBillingPeriod()}
+                    {c.customerName}
 
-    </h3>
+                  </option>
 
-    <p className="text-gray-500 mt-2">
+                ))}
 
-      Billing Cycle
+              </select>
 
-    </p>
+            </div>
 
-    <p>
+            {/* Month */}
 
-      {bill.cycle === "1"
+            <div>
 
-        ? "1 - 15"
+              <label className="block mb-2 font-semibold">
+                Month
+              </label>
 
-        : "16 - Month End"}
+              <select
+                value={month}
+                onChange={(e) => setMonth(Number(e.target.value))}
+                className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+              >
 
-    </p>
+                {Array.from({ length: 12 }, (_, i) => (
 
-  </div>
+                  <option
+                    key={i + 1}
+                    value={i + 1}
+                  >
 
-</div>
+                    {new Date(0, i).toLocaleString("default", {
+                      month: "long",
+                    })}
 
-             {/* ================================ */}
-{/* Date Wise Table */}
-{/* ================================ */}
+                  </option>
 
-<div className="mt-10 overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+                ))}
 
-  <table className="w-full">
+              </select>
+
+            </div>
+
+            {/* Year */}
+
+            <div>
+
+              <label className="block mb-2 font-semibold">
+                Year
+              </label>
+
+              <input
+                type="number"
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+
+            </div>
+
+            {/* Cycle */}
+
+            <div>
+
+              <label className="block mb-2 font-semibold">
+                Billing Cycle
+              </label>
+
+              <select
+                value={cycle}
+                onChange={(e) => setCycle(e.target.value)}
+                className="w-full border rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+              >
+
+                <option value="1">
+                  1 - 15
+                </option>
+
+                <option value="2">
+                  16 - End
+                </option>
+
+              </select>
+
+            </div>
+
+          </div>
+
+          {/* Generate Button */}
+
+          <div className="mt-8">
+
+            <button
+              onClick={handleGenerate}
+              className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl font-bold transition"
+            >
+
+              🧾 Generate Bill
+
+            </button>
+
+          </div>
+
+        </div>
+
+        {/* Invoice */}
+                {bill && (
+
+          <div
+            ref={billRef}
+            className="bg-white rounded-2xl shadow-xl mt-8 p-8"
+          >
+
+            {/* Invoice Header */}
+
+            <div className="flex flex-col md:flex-row justify-between items-center border-b pb-6">
+
+              <div className="flex items-center gap-4">
+
+                <img
+                  src={logo}
+                  alt="OM Tiffin"
+                  className="w-20 h-20 rounded-full border"
+                />
+
+                <div>
+
+                  <h1 className="text-3xl font-bold text-blue-700">
+
+                    OM TIFFIN SERVICE
+
+                  </h1>
+
+                  <p className="text-gray-500">
+
+                    Healthy • Fresh • Homemade
+
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="text-right mt-6 md:mt-0">
+
+                <h2 className="text-2xl font-bold">
+
+                  TAX INVOICE
+
+                </h2>
+
+                <p>
+
+                  Invoice :
+                  <strong>
+
+                    {bill.invoiceNo}
+
+                  </strong>
+
+                </p>
+
+                <p>
+
+                  Date :
+                  {" "}
+                  {new Date().toLocaleDateString()}
+
+                </p>
+
+              </div>
+
+            </div>
+
+            {/* Customer Details */}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+
+              <div>
+
+                <h3 className="font-bold text-lg mb-3">
+
+                  Customer Details
+
+                </h3>
+
+                <p>
+
+                  <strong>Name :</strong>
+
+                  {" "}
+
+                  {customerData?.customerName}
+
+                </p>
+
+                <p>
+
+                  <strong>Mobile :</strong>
+
+                  {" "}
+
+                  {customerData?.mobile}
+
+                </p>
+
+                <p>
+
+                  <strong>Address :</strong>
+
+                  {" "}
+
+                  {customerData?.address}
+
+                </p>
+
+              </div>
+
+              <div>
+
+                <h3 className="font-bold text-lg mb-3">
+
+                  Billing Details
+
+                </h3>
+
+                <p>
+
+                  <strong>Month :</strong>
+
+                  {" "}
+
+                  {month}
+
+                </p>
+
+                <p>
+
+                  <strong>Year :</strong>
+
+                  {" "}
+
+                  {year}
+
+                </p>
+
+                <p>
+
+                  <strong>Period :</strong>
+
+                  {" "}
+
+                  {getBillingPeriod()}
+
+                </p>
+
+              </div>
+
+            </div>
+
+            {/* Meals Table */}
+            {/* Meals Table */}
+
+<div className="mt-8 overflow-x-auto">
+
+  <table className="min-w-full border border-gray-300">
 
     <thead className="bg-blue-700 text-white">
 
       <tr>
 
-        <th className="py-4 px-4 text-center">
-          Date
+        <th className="border px-4 py-3">
+          Description
         </th>
 
-        <th className="py-4 px-4 text-center">
-          🍳 Breakfast
+        <th className="border px-4 py-3">
+          Qty
         </th>
 
-        <th className="py-4 px-4 text-center">
-          🍛 Lunch
+        <th className="border px-4 py-3">
+          Rate
         </th>
 
-        <th className="py-4 px-4 text-center">
-          🍽 Dinner
+        <th className="border px-4 py-3">
+          Amount
         </th>
 
-       <th className="border p-3">
-            Extra Items
-        </th>
-
-        <th className="py-4 px-4 text-right">
-            Amount (₹)
-        </th>
       </tr>
 
     </thead>
 
     <tbody>
 
-  {bill.dailyDetails?.map((day, index) => (
+      <tr>
 
-    <tr
-      key={index}
-      className={`${
-        index % 2 === 0
-          ? "bg-white"
-          : "bg-gray-50"
-      } hover:bg-blue-50 transition-colors duration-200`}
-    >
+        <td className="border px-4 py-3">
 
-      {/* Date */}
-      <td className="py-3 px-4 text-center border-t">
-        {new Date(day.date).toLocaleDateString("en-GB")}
-      </td>
+          Lunch Meals
 
-      {/* Breakfast */}
-      <td className="py-3 px-4 text-center border-t">
-        {day.breakfastQty}
-      </td>
+        </td>
 
-      {/* Lunch */}
-      <td className="py-3 px-4 text-center border-t">
-        {day.lunchQty}
-      </td>
+        <td className="border px-4 py-3 text-center">
 
-      {/* Dinner */}
-      <td className="py-3 px-4 text-center border-t">
-        {day.dinnerQty}
-      </td>
+          {bill.totalLunch}
 
-      {/* Extra Items */}
-      <td className="py-3 px-4 border-t">
+        </td>
 
-        {day.extraItems?.length > 0 ? (
+        <td className="border px-4 py-3 text-center">
 
-          <div className="space-y-2">
+          ₹{bill.lunchPrice}
 
-            {day.extraItems.map((item, i) => (
+        </td>
 
-              <div
-                key={i}
-                className="flex justify-between items-center bg-orange-50 border border-orange-200 rounded px-2 py-1"
-              >
+        <td className="border px-4 py-3 text-right">
 
-                <span className="font-medium text-orange-700">
-                  {item.description}
-                </span>
+          ₹{bill.lunchAmount}
 
-                <span className="font-bold text-red-600">
-                  ₹ {item.amount}
-                </span>
+        </td>
 
-              </div>
+      </tr>
 
-            ))}
+      <tr>
 
-          </div>
+        <td className="border px-4 py-3">
 
-        ) : (
+          Dinner Meals
 
-          <span className="text-gray-400">
-            —
-          </span>
+        </td>
 
-        )}
+        <td className="border px-4 py-3 text-center">
 
-      </td>
+          {bill.totalDinner}
 
-      {/* Total Amount */}
-      <td className="py-3 px-4 text-right font-semibold border-t">
-        ₹ {day.total}
-      </td>
+        </td>
 
-    </tr>
+        <td className="border px-4 py-3 text-center">
 
-  ))}
+          ₹{bill.dinnerPrice}
 
-</tbody>
+        </td>
+
+        <td className="border px-4 py-3 text-right">
+
+          ₹{bill.dinnerAmount}
+
+        </td>
+
+      </tr>
+
+      <tr>
+
+        <td className="border px-4 py-3">
+
+          Extra Charges
+
+        </td>
+
+        <td className="border px-4 py-3 text-center">
+
+          -
+
+        </td>
+
+        <td className="border px-4 py-3 text-center">
+
+          -
+
+        </td>
+
+        <td className="border px-4 py-3 text-right">
+
+          ₹{bill.extraCharges}
+
+        </td>
+
+      </tr>
+
+      <tr className="bg-slate-100 font-bold">
+
+        <td
+          colSpan="3"
+          className="border px-4 py-3 text-right"
+        >
+
+          Grand Total
+
+        </td>
+
+        <td className="border px-4 py-3 text-right text-green-700">
+
+          ₹{bill.totalAmount}
+
+        </td>
+
+      </tr>
+
+    </tbody>
+
   </table>
 
 </div>
 
-                           
+{/* Payment Summary */}
 
-               {/* ================================ */}
-{/* Bill Summary Cards */}
-{/* ================================ */}
+<div className="grid md:grid-cols-2 gap-6 mt-8">
 
-<div className="grid grid-cols-5 gap-6 mt-10">
+  <div className="bg-green-50 rounded-xl p-5">
 
-  {/* Total Amount */}
-  <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm">
-    <p className="text-gray-500 text-sm">
-      Total Amount
-    </p>
+    <h3 className="font-bold text-lg mb-4">
 
-    <h2 className="text-3xl font-bold text-blue-700 mt-3">
-      ₹ {bill.totalAmount}
-    </h2>
+      Payment Summary
+
+    </h3>
+
+    <div className="space-y-2">
+
+      <div className="flex justify-between">
+
+        <span>Total Bill</span>
+
+        <strong>
+
+          ₹{bill.totalAmount}
+
+        </strong>
+
+      </div>
+
+      <div className="flex justify-between">
+
+        <span>Paid</span>
+
+        <strong className="text-green-600">
+
+          ₹{bill.paidAmount}
+
+        </strong>
+
+      </div>
+
+      <div className="flex justify-between">
+
+        <span>Pending</span>
+
+        <strong className="text-red-600">
+
+          ₹{bill.pendingAmount}
+
+        </strong>
+
+      </div>
+
+    </div>
+
   </div>
 
-  {/* Paid Amount */}
-  <div className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-sm">
-    <p className="text-gray-500 text-sm">
-      Paid Amount
-    </p>
+  <div className="bg-blue-50 rounded-xl p-5">
 
-    <h2 className="text-3xl font-bold text-green-700 mt-3">
-      ₹ {bill.paidAmount}
-    </h2>
-  </div>
+    <h3 className="font-bold text-lg mb-4">
 
-{/* Extra Charges */}
-<div className="bg-orange-50 border border-orange-200 rounded-xl p-6 shadow-sm">
+      Bill Status
 
-  <p className="text-gray-500 text-sm">
-    Extra Charges
-  </p>
+    </h3>
 
-  <h2 className="text-3xl font-bold text-orange-600 mt-3">
-    ₹ {bill.extraAmount || 0}
-  </h2>
+    <div className="text-center">
 
-</div>
+      <span className="px-5 py-2 rounded-full bg-blue-700 text-white font-bold">
 
-  {/* Pending Amount */}
-  <div className="bg-red-50 border border-red-200 rounded-xl p-6 shadow-sm">
-    <p className="text-gray-500 text-sm">
-      Pending Amount
-    </p>
-
-    <h2 className="text-3xl font-bold text-red-700 mt-3">
-      ₹ {bill.pendingAmount}
-    </h2>
-  </div>
-
-  {/* Status */}
-  <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 shadow-sm">
-
-    <p className="text-gray-500 text-sm">
-      Payment Status
-    </p>
-
-    <div className="mt-4">
-
-      <span
-        className={`px-5 py-2 rounded-full text-lg font-bold
-        ${
-          bill.status === "Paid"
-            ? "bg-green-600 text-white"
-            : bill.status === "Partial"
-            ? "bg-yellow-500 text-white"
-            : "bg-red-600 text-white"
-        }`}
-      >
         {bill.status}
+
       </span>
 
     </div>
@@ -708,90 +791,91 @@ const customerData = bill
 
 </div>
 
-{/* ================================ */}
-{/* Payment Details */}
-{/* ================================ */}
+{/* QR Section */}
+{/* QR Section */}
 
-<div className="mt-10 border rounded-xl p-6 bg-gray-50">
+<div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
 
-  <h2 className="text-2xl font-bold mb-6">
-    Payment Details
-  </h2>
+  {/* QR */}
 
-  <div className="grid grid-cols-2 gap-10">
+  <div className="bg-white border rounded-2xl p-6 flex flex-col items-center">
 
-    <div>
+    <h3 className="text-xl font-bold mb-4">
 
-      <div className="mb-5">
-        <p className="text-gray-500">
-          UPI ID
-        </p>
+      Scan & Pay
 
-        <p className="font-semibold text-lg">
-          malaybarochiya-5@oksbi
-        </p>
-      </div>
-
-      <div className="mb-5">
-        <p className="text-gray-500">
-          Bank Name
-        </p>
-
-        <p className="font-semibold text-lg">
-          State Bank of India
-        </p>
-      </div>
-
-      <div className="mb-5">
-        <p className="text-gray-500">
-          Account Number
-        </p>
-
-        <p className="font-semibold text-lg">
-          45073878066
-        </p>
-      </div>
-
-      <div>
-        <p className="text-gray-500">
-          IFSC Code
-        </p>
-
-        <p className="font-semibold text-lg">
-          SBIN0032214
-        </p>
-      </div>
-
-    </div>
-
-    <div className="flex items-center justify-center">
-
-      <div className="bg-green-50 border border-green-300 rounded-xl p-6 text-center w-full">
-
-        <div className="bg-green-50 border border-green-300 rounded-xl p-6 text-center">
-
-  <h3 className="text-xl font-bold text-green-700">
-    Scan & Pay
-  </h3>
-
-  <div className="flex justify-center mt-5">
+    </h3>
 
     <QRCode
-      value={`upi://pay?pa=malaybarochiya-5@oksbi&pn=OM TIFFIN SERVICE&am=${bill.pendingAmount}&cu=INR`}
-      size={170}
+      value={`upi://pay?pa=omtiffin@upi&pn=OM Tiffin Service&am=${bill.pendingAmount}`}
+      size={180}
     />
+
+    <p className="mt-4 text-sm text-gray-500 text-center">
+
+      Scan this QR using any UPI App
+
+    </p>
 
   </div>
 
-  <p className="mt-5 text-lg font-semibold">
-    UPI ID
-  </p>
+  {/* Bank Details */}
 
-  <p className="text-blue-700 font-bold">
-    malaybarochiya-5@oksbi
-  </p>
+  <div className="bg-white border rounded-2xl p-6">
 
-</div>
+    <h3 className="text-xl font-bold mb-5">
+
+      Payment Details
+
+    </h3>
+
+    <div className="space-y-3">
+
+      <div className="flex justify-between">
+
+        <span>UPI ID</span>
+
+        <strong>
+
+          omtiffin@upi
+
+        </strong>
+
+      </div>
+
+      <div className="flex justify-between">
+
+        <span>Account Name</span>
+
+        <strong>
+
+          OM TIFFIN SERVICE
+
+        </strong>
+
+      </div>
+
+      <div className="flex justify-between">
+
+        <span>IFSC</span>
+
+        <strong>
+
+          SBIN0001234
+
+        </strong>
+
+      </div>
+
+      <div className="flex justify-between">
+
+        <span>Bank</span>
+
+        <strong>
+
+          State Bank of India
+
+        </strong>
 
       </div>
 
@@ -801,110 +885,149 @@ const customerData = bill
 
 </div>
 
-<div className="mt-10">
+{/* Terms */}
 
-  <h3 className="text-xl font-bold mb-4">
+<div className="mt-10 bg-yellow-50 border border-yellow-300 rounded-2xl p-6">
+
+  <h3 className="text-lg font-bold mb-3">
+
     Terms & Conditions
+
   </h3>
 
-  <ul className="list-disc ml-6 text-gray-700 space-y-2">
+  <ul className="list-disc pl-5 space-y-2 text-gray-700">
 
     <li>
-      Payment should be completed before the due date.
+
+      Payment due within 7 days.
+
     </li>
 
     <li>
-      Meal changes must be informed at least one day in advance.
+
+      Meals once delivered cannot be refunded.
+
     </li>
 
     <li>
-      No refund will be provided for missed meals without prior notice.
-    </li>
 
-    <li>
-      Online payment is preferred.
+      Contact OM Tiffin Service for any billing issue.
+
     </li>
 
   </ul>
 
 </div>
 
-{/* ================================ */}
+{/* Buttons */}
+
+<div className="flex flex-wrap gap-4 mt-10">
+
+  <button
+
+    onClick={handlePrint}
+
+    className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl"
+
+  >
+
+    🖨 Print Invoice
+
+  </button>
+
+  <button
+
+    className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl"
+
+  >
+
+    📄 Download PDF
+
+  </button>
+
+</div>
+
 {/* Footer */}
-{/* ================================ */}
+{/* Footer */}
 
 <div className="mt-12 border-t pt-8">
 
-  <div className="flex justify-between items-end">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-    {/* Left */}
+    {/* Thank You */}
+
     <div>
 
-      <h2 className="text-xl font-bold text-green-700">
-        Thank You For Choosing
-      </h2>
+      <h3 className="text-xl font-bold text-blue-700 mb-3">
 
-      <h1 className="text-2xl font-bold text-blue-700 mt-2">
-        OM TIFFIN SERVICE
-      </h1>
+        Thank You ❤️
 
-      <p className="text-gray-500 mt-2">
-        Fresh • Healthy • Homemade Food
-      </p>
+      </h3>
 
-      <p className="text-sm text-gray-400 mt-3">
-        This is a Computer Generated Invoice.
+      <p className="text-gray-600 leading-7">
+
+        Thank you for choosing
+
+        <strong> OM TIFFIN SERVICE </strong>
+
+        We appreciate your trust and look forward to serving you with fresh,
+        healthy and hygienic homemade meals every day.
+
       </p>
 
     </div>
 
-    {/* Right */}
-    <div className="text-center">
+    {/* Contact */}
 
-      <img
-        src={logo}
-        alt="Company Stamp"
-        className="w-20 h-20 mx-auto opacity-80"
-      />
+    <div className="text-left md:text-right">
 
-      <div className="w-44 border-b border-gray-500 mt-4"></div>
+      <h3 className="text-xl font-bold mb-3">
 
-      <p className="mt-2 font-semibold">
-        Authorized Signature
+        Contact Information
+
+      </h3>
+
+      <p>
+
+        📞 +91 94093 80470
+
+      </p>
+
+      <p>
+
+        📧 omtiffinservice@gmail.com
+
+      </p>
+
+      <p>
+
+        📍 Gandhinagar, Gujarat
+
       </p>
 
     </div>
 
   </div>
 
+  {/* Copyright */}
+
+  <div className="border-t mt-8 pt-5 text-center text-gray-500 text-sm">
+
+    © 2026 OM TIFFIN SERVICE
+
+    <br />
+
+    Powered By OM Tiffin Management System
+
+  </div>
+
 </div>
-              {/* ================================ */}
-              {/* Buttons */}
-              {/* ================================ */}
 
-              <div className="flex gap-4 mt-8">
+{/* Close Invoice */}
 
-                <button
-                  onClick={handlePrint}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
-                >
-                  🖨 Print Bill
-                </button>
+          </div>
 
-              <button
-  onClick={handlePrint}
-  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
->
-  📄 Save as PDF
-</button>
-
-              </div>
-
-            </div>
-
-          )}
-
-        </div>
+        )}
 
       </div>
 

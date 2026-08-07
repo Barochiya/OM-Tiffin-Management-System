@@ -1,94 +1,267 @@
 import { useEffect, useState } from "react";
+
+import {
+  FaCoffee,
+  FaUtensils,
+  FaMoon,
+  FaSave,
+} from "react-icons/fa";
+
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
+
 import {
   getPrices,
   updatePrices,
 } from "../services/customerService";
 
 export default function PriceSettings() {
+
   const [prices, setPrices] = useState({
+
     breakfast: 40,
-    lunch: 70,
+
+    lunch: 90,
+
     dinner: 90,
+
   });
 
   const [loading, setLoading] = useState(false);
 
+  const [saved, setSaved] = useState(false);
+
   useEffect(() => {
+
     loadPrices();
+
   }, []);
 
   const loadPrices = async () => {
+
     try {
+
+      setLoading(true);
+
       const res = await getPrices();
 
-      setPrices({
-        breakfast: res.data.breakfast,
-        lunch: res.data.lunch,
-        dinner: res.data.dinner,
-      });
-    } catch (error) {
-      console.log(error);
-      alert("Failed to load prices");
+      if (res.data) {
+
+        setPrices({
+
+          breakfast:
+            res.data.breakfast || 40,
+
+          lunch:
+            res.data.lunch || 90,
+
+          dinner:
+            res.data.dinner || 90,
+
+        });
+
+      }
+
+    } catch (err) {
+
+      console.log(err);
+
+    } finally {
+
+      setLoading(false);
+
     }
+
   };
 
   const handleChange = (e) => {
+
     setPrices({
+
       ...prices,
-      [e.target.name]: Number(e.target.value),
+
+      [e.target.name]:
+        Number(e.target.value),
+
     });
+
   };
 
-  const handleSubmit = async (e) => {
+  const cards = [
+
+    {
+
+      title: "Breakfast",
+
+      icon: <FaCoffee className="text-3xl"/>,
+
+      value: prices.breakfast,
+
+      color: "text-orange-500",
+
+      bg: "bg-orange-100",
+
+    },
+
+    {
+
+      title: "Lunch",
+
+      icon: <FaUtensils className="text-3xl"/>,
+
+      value: prices.lunch,
+
+      color: "text-green-600",
+
+      bg: "bg-green-100",
+
+    },
+
+    {
+
+      title: "Dinner",
+
+      icon: <FaMoon className="text-3xl"/>,
+
+      value: prices.dinner,
+
+      color: "text-indigo-600",
+
+      bg: "bg-indigo-100",
+
+    },
+
+  ];
+    const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     try {
+
       setLoading(true);
 
       await updatePrices(prices);
 
-      alert("✅ Prices Updated Successfully");
+      setSaved(true);
+
+      setTimeout(() => {
+
+        setSaved(false);
+
+      }, 2000);
+
     } catch (error) {
+
       console.log(error);
 
       alert(
+
         error.response?.data?.message ||
-          "Failed to update prices"
+
+        "Failed to Update Prices"
+
       );
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
   return (
-    <div className="flex">
+
+    <div className="min-h-screen bg-slate-100">
+
       <Sidebar />
 
-      <div className="ml-64 w-full min-h-screen bg-slate-100">
+      <div className="lg:ml-64">
+
         <Navbar />
 
-        <div className="p-8">
+        <div className="p-4 lg:p-8">
 
-          <div className="bg-white rounded-xl shadow-md p-8 max-w-xl mx-auto">
+          {/* Header */}
+
+          <div className="mb-8">
 
             <h1 className="text-3xl font-bold text-slate-800">
-              Meal Price Settings
+
+              💰 Meal Price Settings
+
             </h1>
 
-            <p className="text-gray-500 mt-2 mb-8">
-              Update default meal prices
+            <p className="text-gray-500 mt-2">
+
+              Configure default meal prices for all customers.
+
             </p>
+
+          </div>
+
+          {/* Summary Cards */}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+            {cards.map((card) => (
+
+              <div
+
+                key={card.title}
+
+                className="bg-white rounded-2xl shadow-lg p-6"
+
+              >
+
+                <div className="flex justify-between items-center">
+
+                  <div>
+
+                    <p className="text-gray-500">
+
+                      {card.title}
+
+                    </p>
+
+                    <h2 className={`text-3xl font-bold ${card.color}`}>
+
+                      ₹{card.value}
+
+                    </h2>
+
+                  </div>
+
+                  <div className={`${card.bg} p-4 rounded-xl ${card.color}`}>
+
+                    {card.icon}
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            ))}
+
+          </div>
+
+          {/* Form */}
+
+          <div className="bg-white rounded-2xl shadow-lg p-8">
 
             <form
               onSubmit={handleSubmit}
-              className="space-y-6"
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
             >
+                            {/* Breakfast */}
 
               <div>
+
                 <label className="block font-semibold mb-2">
+
                   🍳 Breakfast Price
+
                 </label>
 
                 <input
@@ -96,13 +269,19 @@ export default function PriceSettings() {
                   name="breakfast"
                   value={prices.breakfast}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-4 py-3"
+                  className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none"
                 />
+
               </div>
 
+              {/* Lunch */}
+
               <div>
+
                 <label className="block font-semibold mb-2">
+
                   🍛 Lunch Price
+
                 </label>
 
                 <input
@@ -110,13 +289,19 @@ export default function PriceSettings() {
                   name="lunch"
                   value={prices.lunch}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-4 py-3"
+                  className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 outline-none"
                 />
+
               </div>
 
+              {/* Dinner */}
+
               <div>
+
                 <label className="block font-semibold mb-2">
-                  🍽 Dinner Price
+
+                  🌙 Dinner Price
+
                 </label>
 
                 <input
@@ -124,26 +309,67 @@ export default function PriceSettings() {
                   name="dinner"
                   value={prices.dinner}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-4 py-3"
+                  className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
+
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
-              >
-                {loading
-                  ? "Saving..."
-                  : "💾 Save Prices"}
-              </button>
+              {/* Save Button */}
 
-            </form>
+              <div className="md:col-span-3 mt-4">
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full py-4 rounded-xl text-white font-bold text-lg transition flex justify-center items-center gap-3 ${
+                    loading
+                      ? "bg-gray-500 cursor-not-allowed"
+                      : saved
+                      ? "bg-green-600"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  }`}
+                >
+
+                  <FaSave />
+
+                  {loading
+                    ? "Saving..."
+                    : saved
+                    ? "✅ Prices Saved Successfully"
+                    : "💾 Save Prices"}
+
+                </button>
+
+              </div>
+                          </form>
+
+          </div>
+
+          {/* Footer */}
+
+          <div className="mt-8 text-center text-gray-500 text-sm">
+
+            <p>
+
+              💡 These prices will be used as the default meal rates for new
+              billing and daily entries.
+
+            </p>
+
+            <p className="mt-2">
+
+              © 2026 OM Tiffin Management System
+
+            </p>
 
           </div>
 
         </div>
+
       </div>
+
     </div>
+
   );
+
 }

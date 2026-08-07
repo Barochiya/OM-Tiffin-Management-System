@@ -1,3 +1,6 @@
+import RecentPayments from "../components/RecentPayments";
+import PendingBills from "../components/PendingBills";
+import TopCustomers from "../components/TopCustomers";
 import { useEffect, useState } from "react";
 
 import DashboardCard from "../components/DashboardCard";
@@ -14,6 +17,9 @@ export default function Dashboard() {
     todayMeals: 0,
     todayExtraCharges: 0,
     revenueChart: [],
+    recentPayments: [],
+    pendingBills: [],
+    topCustomers: [],
   });
 
   const loadDashboard = async () => {
@@ -92,5 +98,22 @@ export default function Dashboard() {
       </div>
 
     </div>
+    
   );
+
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+
+  <RecentPayments
+    data={stats.recentPayments}
+  />
+
+  <PendingBills
+    data={stats.pendingBills}
+  />
+
+  <TopCustomers
+    data={stats.topCustomers}
+  />
+
+</div>
 }

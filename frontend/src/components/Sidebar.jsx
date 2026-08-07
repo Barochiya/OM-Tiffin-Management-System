@@ -4,27 +4,6 @@ const Sidebar = () => {
   const location = useLocation();
 
   return (
-  <div
-    className="
-      fixed
-      top-0
-      left-0
-      h-screen
-      w-72
-      bg-gradient-to-b
-      from-blue-700
-      to-blue-900
-      text-white
-      shadow-2xl
-      flex
-      flex-col
-      z-50
-      lg:translate-x-0
-      transition-transform
-      duration-300
-    "
-  >
-    
     <div className="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-2xl flex flex-col print:!hidden">
 
       {/* Logo */}
@@ -49,7 +28,6 @@ const Sidebar = () => {
       {/* Menu */}
       <nav className="flex-1 mt-6 px-3 space-y-2">
 
-        {/* Dashboard */}
         <Link
           to="/dashboard"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -61,7 +39,6 @@ const Sidebar = () => {
           📊 Dashboard
         </Link>
 
-        {/* Customers */}
         <Link
           to="/customers"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -73,7 +50,6 @@ const Sidebar = () => {
           👥 Customers
         </Link>
 
-        {/* Add Customer */}
         <Link
           to="/add-customer"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -85,7 +61,6 @@ const Sidebar = () => {
           ➕ Add Customer
         </Link>
 
-        {/* Daily Entry */}
         <Link
           to="/daily-entry"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -97,7 +72,6 @@ const Sidebar = () => {
           📅 Daily Entry
         </Link>
 
-        {/* Price Settings */}
         <Link
           to="/price-settings"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -109,7 +83,6 @@ const Sidebar = () => {
           ⚙️ Price Settings
         </Link>
 
-        {/* Billing */}
         <Link
           to="/billing"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -121,7 +94,6 @@ const Sidebar = () => {
           🧾 Billing
         </Link>
 
-        {/* Payments */}
         <Link
           to="/payments"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${

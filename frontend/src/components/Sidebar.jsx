@@ -4,6 +4,27 @@ const Sidebar = () => {
   const location = useLocation();
 
   return (
+  <div
+    className="
+      fixed
+      top-0
+      left-0
+      h-screen
+      w-72
+      bg-gradient-to-b
+      from-blue-700
+      to-blue-900
+      text-white
+      shadow-2xl
+      flex
+      flex-col
+      z-50
+      lg:translate-x-0
+      transition-transform
+      duration-300
+    "
+  >
+    
     <div className="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-2xl flex flex-col print:!hidden">
 
       {/* Logo */}

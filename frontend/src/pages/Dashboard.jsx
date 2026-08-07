@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { FaBars } from "react-icons/fa";
+
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import DashboardCard from "../components/DashboardCard";
 import RevenueChart from "../components/RevenueChart";
-
 import RecentPayments from "../components/RecentPayments";
 import PendingBills from "../components/PendingBills";
 import TopCustomers from "../components/TopCustomers";
@@ -12,16 +13,16 @@ import { getDashboardAnalytics } from "../services/dashboardService";
 
 export default function Dashboard() {
 
-  const [stats, setStats] = useState({
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+ const [stats, setStats] = useState({
   todaysCollection: 0,
   monthlyRevenue: 0,
   pendingAmount: 0,
   totalCustomers: 0,
   todayMeals: 0,
   todayExtraCharges: 0,
-
   revenueChart: [],
-
   recentPayments: [],
   pendingBills: [],
   topCustomers: [],
@@ -49,11 +50,28 @@ useEffect(() => {
   return (
     <div className="flex">
 
-      <Sidebar />
+      <>
+  {/* Mobile Overlay */}
+  {sidebarOpen && (
+    <div
+      onClick={() => setSidebarOpen(false)}
+      className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+    />
+  )}
 
-      <div className="ml-64 w-full min-h-screen bg-slate-100">
+  {/* Sidebar */}
+  <div
+    className={`fixed top-0 left-0 h-screen z-50 transition-transform duration-300
+    ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+    lg:translate-x-0`}
+  >
+    <Sidebar />
+  </div>
+</>
 
-        <Navbar />
+      <div className="lg:ml-64 min-h-screen bg-slate-100">
+
+        <Navbar setSidebarOpen={setSidebarOpen} />
 
         <div className="p-8">
 

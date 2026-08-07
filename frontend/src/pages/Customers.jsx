@@ -98,11 +98,7 @@ useEffect(() => {
 
 }, []);
 
-  useEffect(() => {
-
-    loadCustomers();
-
-  }, []);
+ 
     // ==========================
   // FILTERED CUSTOMERS
   // ==========================
@@ -497,7 +493,13 @@ useEffect(() => {
                           >
                             <FaEye />
                           </Link>
-
+                                  <button
+                                          onClick={() => openWhatsApp(customer)}
+                                          className="bg-green-100 hover:bg-green-200 text-green-700 p-2 rounded-lg"
+                                          title="WhatsApp Chat"
+                                        >
+                                    <FaWhatsapp />
+                                  </button>
                           <Link
                             to={`/edit-customer/${customer._id}`}
                             className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-2 rounded-lg"

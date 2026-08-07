@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import QRCode from "react-qr-code";
 import { useReactToPrint } from "react-to-print";
 import { FaUsers, FaFileInvoice, FaCalendarAlt, FaMoneyBillWave } from "react-icons/fa";
-
+import { FaWhatsapp } from "react-icons/fa";
+import { sendInvoiceWhatsApp } from "../services/whatsappService";
 import logo from "../assets/logo.png";
 
 import { getCustomersForEntry } from "../services/dailyEntryService";
@@ -944,6 +945,14 @@ export default function Billing() {
     📄 Download PDF
 
   </button>
+
+  <button
+  onClick={() => sendInvoiceWhatsApp(bill)}
+  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl flex items-center gap-2"
+>
+  <FaWhatsapp />
+  Share on WhatsApp
+</button>
 
 </div>
 

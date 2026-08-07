@@ -44,3 +44,46 @@ export const sendReceiptWhatsApp = (payment) => {
   );
 
 };
+export const sendInvoiceWhatsApp = (bill) => {
+
+  if (!bill) return;
+
+  const phone =
+    bill.customer?.phone?.replace(/\D/g, "");
+
+  if (!phone) {
+
+    alert("Customer phone number not found.");
+
+    return;
+
+  }
+
+  const message = `🍱 *OM TIFFIN SERVICE*
+
+📄 Monthly Invoice
+
+👤 Customer : ${bill.customer?.customerName}
+
+🧾 Invoice No : ${bill.invoiceNo}
+
+💰 Total Amount : ₹${bill.totalAmount}
+
+📅 Billing Month : ${bill.month}
+
+🙏 Thank you for choosing OM TIFFIN SERVICE.
+
+Please complete your payment.
+
+Regards,
+OM TIFFIN SERVICE`;
+
+  window.open(
+
+    `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`,
+
+    "_blank"
+
+  );
+
+};

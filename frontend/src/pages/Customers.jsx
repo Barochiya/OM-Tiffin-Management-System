@@ -11,6 +11,7 @@ import {
   FaEdit,
   FaMoneyBillWave,
   FaTrash,
+  FaWhatsapp,
 } from "react-icons/fa";
 
 import { getCustomers } from "../services/customerService";
@@ -39,27 +40,63 @@ export default function Customers() {
 
   const loadCustomers = async () => {
 
-    try {
+  try {
 
-      setLoading(true);
+    setLoading(true);
 
-      const res = await getCustomers();
+    const res = await getCustomers();
 
-      console.log(res.data);
+    setCustomers(res.data || []);
 
-      setCustomers(res.data || []);
+  } catch (err) {
 
-    } catch (err) {
+    console.log(err);
 
-      console.log(err);
+  } finally {
 
-    } finally {
+    setLoading(false);
 
-      setLoading(false);
+  }
 
-    }
+};
 
-  };
+// 👇👇 YAHAN ADD KARO
+
+const openWhatsApp = (customer) => {
+
+  const phone = customer.phone?.replace(/\D/g, "");
+
+  if (!phone) {
+
+    alert("Customer phone number not found.");
+
+    return;
+
+  }
+
+  const message = `👋 Hello ${customer.customerName},
+
+Welcome to *OM TIFFIN SERVICE* 🍱
+
+How can we help you today?`;
+
+  window.open(
+
+    `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`,
+
+    "_blank"
+
+  );
+
+};
+
+// 👇 iske baad already ye rahega
+
+useEffect(() => {
+
+  loadCustomers();
+
+}, []);
 
   useEffect(() => {
 

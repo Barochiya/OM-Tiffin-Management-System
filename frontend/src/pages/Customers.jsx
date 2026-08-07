@@ -493,13 +493,7 @@ useEffect(() => {
                           >
                             <FaEye />
                           </Link>
-                                  <button
-                                          onClick={() => openWhatsApp(customer)}
-                                          className="bg-green-100 hover:bg-green-200 text-green-700 p-2 rounded-lg"
-                                          title="WhatsApp Chat"
-                                        >
-                                    <FaWhatsapp />
-                                  </button>
+                                  
                           <Link
                             to={`/edit-customer/${customer._id}`}
                             className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 p-2 rounded-lg"
@@ -513,7 +507,13 @@ useEffect(() => {
                           >
                             <FaMoneyBillWave />
                           </Link>
-
+                            <button
+                                          onClick={() => openWhatsApp(customer)}
+                                          className="bg-green-100 hover:bg-green-200 text-green-700 p-2 rounded-lg"
+                                          title="WhatsApp Chat"
+                                        >
+                                    <FaWhatsapp />
+                                  </button>
                           <button
                             className="bg-red-100 hover:bg-red-200 text-red-700 p-2 rounded-lg"
                             onClick={() => {

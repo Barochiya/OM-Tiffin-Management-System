@@ -1,12 +1,15 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import DailyEntry from "./pages/DailyEntry";
+
+import AdminLayout from "./layouts/AdminLayout";
+
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import AddCustomer from "./pages/AddCustomer";
 import EditCustomer from "./pages/EditCustomer";
 import ViewCustomer from "./pages/ViewCustomer";
-import PriceSettings from "./pages/PriceSettings"; // ✅ NEW
+import DailyEntry from "./pages/DailyEntry";
+import PriceSettings from "./pages/PriceSettings";
 import Billing from "./pages/Billing";
 import Payments from "./pages/Payments";
 import PaymentReceipt from "./pages/PaymentReceipt";
@@ -27,61 +30,61 @@ export default function App() {
         element={<Login />}
       />
 
-      {/* Dashboard */}
-      <Route
-        path="/dashboard"
-        element={<Dashboard />}
-      />
+      {/* Admin Layout */}
+      <Route element={<AdminLayout />}>
 
-      {/* Customers */}
-      <Route
-        path="/customers"
-        element={<Customers />}
-      />
+        <Route
+          path="/dashboard"
+          element={<Dashboard />}
+        />
 
-      {/* Add Customer */}
-      <Route
-        path="/add-customer"
-        element={<AddCustomer />}
-      />
+        <Route
+          path="/customers"
+          element={<Customers />}
+        />
 
-      {/* Edit Customer */}
-      <Route
-        path="/edit-customer/:id"
-        element={<EditCustomer />}
-      />
+        <Route
+          path="/add-customer"
+          element={<AddCustomer />}
+        />
 
-      {/* View Customer */}
-      <Route
-        path="/customer/:id"
-        element={<ViewCustomer />}
-      />
+        <Route
+          path="/edit-customer/:id"
+          element={<EditCustomer />}
+        />
 
-      {/* Price Settings */}
-      <Route
-        path="/price-settings"
-        element={<PriceSettings />}
-      />
+        <Route
+          path="/customer/:id"
+          element={<ViewCustomer />}
+        />
 
-      <Route
-        path="/daily-entry"
-        element={<DailyEntry />}
-      />
-      <Route
-        path="/billing"
-        element={<Billing />}
-      />
+        <Route
+          path="/daily-entry"
+          element={<DailyEntry />}
+        />
 
-      <Route
-        path="/payments"
-        element={<Payments />}
-      />
+        <Route
+          path="/price-settings"
+          element={<PriceSettings />}
+        />
 
-      <Route
-        path="/payment-receipt/:id"
-        element={<PaymentReceipt />}
-      />
-      
+        <Route
+          path="/billing"
+          element={<Billing />}
+        />
+
+        <Route
+          path="/payments"
+          element={<Payments />}
+        />
+
+        <Route
+          path="/payment-receipt/:id"
+          element={<PaymentReceipt />}
+        />
+
+      </Route>
+
       {/* 404 */}
       <Route
         path="*"

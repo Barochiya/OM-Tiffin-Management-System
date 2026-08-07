@@ -283,7 +283,7 @@ const loadData = async () => {
       <Sidebar />
 
       <div className="ml-64 w-full min-h-screen bg-slate-100">
-        <Navbar />
+        
 
         <div className="p-8">
 

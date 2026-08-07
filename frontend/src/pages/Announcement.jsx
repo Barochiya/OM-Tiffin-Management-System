@@ -2,11 +2,14 @@ import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
+
 export default function Announcement() {
 
   const [title, setTitle] = useState("");
 
   const [message, setMessage] = useState("");
+
+  const [audience, setAudience] = useState("all");
 
   return (
 
@@ -83,6 +86,46 @@ export default function Announcement() {
                 />
 
               </div>
+
+              <div className="mt-6">
+
+  <label className="font-semibold">
+    Send To
+  </label>
+
+  <select
+    value={audience}
+    onChange={(e) => setAudience(e.target.value)}
+    className="w-full mt-2 border rounded-xl p-3"
+  >
+    <option value="all">👥 All Customers</option>
+    <option value="active">✅ Active Customers</option>
+    <option value="pending">💰 Pending Payment Customers</option>
+    <option value="lunch">🍛 Lunch Customers</option>
+    <option value="dinner">🌙 Dinner Customers</option>
+    <option value="both">🍱 Lunch + Dinner Customers</option>
+  </select>
+
+</div>
+
+<div className="mt-8 rounded-2xl border bg-slate-50 p-6">
+
+  <h3 className="text-xl font-bold mb-4">
+    📱 WhatsApp Preview
+  </h3>
+
+  <div className="bg-white rounded-xl border p-5 whitespace-pre-wrap">
+
+    <strong>{title || "Announcement Title"}</strong>
+
+    <br />
+    <br />
+
+    {message || "Your announcement message will appear here..."}
+
+  </div>
+
+</div>
 
               <div className="mt-8 flex gap-4">
 

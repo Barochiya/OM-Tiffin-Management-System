@@ -1,10 +1,10 @@
-import RecentPayments from "../components/RecentPayments";
-import PendingBills from "../components/PendingBills";
-import TopCustomers from "../components/TopCustomers";
 import { useEffect, useState } from "react";
 
 import DashboardCard from "../components/DashboardCard";
 import RevenueChart from "../components/RevenueChart";
+import RecentPayments from "../components/RecentPayments";
+import PendingBills from "../components/PendingBills";
+import TopCustomers from "../components/TopCustomers";
 
 import { getDashboardAnalytics } from "../services/dashboardService";
 
@@ -40,8 +40,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-  <div className="min-h-screen bg-slate-100">
-  
+    <div className="min-h-screen bg-slate-100 p-4 lg:p-8">
 
       <h1 className="text-3xl font-bold text-slate-800">
         📊 Dashboard
@@ -51,7 +50,8 @@ export default function Dashboard() {
         Welcome to OM Tiffin Management System
       </p>
 
-      {/* Analytics Cards */}
+      {/* Cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
 
         <DashboardCard
@@ -92,28 +92,32 @@ export default function Dashboard() {
 
       </div>
 
-            {/* Revenue Chart */}
+      {/* Revenue Chart */}
+
       <div className="mt-8">
-        <RevenueChart data={stats.revenueChart} />
+        <RevenueChart
+          data={stats.revenueChart}
+        />
+      </div>
+
+      {/* Bottom Section */}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
+
+        <RecentPayments
+          data={stats.recentPayments}
+        />
+
+        <PendingBills
+          data={stats.pendingBills}
+        />
+
+        <TopCustomers
+          data={stats.topCustomers}
+        />
+
       </div>
 
     </div>
-    
   );
-
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-
-  <RecentPayments
-    data={stats.recentPayments}
-  />
-
-  <PendingBills
-    data={stats.pendingBills}
-  />
-
-  <TopCustomers
-    data={stats.topCustomers}
-  />
-
-</div>
 }

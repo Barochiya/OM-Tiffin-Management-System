@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
-
+import { getCustomers } from "../services/customerService";
 
 export default function Announcement() {
 
@@ -10,6 +10,77 @@ export default function Announcement() {
   const [message, setMessage] = useState("");
 
   const [audience, setAudience] = useState("all");
+
+  const [customers, setCustomers] = useState([]);
+
+  const loadCustomers = async () => {
+
+  try {
+
+    const res = await getCustomers();
+
+    setCustomers(res.data || []);
+
+  } catch (err) {
+
+    console.error(err);
+
+  }
+
+};
+
+useEffect(() => {
+
+  loadCustomers();
+
+}, []);
+
+const sendAnnouncement = () => {
+
+  let filtered = customers;
+
+  switch (audience) {
+
+    case "active":
+      filtered = customers.filter(
+        (c) => c.status === "Active"
+      );
+      break;
+
+    case "pending":
+      filtered = customers.filter(
+        (c) => c.paymentStatus !== "Paid"
+      );
+      break;
+
+    case "lunch":
+      filtered = customers.filter(
+        (c) => c.mealType === "Lunch"
+      );
+      break;
+
+    case "dinner":
+      filtered = customers.filter(
+        (c) => c.mealType === "Dinner"
+      );
+      break;
+
+    case "both":
+      filtered = customers.filter(
+        (c) => c.mealType === "Both"
+      );
+      break;
+
+    default:
+      filtered = customers;
+
+  }
+
+  alert(
+    `Ready to send announcement to ${filtered.length} customers.`
+  );
+
+};
 
   return (
 
@@ -130,13 +201,10 @@ export default function Announcement() {
               <div className="mt-8 flex gap-4">
 
                 <button
-
-                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl"
-
-                >
-
-                  📢 Send to All
-
+                        onClick={sendAnnouncement}
+                        className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl"
+                        >
+                        📢 Send Announcement
                 </button>
 
                 <button

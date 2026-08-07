@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+
 import StatusBadge from "../components/StatusBadge";
 import {
   getCustomers,
@@ -91,33 +90,27 @@ const handlePayment = async (id, customerName) => {
 };
 
   return (
-    <div className="flex">
-      <Sidebar />
+  <div className="p-8">
 
-      <div className="ml-64 w-full min-h-screen bg-slate-100">
-        <Navbar />
+    {/* Header */}
+    <div className="flex justify-between items-center mb-8">
+      <div>
+        <h1 className="text-3xl font-bold text-slate-800">
+          Customers
+        </h1>
 
-        <div className="p-8">
+        <p className="text-gray-500">
+          Manage all tiffin customers
+        </p>
+      </div>
 
-          {/* Header */}
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-800">
-                Customers
-              </h1>
-
-              <p className="text-gray-500">
-                Manage all tiffin customers
-              </p>
-            </div>
-
-            <Link
-              to="/add-customer"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg"
-            >
-              + Add Customer
-            </Link>
-          </div>
+      <Link
+        to="/add-customer"
+        className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-lg"
+      >
+        + Add Customer
+      </Link>
+    </div>
 
           {/* Search + Filter */}
           <div className="bg-white rounded-xl shadow-md p-5 mb-6">
@@ -387,10 +380,6 @@ const handlePayment = async (id, customerName) => {
 
           </div>
 
-        </div>
-
-      </div>
-
-    </div>
+        </div>      
   );
 }

@@ -13,7 +13,10 @@ import {
   FaReceipt,
   FaCalendarAlt,
   FaMoneyBillWave,
+  FaWhatsapp,
 } from "react-icons/fa";
+
+import { sendReceiptWhatsApp } from "../services/whatsappService";
 
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -634,37 +637,11 @@ export default function PaymentReceipt() {
               </button>
 
               <button
-
-                onClick={() => {
-
-                  const text =
-
-                    `Payment Receipt\n\n` +
-
-                    `Receipt No: ${receiptNumber}\n` +
-
-                    `Customer: ${payment.customer?.customerName}\n` +
-
-                    `Amount: ₹${payment.amount}\n` +
-
-                    `Status: ${payment.status}`;
-
-                  window.open(
-
-                    `https://wa.me/?text=${encodeURIComponent(text)}`,
-
-                    "_blank"
-
-                  );
-
-                }}
-
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 rounded-xl transition"
-
-              >
-
-                📲 Share on WhatsApp
-
+                  onClick={() => sendReceiptWhatsApp(payment)}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl transition"
+                >
+                  <FaWhatsapp />
+                  Share on WhatsApp
               </button>
 
             </div>

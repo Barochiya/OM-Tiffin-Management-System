@@ -38,7 +38,7 @@ export default function RecentPayments({ data = [] }) {
                   className="border-b hover:bg-slate-50 transition"
                 >
                   <td className="py-3 font-medium">
-                    {payment.customer?.name || "-"}
+                    {payment.customer?.customerName || "-"}
                   </td>
 
                   <td className="py-3 font-semibold text-green-600">
@@ -47,7 +47,7 @@ export default function RecentPayments({ data = [] }) {
 
                   <td className="py-3">
                     <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs">
-                      {payment.paymentMode || "-"}
+                      {payment.paymentMethod || "-"}
                     </span>
                   </td>
 

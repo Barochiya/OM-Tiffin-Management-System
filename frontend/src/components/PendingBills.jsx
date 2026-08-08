@@ -37,7 +37,7 @@ export default function PendingBills({ data = [] }) {
                   className="border-b hover:bg-red-50 transition"
                 >
                   <td className="py-3 font-medium">
-                    {bill.customer?.name || "-"}
+                   {bill.customer?.customerName || "-"}
                   </td>
 
                   <td className="py-3 font-bold text-red-600">

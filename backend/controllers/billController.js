@@ -301,7 +301,7 @@ if (customerData && customerData.advanceBalance > 0) {
 
     } else {
 
-bill = new Bill({
+const bill = new Bill({
 
   invoiceNo,
 

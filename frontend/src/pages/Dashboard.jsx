@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   FaMoneyBillWave,
-  FaChartLine,
   FaUsers,
-  FaUtensils,
   FaClock,
-  FaWallet,
 } from "react-icons/fa";
 
 import DashboardCard from "../components/DashboardCard";
@@ -14,7 +11,9 @@ import RecentPayments from "../components/RecentPayments";
 import PendingBills from "../components/PendingBills";
 import TopCustomers from "../components/TopCustomers";
 
-import { getDashboardAnalytics } from "../services/dashboardService";
+import {
+  getDashboardAnalytics,
+} from "../services/dashboardService";
 
 export default function Dashboard() {
   // ======================================
@@ -33,15 +32,21 @@ export default function Dashboard() {
     try {
       setLoading(true);
 
-      const data = await getDashboardAnalytics();
+      const response =
+        await getDashboardAnalytics();
 
-      setDashboard(data);
+      setDashboard(response);
 
       setError("");
     } catch (err) {
-      console.error(err);
+      console.error(
+        "Dashboard Error:",
+        err
+      );
 
-      setError("Unable to load dashboard.");
+      setError(
+        "Unable to load dashboard."
+      );
     } finally {
       setLoading(false);
     }
@@ -50,18 +55,25 @@ export default function Dashboard() {
   useEffect(() => {
     loadDashboard();
   }, []);
-
-  // ======================================
+    // ======================================
   // LOADING
   // ======================================
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
-        <div className="bg-white rounded-2xl shadow-lg p-10">
+        <div className="bg-white rounded-3xl shadow-xl p-10 text-center">
+
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-6"></div>
+
           <h2 className="text-2xl font-bold text-slate-700">
             Loading Dashboard...
           </h2>
+
+          <p className="text-gray-500 mt-2">
+            Please wait while we fetch your latest data.
+          </p>
+
         </div>
       </div>
     );
@@ -74,17 +86,34 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
-        <div className="bg-white rounded-2xl shadow-lg p-10">
+
+        <div className="bg-white rounded-3xl shadow-xl p-10 text-center max-w-md">
+
+          <h2 className="text-3xl mb-3">⚠️</h2>
+
           <h2 className="text-2xl font-bold text-red-600">
-            {error}
+            Dashboard Error
           </h2>
+
+          <p className="text-gray-500 mt-3">
+            {error}
+          </p>
+
+          <button
+            onClick={loadDashboard}
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition"
+          >
+            Retry
+          </button>
+
         </div>
+
       </div>
     );
   }
 
   // ======================================
-  // API DATA
+  // DASHBOARD DATA
   // ======================================
 
   const stats = dashboard?.stats || {};
@@ -98,13 +127,20 @@ export default function Dashboard() {
   const topCustomers =
     dashboard?.topCustomers || [];
 
+  const revenueChart =
+    dashboard?.revenueChart || [];
+      // ======================================
+  // KPI CARDS
+  // ======================================
+
   const cards = [
     {
       title: "Total Revenue",
-      value: `₹${stats.totalRevenue || 0}`,
+      value: `₹${stats.totalRevenue?.toLocaleString("en-IN") || 0}`,
       color: "text-green-600",
       bg: "bg-green-100",
       icon: <FaMoneyBillWave />,
+      subtitle: "Overall Collection",
     },
 
     {
@@ -113,14 +149,16 @@ export default function Dashboard() {
       color: "text-blue-600",
       bg: "bg-blue-100",
       icon: <FaUsers />,
+      subtitle: "Currently Active",
     },
 
     {
       title: "Pending Amount",
-      value: `₹${stats.totalPending || 0}`,
+      value: `₹${stats.totalPending?.toLocaleString("en-IN") || 0}`,
       color: "text-red-600",
       bg: "bg-red-100",
       icon: <FaClock />,
+      subtitle: "Outstanding Payments",
     },
 
     {
@@ -129,6 +167,7 @@ export default function Dashboard() {
       color: "text-purple-600",
       bg: "bg-purple-100",
       icon: <FaUsers />,
+      subtitle: "Registered Customers",
     },
   ];
 
@@ -137,84 +176,79 @@ export default function Dashboard() {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
 
-        {/* Header */}
+        {/* Premium Header */}
 
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-8">
+        <div className="rounded-3xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-8 shadow-xl mb-8">
 
-          <div>
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center">
 
-            <h1 className="text-4xl font-bold text-slate-800">
+            <div>
 
-              📊 Dashboard
+              <h1 className="text-4xl font-bold">
+                👋 Welcome Back
+              </h1>
 
-            </h1>
-
-            <p className="text-gray-500 mt-2">
-
-              Welcome to OM Tiffin Management System
-
-            </p>
-
-          </div>
-
-          <div className="mt-6 lg:mt-0">
-
-            <div className="bg-white rounded-2xl shadow-lg px-6 py-4">
-
-              <p className="text-sm text-gray-500">
-
-                System Status
-
+              <p className="mt-2 text-blue-100 text-lg">
+                OM Tiffin Management System
               </p>
 
-              <h3 className="text-green-600 font-bold text-lg">
+              <p className="text-sm text-blue-200 mt-2">
+                Manage Customers, Billing, Payments & Analytics
+              </p>
 
+            </div>
+
+            <div className="mt-6 lg:mt-0 bg-white/10 backdrop-blur-lg rounded-2xl px-6 py-5">
+
+              <p className="text-sm text-blue-100">
+                System Status
+              </p>
+
+              <h3 className="text-2xl font-bold text-green-300 mt-1">
                 🟢 Online
-
               </h3>
+
+              <p className="text-sm text-blue-100 mt-2">
+                {new Date().toLocaleDateString("en-IN", {
+                  weekday: "long",
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
 
             </div>
 
           </div>
 
         </div>
-                {/* KPI Cards */}
+
+        {/* KPI Cards */}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
           {cards.map((card) => (
-
             <DashboardCard
               key={card.title}
-              title={card.title}
-              value={card.value}
-              color={card.color}
-              bg={card.bg}
-              icon={card.icon}
+              {...card}
             />
-
           ))}
 
         </div>
+                {/* Revenue Analytics */}
 
-        {/* Revenue Analytics */}
-
-        <div className="bg-white rounded-3xl shadow-lg p-6 mt-8">
+        <div className="mt-8 bg-white rounded-3xl shadow-lg p-6">
 
           <div className="flex items-center justify-between mb-6">
 
             <div>
 
               <h2 className="text-2xl font-bold text-slate-800">
-
                 📈 Revenue Analytics
-
               </h2>
 
               <p className="text-gray-500 mt-1">
-
-                Monthly revenue overview
-
+                Monthly Revenue Overview
               </p>
 
             </div>
@@ -222,7 +256,7 @@ export default function Dashboard() {
           </div>
 
           <RevenueChart
-            data={dashboard?.revenueChart || []}
+            data={revenueChart}
           />
 
         </div>
@@ -262,7 +296,8 @@ export default function Dashboard() {
           </div>
 
         </div>
-              </div>
+
+      </div>
 
     </div>
 

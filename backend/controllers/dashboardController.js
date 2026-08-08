@@ -4,9 +4,9 @@ const Tiffin = require("../models/Tiffin");
 
 exports.getDashboard = async (req, res) => {
   try {
-    // -------------------------
-    // Customers
-    // -------------------------
+    // ==========================================
+    // CUSTOMER STATISTICS
+    // ==========================================
 
     const totalCustomers = await Tiffin.countDocuments();
 
@@ -14,24 +14,24 @@ exports.getDashboard = async (req, res) => {
       status: "Active",
     });
 
-    // -------------------------
-    // Recent Payments
-    // -------------------------
+    // ==========================================
+    // RECENT PAYMENTS
+    // ==========================================
 
     const recentPayments = await Payment.find()
       .populate("customer")
       .sort({ createdAt: -1 })
       .limit(5);
 
-    // -------------------------
-    // Total Revenue
-    // -------------------------
+    // ==========================================
+    // TOTAL REVENUE
+    // ==========================================
 
     const revenueResult = await Payment.aggregate([
       {
         $group: {
           _id: null,
-          total: {
+          totalRevenue: {
             $sum: "$amount",
           },
         },
@@ -40,12 +40,12 @@ exports.getDashboard = async (req, res) => {
 
     const totalRevenue =
       revenueResult.length > 0
-        ? revenueResult[0].total
+        ? revenueResult[0].totalRevenue
         : 0;
 
-    // -------------------------
-    // Pending Bills
-    // -------------------------
+    // ==========================================
+    // PENDING BILLS
+    // ==========================================
 
     const pendingBills = await Bill.find({
       pendingAmount: {
@@ -58,9 +58,56 @@ exports.getDashboard = async (req, res) => {
       0
     );
 
-    // -------------------------
-    // Top Customers
-    // -------------------------
+    // ==========================================
+    // MONTHLY REVENUE
+    // ==========================================
+
+    const monthlyRevenue = await Payment.aggregate([
+      {
+        $group: {
+          _id: {
+            month: {
+              $month: "$createdAt",
+            },
+          },
+          revenue: {
+            $sum: "$amount",
+          },
+        },
+      },
+      {
+        $sort: {
+          "_id.month": 1,
+        },
+      },
+    ]);
+        // ==========================================
+    // FORMAT REVENUE CHART
+    // ==========================================
+
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    const revenueChart = monthlyRevenue.map((item) => ({
+      month: monthNames[item._id.month - 1],
+      revenue: item.revenue,
+    }));
+
+    // ==========================================
+    // TOP CUSTOMERS
+    // ==========================================
 
     const topCustomers = await Payment.aggregate([
       {
@@ -79,9 +126,27 @@ exports.getDashboard = async (req, res) => {
       {
         $limit: 5,
       },
+      {
+        $lookup: {
+          from: "tiffins",
+          localField: "_id",
+          foreignField: "_id",
+          as: "customer",
+        },
+      },
+      {
+        $unwind: {
+          path: "$customer",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ]);
 
-    res.json({
+    // ==========================================
+    // API RESPONSE
+    // ==========================================
+
+    res.status(200).json({
       success: true,
 
       stats: {
@@ -91,6 +156,8 @@ exports.getDashboard = async (req, res) => {
         totalPending,
       },
 
+      revenueChart,
+
       recentPayments,
 
       pendingBills,
@@ -98,7 +165,7 @@ exports.getDashboard = async (req, res) => {
       topCustomers,
     });
   } catch (err) {
-    console.log(err);
+    console.error("Dashboard Error:", err);
 
     res.status(500).json({
       success: false,

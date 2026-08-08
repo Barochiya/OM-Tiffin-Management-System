@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   FaMoneyBillWave,
   FaUsers,
   FaClock,
+  FaUtensils,
+  FaPlus,
+  FaFileInvoice,
+  FaBullhorn,
 } from "react-icons/fa";
 
 import DashboardCard from "../components/DashboardCard";
@@ -129,6 +134,16 @@ export default function Dashboard() {
 
   const revenueChart =
     dashboard?.revenueChart || [];
+
+    // ======================================
+// TODAY ANALYTICS
+// ======================================
+
+const todayCollection =
+  dashboard?.todayCollection ?? 0;
+
+const todayMeals =
+  dashboard?.todayMeals ?? 0;
       // ======================================
   // KPI CARDS
   // ======================================
@@ -173,6 +188,26 @@ export default function Dashboard() {
     subtitle: "Registered Customers",
     growth: "+8%",
   },
+
+  {
+  title: "Today's Collection",
+  value: `₹${todayCollection.toLocaleString("en-IN")}`,
+  color: "text-emerald-600",
+  bg: "bg-emerald-100",
+  icon: <FaMoneyBillWave />,
+  subtitle: "Today's Received Amount",
+  growth: "+18%",
+},
+
+{
+  title: "Today's Meals",
+  value: todayMeals,
+  color: "text-orange-600",
+  bg: "bg-orange-100",
+  icon: <FaUtensils />,
+  subtitle: "Meals Delivered Today",
+  growth: "+9%",
+},
 ];
 
   return (
@@ -229,22 +264,31 @@ export default function Dashboard() {
 
         {/* KPI Cards */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
 
-          {cards.map((card) => (
-            <DashboardCard
-  key={card.title}
-  title={card.title}
-  value={card.value}
-  color={card.color}
-  bg={card.bg}
-  icon={card.icon}
-  subtitle={card.subtitle}
-  growth={card.growth}
-/>
-          ))}
+  {cards.map((card) => (
+    <DashboardCard
+      key={card.title}
+      title={card.title}
+      value={card.value}
+      color={card.color}
+      bg={card.bg}
+      icon={card.icon}
+      subtitle={card.subtitle}
+      growth={card.growth}
+    />
+  ))}
 
-        </div>
+</div>
+
+{/* KPI Cards */}
+
+<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
+  ...
+</div>
+
+{/* Revenue Analytics */}
+        
                 {/* Revenue Analytics */}
 
         <div className="mt-8 bg-white rounded-3xl shadow-lg p-6">

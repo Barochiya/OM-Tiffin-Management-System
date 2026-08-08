@@ -1,14 +1,10 @@
 const express = require("express");
-
 const router = express.Router();
 
 const {
-  getDashboardAnalytics,
+  getDashboard,
 } = require("../controllers/dashboardController");
 
-// =============================
-// Dashboard Analytics
-// =============================
-router.get("/", getDashboardAnalytics);
+router.get("/", getDashboard);
 
 module.exports = router;

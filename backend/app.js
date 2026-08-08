@@ -1,3 +1,5 @@
+const dashboardRoutes = require("./routes/dashboardRoutes");
+
 const express = require("express");
 const cors = require("cors");
 
@@ -15,7 +17,6 @@ const priceRoutes = require("./routes/priceRoutes");
 const dailyEntryRoutes = require("./routes/dailyEntryRoutes");
 const billRoutes = require("./routes/billRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-const dashboardRoutes = require("./routes/dashboardRoutes");
 
 // Razorpay Payment Gateway
 const paymentGatewayRoutes = require("./routes/paymentGatewayRoutes");

@@ -1,68 +1,83 @@
-export default function TopCustomers({ customers }) {
+import React from "react";
+import { FaCrown, FaMedal } from "react-icons/fa";
+
+export default function TopCustomers({ data = [] }) {
   return (
-    <div className="bg-white rounded-xl shadow-md p-6">
+    <div className="bg-white rounded-2xl">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          <FaCrown className="text-yellow-500" />
+          Top Customers
+        </h3>
 
-      <h2 className="text-xl font-bold mb-4">
-        👥 Top Customers
-      </h2>
+        <span className="text-sm text-gray-500">
+          {data.length} Customers
+        </span>
+      </div>
 
-      <table className="w-full">
+      {data.length === 0 ? (
+        <div className="border rounded-xl p-10 text-center text-gray-500">
+          No Customer Data
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {data.map((customer, index) => (
+            <div
+              key={customer._id || index}
+              className="flex items-center justify-between border rounded-xl p-4 hover:bg-yellow-50 transition"
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className={`
+                    w-10
+                    h-10
+                    rounded-full
+                    flex
+                    items-center
+                    justify-center
+                    font-bold
+                    text-white
+                    ${
+                      index === 0
+                        ? "bg-yellow-500"
+                        : index === 1
+                        ? "bg-gray-400"
+                        : index === 2
+                        ? "bg-orange-500"
+                        : "bg-blue-500"
+                    }
+                  `}
+                >
+                  {index + 1}
+                </div>
 
-        <thead>
-          <tr className="border-b">
-            <th className="text-left py-2">
-              Customer
-            </th>
+                <div>
+                  <h4 className="font-semibold">
+                    {customer.customer?.name ||
+                      customer.name ||
+                      "Unknown Customer"}
+                  </h4>
 
-            <th className="text-center py-2">
-              Status
-            </th>
-          </tr>
-        </thead>
+                  <p className="text-sm text-gray-500">
+                    Top Paying Customer
+                  </p>
+                </div>
+              </div>
 
-        <tbody>
+              <div className="text-right">
+                <FaMedal className="text-yellow-500 ml-auto mb-1" />
 
-          {customers?.length > 0 ? (
-
-            customers.map((customer) => (
-
-              <tr
-                key={customer._id}
-                className="border-b hover:bg-gray-50"
-              >
-                <td className="py-3">
-                  {customer.customerName}
-                </td>
-
-                <td className="text-center">
-
-                  <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                    {customer.status}
-                  </span>
-
-                </td>
-
-              </tr>
-
-            ))
-
-          ) : (
-
-            <tr>
-              <td
-                colSpan="2"
-                className="text-center py-5 text-gray-500"
-              >
-                No Customers
-              </td>
-            </tr>
-
-          )}
-
-        </tbody>
-
-      </table>
-
+                <p className="font-bold text-green-600">
+                  ₹
+                  {customer.totalPaid ||
+                    customer.amount ||
+                    0}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

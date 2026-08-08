@@ -202,22 +202,7 @@ const customerData = await Tiffin.findById(customer);
 let advanceUsed = 0;
 let payableAmount = totalAmount;
 
-if (customerData && customerData.advanceBalance > 0) {
-
-    const advanceToUse = Math.min(
-        customerData.advanceBalance,
-        totalAmount - bill.paidAmount
-    );
-
-    bill.paidAmount += advanceToUse;
-
-    customerData.advanceBalance -= advanceToUse;
-}
-
-bill.pendingAmount = Math.max(
-    0,
-    totalAmount - bill.paidAmount
-);
+advanceUsed = applyAdvance(customerData, bill) || 0;
 
   // Don't generate bill if no meals found
 if (totalAmount === 0) {
@@ -343,6 +328,9 @@ pendingAmount: payableAmount,
 status: payableAmount === 0 ? "Paid" : "Pending",
 
 });
+
+advanceUsed = applyAdvance(customerData, bill) || 0;
+
     }
 
     if (advanceUsed > 0) {

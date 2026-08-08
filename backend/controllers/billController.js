@@ -2,6 +2,7 @@ const Bill = require("../models/Bill");
 const DailyEntry = require("../models/DailyEntry");
 const Price = require("../models/Price");
 const Tiffin = require("../models/Tiffin");
+const applyAdvance = require("../utils/advanceHelper");
 
 // =======================================
 // Generate Bill
@@ -203,14 +204,20 @@ let payableAmount = totalAmount;
 
 if (customerData && customerData.advanceBalance > 0) {
 
-  advanceUsed = Math.min(
-    customerData.advanceBalance,
-    totalAmount
-  );
+    const advanceToUse = Math.min(
+        customerData.advanceBalance,
+        totalAmount - bill.paidAmount
+    );
 
-  payableAmount = totalAmount - advanceUsed;
+    bill.paidAmount += advanceToUse;
 
+    customerData.advanceBalance -= advanceToUse;
 }
+
+bill.pendingAmount = Math.max(
+    0,
+    totalAmount - bill.paidAmount
+);
 
   // Don't generate bill if no meals found
 if (totalAmount === 0) {
@@ -274,8 +281,23 @@ let bill = await Bill.findOne({
         bill.extraAmount = totalExtraAmount;
 
         bill.totalAmount = totalAmount;
-      bill.pendingAmount =
-        totalAmount - bill.paidAmount;
+        // Apply Advance On Existing Bill
+if (customerData && customerData.advanceBalance > 0) {
+
+    const advanceToUse = Math.min(
+        customerData.advanceBalance,
+        totalAmount - bill.paidAmount
+    );
+
+    bill.paidAmount += advanceToUse;
+
+    customerData.advanceBalance -= advanceToUse;
+
+}
+     bill.pendingAmount = Math.max(
+    0,
+    totalAmount - bill.paidAmount
+);
 
       if (bill.pendingAmount <= 0) {
 
@@ -329,6 +351,10 @@ status: payableAmount === 0 ? "Paid" : "Pending",
 
     await customerData.save();
 
+}
+
+if (customerData.isModified()) {
+    await customerData.save();
 }
 
     await bill.save();

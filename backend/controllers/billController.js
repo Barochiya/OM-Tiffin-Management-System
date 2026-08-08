@@ -1,6 +1,7 @@
 const Bill = require("../models/Bill");
 const DailyEntry = require("../models/DailyEntry");
 const Price = require("../models/Price");
+const Tiffin = require("../models/Tiffin");
 
 // =======================================
 // Generate Bill
@@ -139,6 +140,7 @@ const dailyDetails = filteredEntries.map((entry) => {
 
 };
 
+
 });
 
 // ===============================
@@ -190,6 +192,25 @@ const totalAmount =
   lunchAmount +
   dinnerAmount +
   totalExtraAmount;
+  // ===============================
+// Advance Adjustment
+// ===============================
+
+const customerData = await Tiffin.findById(customer);
+
+let advanceUsed = 0;
+let payableAmount = totalAmount;
+
+if (customerData && customerData.advanceBalance > 0) {
+
+  advanceUsed = Math.min(
+    customerData.advanceBalance,
+    totalAmount
+  );
+
+  payableAmount = totalAmount - advanceUsed;
+
+}
 
   // Don't generate bill if no meals found
 if (totalAmount === 0) {
@@ -295,12 +316,20 @@ bill = new Bill({
 
   totalAmount,
 
-  paidAmount: 0,
-  pendingAmount: totalAmount,
-  status: "Pending",
+ paidAmount: advanceUsed,
+pendingAmount: payableAmount,
+status: payableAmount === 0 ? "Paid" : "Pending",
 
 });
     }
+
+    if (advanceUsed > 0) {
+
+    customerData.advanceBalance -= advanceUsed;
+
+    await customerData.save();
+
+}
 
     await bill.save();
 

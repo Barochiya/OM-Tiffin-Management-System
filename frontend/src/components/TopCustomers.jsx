@@ -53,9 +53,9 @@ export default function TopCustomers({ data = [] }) {
 
                 <div>
                   <h4 className="font-semibold">
-                    {customer.customer?.name ||
-                    customer.name ||
-                    "Unknown Customer"}
+                    {customer.customer?.customerName ||
+                      customer.customerName ||
+                      "Unknown Customer"}
                   </h4>
 
                   <p className="text-sm text-gray-500">

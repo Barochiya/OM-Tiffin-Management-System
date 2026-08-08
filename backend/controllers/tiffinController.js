@@ -1,3 +1,4 @@
+const Price = require("../models/Price");
 console.log("✅ Controller Loaded");
 const Tiffin = require("../models/Tiffin");
 const Bill = require("../models/Bill");
@@ -9,6 +10,10 @@ const createTiffin = async (req, res) => {
         const currentMonth = new Date().toLocaleString("default", {
             month: "long",
         });
+
+const defaultPrice = await Price.findOne().sort({
+  createdAt: -1,
+});
 
         const tiffin = await Tiffin.create({
     customerName: req.body.customerName,
@@ -27,15 +32,15 @@ const createTiffin = async (req, res) => {
     paymentMonth: currentMonth,
 
     pricing: req.body.pricing || {
-        pricingType: "default",
-        breakfastPrice: 0,
-        lunchPrice: 0,
-        dinnerPrice: 0,
-        extraCharge: 0,
-        extraReason: "",
-        discountType: "fixed",
-        discount: 0,
-    },
+    pricingType: "default",
+    breakfastPrice: defaultPrice?.breakfast ?? 40,
+    lunchPrice: defaultPrice?.lunch ?? 90,
+    dinnerPrice: defaultPrice?.dinner ?? 90,
+    extraCharge: 0,
+    extraReason: "",
+    discountType: "fixed",
+    discount: 0,
+},
 });
 
         res.status(201).json({

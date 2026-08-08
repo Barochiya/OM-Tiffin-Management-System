@@ -134,42 +134,46 @@ export default function Dashboard() {
   // ======================================
 
   const cards = [
-    {
-      title: "Total Revenue",
-      value: `₹${stats.totalRevenue?.toLocaleString("en-IN") || 0}`,
-      color: "text-green-600",
-      bg: "bg-green-100",
-      icon: <FaMoneyBillWave />,
-      subtitle: "Overall Collection",
-    },
+  {
+    title: "Total Revenue",
+    value: `₹${stats.totalRevenue?.toLocaleString("en-IN") || 0}`,
+    color: "text-green-600",
+    bg: "bg-green-100",
+    icon: <FaMoneyBillWave />,
+    subtitle: "Overall Collection",
+    growth: "+12%",
+  },
 
-    {
-      title: "Active Customers",
-      value: stats.activeCustomers || 0,
-      color: "text-blue-600",
-      bg: "bg-blue-100",
-      icon: <FaUsers />,
-      subtitle: "Currently Active",
-    },
+  {
+    title: "Active Customers",
+    value: stats.activeCustomers || 0,
+    color: "text-blue-600",
+    bg: "bg-blue-100",
+    icon: <FaUsers />,
+    subtitle: "Currently Active",
+    growth: "+5%",
+  },
 
-    {
-      title: "Pending Amount",
-      value: `₹${stats.totalPending?.toLocaleString("en-IN") || 0}`,
-      color: "text-red-600",
-      bg: "bg-red-100",
-      icon: <FaClock />,
-      subtitle: "Outstanding Payments",
-    },
+  {
+    title: "Pending Amount",
+    value: `₹${stats.totalPending?.toLocaleString("en-IN") || 0}`,
+    color: "text-red-600",
+    bg: "bg-red-100",
+    icon: <FaClock />,
+    subtitle: "Outstanding Payments",
+    growth: "-2%",
+  },
 
-    {
-      title: "Total Customers",
-      value: stats.totalCustomers || 0,
-      color: "text-purple-600",
-      bg: "bg-purple-100",
-      icon: <FaUsers />,
-      subtitle: "Registered Customers",
-    },
-  ];
+  {
+    title: "Total Customers",
+    value: stats.totalCustomers || 0,
+    color: "text-purple-600",
+    bg: "bg-purple-100",
+    icon: <FaUsers />,
+    subtitle: "Registered Customers",
+    growth: "+8%",
+  },
+];
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -229,9 +233,15 @@ export default function Dashboard() {
 
           {cards.map((card) => (
             <DashboardCard
-              key={card.title}
-              {...card}
-            />
+  key={card.title}
+  title={card.title}
+  value={card.value}
+  color={card.color}
+  bg={card.bg}
+  icon={card.icon}
+  subtitle={card.subtitle}
+  growth={card.growth}
+/>
           ))}
 
         </div>

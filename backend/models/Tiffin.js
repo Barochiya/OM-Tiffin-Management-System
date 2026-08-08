@@ -54,6 +54,11 @@ const tiffinSchema = new mongoose.Schema(
         default: 0,
     },
 
+    advanceBalance: {
+    type: Number,
+    default: 0,
+    },
+
     paymentMonth: {
         type: String,
         default: () => {

@@ -1,5 +1,6 @@
 const Payment = require("../models/Payment");
 const Bill = require("../models/Bill");
+const Tiffin = require("../models/Tiffin");
 
 // ===============================
 // Add Payment
@@ -17,6 +18,14 @@ exports.addPayment = async (req, res) => {
     // Find Bill
     const billData = await Bill.findById(bill);
 
+    const customerData = await Tiffin.findById(customer);
+
+if (!customerData) {
+    return res.status(404).json({
+        message: "Customer not found"
+    });
+}
+
     if (!billData) {
       return res.status(404).json({
         message: "Bill not found",
@@ -33,10 +42,24 @@ exports.addPayment = async (req, res) => {
 });
 
     // Update Bill
-    billData.paidAmount += Number(amount);
+    const paidAmount = Number(amount);
 
-    billData.pendingAmount =
-      billData.totalAmount - billData.paidAmount;
+billData.paidAmount += paidAmount;
+
+let extraPayment = 0;
+
+if (billData.paidAmount > billData.totalAmount) {
+
+    extraPayment =
+        billData.paidAmount - billData.totalAmount;
+
+    customerData.advanceBalance += extraPayment;
+
+    billData.paidAmount = billData.totalAmount;
+}
+
+billData.pendingAmount =
+    billData.totalAmount - billData.paidAmount;
 
     if (billData.pendingAmount <= 0) {
       billData.status = "Paid";
@@ -49,6 +72,7 @@ exports.addPayment = async (req, res) => {
       billData.status = "Pending";
     }
 
+    await customerData.save();
     await billData.save();
 
     res.status(201).json(payment);

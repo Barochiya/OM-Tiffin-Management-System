@@ -191,6 +191,14 @@ const totalAmount =
   dinnerAmount +
   totalExtraAmount;
 
+  // Don't generate bill if no meals found
+if (totalAmount === 0) {
+  return res.status(400).json({
+    success: false,
+    message: "No meals found for selected billing cycle."
+  });
+}
+
 // ===============================
 // Generate Invoice Number
 // ===============================

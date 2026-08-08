@@ -43,25 +43,15 @@ export default function PriceSettings() {
 
       setLoading(true);
 
-      const res = await getPrices();
+     const res = await getPrices();
 
-      if (res.data) {
-
-        setPrices({
-
-          breakfast:
-            res.data.breakfast || 40,
-
-          lunch:
-            res.data.lunch || 90,
-
-          dinner:
-            res.data.dinner || 90,
-
-        });
-
-      }
-
+if (res.data?.data) {
+  setPrices({
+    breakfast: res.data.data.breakfast,
+    lunch: res.data.data.lunch,
+    dinner: res.data.data.dinner,
+  });
+}
     } catch (err) {
 
       console.log(err);

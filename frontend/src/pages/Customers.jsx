@@ -500,11 +500,15 @@ Thank you 🙏`;
 
                       </td>
 
-                      <td className="px-4 py-4 font-bold text-green-600">
-
-                        ₹{customer.price}
-
-                      </td>
+                     <td className="px-4 py-4 font-bold text-green-600">
+  ₹{
+    customer.mealType === "Breakfast"
+      ? customer.pricing?.breakfastPrice
+      : customer.mealType === "Lunch"
+      ? customer.pricing?.lunchPrice
+      : customer.pricing?.dinnerPrice
+  }
+</td>
 
                       <td className="px-4 py-4">
                                                 <span

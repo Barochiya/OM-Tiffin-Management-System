@@ -262,7 +262,7 @@ const todayMeals =
 
         </div>
 
-        {/* KPI Cards */}
+{/* KPI Cards */}
 
 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
 
@@ -281,13 +281,69 @@ const todayMeals =
 
 </div>
 
-{/* KPI Cards */}
+{/* Quick Actions */}
 
-<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
-  ...
+<div className="mt-8 bg-white rounded-3xl shadow-lg p-6">
+
+  <div className="flex items-center justify-between mb-6">
+
+    <div>
+      <h2 className="text-2xl font-bold text-slate-800">
+        ⚡ Quick Actions
+      </h2>
+
+      <p className="text-gray-500 mt-1">
+        Frequently used shortcuts
+      </p>
+    </div>
+
+  </div>
+
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+
+    <Link
+      to="/customers"
+      className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl p-5 text-center transition-all duration-300 hover:scale-105"
+    >
+      <FaPlus className="mx-auto text-3xl mb-3" />
+      <h3 className="font-semibold">
+        Add Customer
+      </h3>
+    </Link>
+
+    <Link
+      to="/payments"
+      className="bg-green-600 hover:bg-green-700 text-white rounded-2xl p-5 text-center transition-all duration-300 hover:scale-105"
+    >
+      <FaMoneyBillWave className="mx-auto text-3xl mb-3" />
+      <h3 className="font-semibold">
+        New Payment
+      </h3>
+    </Link>
+
+    <Link
+      to="/billing"
+      className="bg-purple-600 hover:bg-purple-700 text-white rounded-2xl p-5 text-center transition-all duration-300 hover:scale-105"
+    >
+      <FaFileInvoice className="mx-auto text-3xl mb-3" />
+      <h3 className="font-semibold">
+        Generate Bill
+      </h3>
+    </Link>
+
+    <Link
+      to="/announcement"
+      className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl p-5 text-center transition-all duration-300 hover:scale-105"
+    >
+      <FaBullhorn className="mx-auto text-3xl mb-3" />
+      <h3 className="font-semibold">
+        Announcement
+      </h3>
+    </Link>
+
+  </div>
+
 </div>
-
-{/* Revenue Analytics */}
         
                 {/* Revenue Analytics */}
 

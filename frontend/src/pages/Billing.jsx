@@ -808,7 +808,7 @@ export default function Billing() {
     </h3>
 
     <QRCode
-      value={`upi://pay?pa=omtiffin@upi&pn=OM Tiffin Service&am=${bill.pendingAmount}`}
+      value={`upi://pay?pa=malaybarochiya-5@oksbi&pn=OM Tiffin Service&am=${bill.pendingAmount}`}
       size={180}
     />
 

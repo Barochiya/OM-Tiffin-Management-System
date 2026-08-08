@@ -838,7 +838,19 @@ export default function Billing() {
 
         <strong>
 
-          omtiffin@upi
+          malaybarochiya-5@oksbi
+
+        </strong>
+
+      </div>
+
+      <div className="flex justify-between">
+
+        <span>A/c No.</span>
+
+        <strong>
+
+          45073878066
 
         </strong>
 
@@ -862,7 +874,7 @@ export default function Billing() {
 
         <strong>
 
-          SBIN0001234
+          SBIN0032214
 
         </strong>
 

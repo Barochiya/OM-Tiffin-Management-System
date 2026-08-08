@@ -81,48 +81,48 @@ const tiffinSchema = new mongoose.Schema(
     // ==========================
 
     pricing: {
-        pricingType: {
-            type: String,
-            enum: ["default", "custom"],
-            default: "default",
-        },
-
-        breakfastPrice: {
-            type: Number,
-            default: 0,
-        },
-
-        lunchPrice: {
-            type: Number,
-            default: 0,
-        },
-
-        dinnerPrice: {
-            type: Number,
-            default: 0,
-        },
-
-        extraCharge: {
-            type: Number,
-            default: 0,
-        },
-
-        extraReason: {
-            type: String,
-            default: "",
-        },
-
-        discountType: {
-            type: String,
-            enum: ["fixed", "percentage"],
-            default: "fixed",
-        },
-
-        discount: {
-            type: Number,
-            default: 0,
-        },
+    pricingType: {
+        type: String,
+        enum: ["default", "custom"],
+        default: "default",
     },
+
+    breakfastPrice: {
+        type: Number,
+        default: 40,
+    },
+
+    lunchPrice: {
+        type: Number,
+        default: 90,
+    },
+
+    dinnerPrice: {
+        type: Number,
+        default: 90,
+    },
+
+    extraCharge: {
+        type: Number,
+        default: 0,
+    },
+
+    extraReason: {
+        type: String,
+        default: "",
+    },
+
+    discountType: {
+        type: String,
+        enum: ["fixed", "percentage"],
+        default: "fixed",
+    },
+
+    discount: {
+        type: Number,
+        default: 0,
+    },
+}
 
 },
 {

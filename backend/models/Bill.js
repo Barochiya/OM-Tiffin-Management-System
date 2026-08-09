@@ -1,41 +1,18 @@
 const mongoose = require("mongoose");
 
-const billSchema = new mongoose.Schema(
+// ======================================================
+// Daily Bill Detail Schema
+// ======================================================
+const dailyDetailSchema = new mongoose.Schema(
   {
-    customer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Tiffin",
-      required: true,
-    },
-
-    month: {
-      type: Number,
-      required: true,
-    },
-
-    year: {
-      type: Number,
-      required: true,
-    },
-
-    invoiceNo: {
-      type: String,
-      unique: true,
-    },
-
-    // ==========================
-    // Billing Cycle
-    // 1 = 1-15
-    // 2 = 16-Month End
-    // ==========================
-    cycle: {
-      type: String,
-      enum: ["1", "2"],
+    // Actual meal date
+    date: {
+      type: Date,
       required: true,
     },
 
     // ==========================
-    // Quantity
+    // Daily Quantity
     // ==========================
     breakfastQty: {
       type: Number,
@@ -53,7 +30,7 @@ const billSchema = new mongoose.Schema(
     },
 
     // ==========================
-    // Meal Amount
+    // Daily Meal Amount
     // ==========================
     breakfastAmount: {
       type: Number,
@@ -71,11 +48,147 @@ const billSchema = new mongoose.Schema(
     },
 
     // ==========================
-    // Extra Charges
+    // Extra Items
+    // ==========================
+    extraItems: [
+      {
+        description: {
+          type: String,
+          default: "",
+        },
+
+        amount: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
+
+    // Total Extra Amount For This Day
+    extraAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    // ==========================
+    // Daily Total
+    // ==========================
+    dailyTotal: {
+      type: Number,
+      default: 0,
+    },
+
+    // ==========================
+    // Daily Remark
+    // ==========================
+    remark: {
+      type: String,
+      default: "",
+    },
+  },
+  {
+    _id: false,
+  }
+);
+
+
+// ======================================================
+// Main Bill Schema
+// ======================================================
+const billSchema = new mongoose.Schema(
+  {
+    // ==========================
+    // Customer
+    // ==========================
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Tiffin",
+      required: true,
+    },
+
+    // ==========================
+    // Billing Month / Year
+    // ==========================
+    month: {
+      type: Number,
+      required: true,
+    },
+
+    year: {
+      type: Number,
+      required: true,
+    },
+
+    // ==========================
+    // Invoice Number
+    // ==========================
+    invoiceNo: {
+      type: String,
+      unique: true,
+    },
+
+    // ==========================
+    // Billing Cycle
+    //
+    // 1 = 1-15
+    // 2 = 16-Month End
+    // ==========================
+    cycle: {
+      type: String,
+      enum: ["1", "2"],
+      required: true,
+    },
+
+    // ==========================
+    // Overall Quantity
+    // ==========================
+    breakfastQty: {
+      type: Number,
+      default: 0,
+    },
+
+    lunchQty: {
+      type: Number,
+      default: 0,
+    },
+
+    dinnerQty: {
+      type: Number,
+      default: 0,
+    },
+
+    // ==========================
+    // Overall Meal Amount
+    // ==========================
+    breakfastAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    lunchAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    dinnerAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    // ==========================
+    // Overall Extra Charges
     // ==========================
     extraAmount: {
       type: Number,
       default: 0,
+    },
+
+    // ==========================
+    // Daily Detailed Records
+    // ==========================
+    dailyDetails: {
+      type: [dailyDetailSchema],
+      default: [],
     },
 
     // ==========================
@@ -86,6 +199,9 @@ const billSchema = new mongoose.Schema(
       default: 0,
     },
 
+    // ==========================
+    // Payment
+    // ==========================
     paidAmount: {
       type: Number,
       default: 0,
@@ -110,7 +226,10 @@ const billSchema = new mongoose.Schema(
   }
 );
 
-// Prevent duplicate bill
+
+// ======================================================
+// Prevent Duplicate Bill
+// ======================================================
 billSchema.index(
   {
     customer: 1,
@@ -123,4 +242,8 @@ billSchema.index(
   }
 );
 
+
+// ======================================================
+// Export Model
+// ======================================================
 module.exports = mongoose.model("Bill", billSchema);

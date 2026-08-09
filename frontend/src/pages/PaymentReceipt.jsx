@@ -18,8 +18,7 @@ import {
 
 import { sendReceiptWhatsApp } from "../services/whatsappService";
 
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+
 
 import logo from "../assets/logo.png";
 
@@ -130,23 +129,15 @@ export default function PaymentReceipt() {
       ? "💳 Card"
 
       : "🌐 Razorpay";
-        return (
+       return (
+  <div className="w-full min-h-screen bg-slate-100 print:bg-white">
 
-    <div className="flex print:block">
+    <div className="w-full px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:py-8">
 
-      {/* Sidebar */}
-
-      <Sidebar />
-
-      {/* Main Content */}
-
-      <div className="ml-64 w-full min-h-screen bg-slate-100 print:ml-0 print:bg-white">
-
-        {/* Navbar */}
-
-        <Navbar />
-
-        <div className="p-8">
+      <div
+        ref={receiptRef}
+        className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-6xl mx-auto overflow-hidden print:shadow-none print:rounded-none"
+      >
 
           <div
 
@@ -174,11 +165,11 @@ export default function PaymentReceipt() {
 
             {/* Header */}
 
-            <div className="relative z-10 flex justify-between items-center p-10 border-b">
+            <div className="relative z-10 flex flex-col lg:flex-row justify-between items-center gap-8 p-5 sm:p-8 lg:p-10 border-b">
 
               {/* Company */}
 
-              <div className="flex items-center gap-6">
+              <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-6 text-center sm:text-left">
 
                 <img
 
@@ -186,19 +177,19 @@ export default function PaymentReceipt() {
 
                   alt="Logo"
 
-                  className="w-28 h-28 rounded-full border-4 border-blue-100"
+                  className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-blue-100 shrink-0"
 
                 />
 
                 <div>
 
-                  <h1 className="text-5xl font-extrabold text-blue-700">
+                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-700">
 
                     OM TIFFIN
 
                   </h1>
 
-                  <h2 className="text-5xl font-extrabold text-blue-700">
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-blue-700">
 
                     SERVICE
 
@@ -228,7 +219,7 @@ export default function PaymentReceipt() {
 
               {/* Receipt */}
 
-              <div className="text-right">
+              <div className="text-center lg:text-right">
 
                 <span className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-5 py-2 rounded-full font-bold">
 
@@ -262,7 +253,7 @@ export default function PaymentReceipt() {
 
             {/* Summary Cards */}
 
-            <div className="grid grid-cols-4 gap-6 px-10 py-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6 px-5 sm:px-8 lg:px-10 py-6 sm:py-8">
 
               <div className="bg-blue-50 rounded-2xl p-5">
 
@@ -339,11 +330,11 @@ export default function PaymentReceipt() {
             </div>
                         {/* Customer & Payment Details */}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-10 pb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8 px-5 sm:px-8 lg:px-10 pb-8 sm:pb-10">
 
               {/* Customer Card */}
 
-              <div className="bg-slate-50 rounded-2xl border p-8">
+              <div className="bg-slate-50 rounded-2xl border p-5 sm:p-8">
 
                 <div className="flex items-center gap-3 mb-6">
 
@@ -405,7 +396,7 @@ export default function PaymentReceipt() {
 
               {/* Payment Card */}
 
-              <div className="bg-slate-50 rounded-2xl border p-8">
+              <div className="bg-slate-50 rounded-2xl border p-5 sm:p-8">
 
                 <div className="flex items-center gap-3 mb-6">
 

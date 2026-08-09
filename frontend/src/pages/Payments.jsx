@@ -609,131 +609,120 @@ export default function Payments() {
 
           </div>
 
-          <div className="overflow-x-auto rounded-xl border">
+          <div className="w-full overflow-x-auto rounded-xl border border-slate-200">
 
-            <table className="min-w-full">
+  <table className="w-full min-w-[850px] table-fixed">
 
-              <thead className="bg-blue-700 text-white">
+    <thead className="bg-blue-700 text-white">
 
-                <tr>
+      <tr>
 
-                  <th className="px-4 py-3 text-left">
-                    Customer
-                  </th>
+        <th className="w-[24%] px-4 py-3 text-left">
+          Customer
+        </th>
 
-                  <th className="px-4 py-3 text-left">
-                    Invoice
-                  </th>
+        <th className="w-[18%] px-4 py-3 text-left">
+          Invoice
+        </th>
 
-                  <th className="px-4 py-3 text-left">
-                    Amount
-                  </th>
+        <th className="w-[12%] px-4 py-3 text-left">
+          Amount
+        </th>
 
-                  <th className="px-4 py-3 text-left">
-                    Method
-                  </th>
+        <th className="w-[14%] px-4 py-3 text-left">
+          Method
+        </th>
 
-                  <th className="px-4 py-3 text-left">
-                    Date
-                  </th>
+        <th className="w-[15%] px-4 py-3 text-left">
+          Date
+        </th>
 
-                  <th className="px-4 py-3 text-center">
-                    Receipt
-                  </th>
+        <th className="w-[17%] px-4 py-3 text-center">
+          Receipt
+        </th>
 
-                </tr>
+      </tr>
 
-              </thead>
+    </thead>
 
-              <tbody>
+    <tbody>
 
-                {payments.length === 0 ? (
+      {payments.length === 0 ? (
 
-                  <tr>
+        <tr>
+          <td
+            colSpan="6"
+            className="text-center py-10 text-gray-500"
+          >
+            No Payments Found
+          </td>
+        </tr>
 
-                    <td
-                      colSpan="6"
-                      className="text-center py-10 text-gray-500"
-                    >
+      ) : (
 
-                      No Payments Found
+        payments
+          .filter((payment) =>
+            payment.customer?.customerName
+              ?.toLowerCase()
+              .includes(search.toLowerCase())
+          )
+          .map((payment) => (
 
-                    </td>
+            <tr
+              key={payment._id}
+              className="border-b hover:bg-slate-50 transition"
+            >
 
-                  </tr>
+              <td className="px-4 py-4 align-middle">
+                <div className="break-words font-medium">
+                  {payment.customer?.customerName || "-"}
+                </div>
+              </td>
 
-                ) : (
+              <td className="px-4 py-4 align-middle">
+                <div className="break-words">
+                  {payment.bill?.invoiceNo || "-"}
+                </div>
+              </td>
 
-                  payments
+              <td className="px-4 py-4 align-middle font-bold text-green-600 whitespace-nowrap">
+                ₹{payment.amount}
+              </td>
 
-                    .filter((payment) =>
-                      payment.customer?.customerName
-                        ?.toLowerCase()
-                        .includes(search.toLowerCase())
-                    )
+              <td className="px-4 py-4 align-middle">
+                <span className="inline-flex bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm whitespace-nowrap">
+                  {payment.paymentMethod}
+                </span>
+              </td>
 
-                    .map((payment) => (
+              <td className="px-4 py-4 align-middle whitespace-nowrap">
+                {new Date(
+                  payment.paymentDate
+                ).toLocaleDateString("en-GB")}
+              </td>
 
-                      <tr
-                        key={payment._id}
-                        className="border-b hover:bg-slate-50 transition"
-                      >
+              <td className="px-4 py-4 align-middle text-center">
 
-                        <td className="px-4 py-3">
-                          {payment.customer?.customerName}
-                        </td>
+                <Link
+                  to={`/payment-receipt/${payment._id}`}
+                  className="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg whitespace-nowrap transition"
+                >
+                  👁 Receipt
+                </Link>
 
-                        <td className="px-4 py-3">
-                          {payment.bill?.invoiceNo || "-"}
-                        </td>
+              </td>
 
-                        <td className="px-4 py-3 font-bold text-green-600">
-                          ₹{payment.amount}
-                        </td>
+            </tr>
 
-                        <td className="px-4 py-3">
+          ))
 
-                          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
+      )}
 
-                            {payment.paymentMethod}
+    </tbody>
 
-                          </span>
+  </table>
 
-                        </td>
-
-                        <td className="px-4 py-3">
-
-                          {new Date(
-                            payment.paymentDate
-                          ).toLocaleDateString("en-GB")}
-
-                        </td>
-
-                        <td className="px-4 py-3 text-center">
-
-                          <Link
-                            to={`/payment-receipt/${payment._id}`}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-                          >
-
-                            👁 Receipt
-
-                          </Link>
-
-                        </td>
-
-                      </tr>
-
-                    ))
-
-                )}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
+</div>
         </div>
 
       </div>

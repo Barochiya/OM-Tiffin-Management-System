@@ -1,6 +1,7 @@
 const Payment = require("../models/Payment");
 const Bill = require("../models/Bill");
 const Tiffin = require("../models/Tiffin");
+const DailyEntry = require("../models/DailyEntry");
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -142,28 +143,130 @@ exports.getDashboard = async (req, res) => {
       },
     ]);
 
+// ==========================================
+// TODAY ANALYTICS
+// ==========================================
+
+// India timezone (IST)
+const now = new Date();
+
+const indiaDate = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Kolkata",
+}).format(now);
+
+// Start of today in India
+const todayStart = new Date(
+  `${indiaDate}T00:00:00+05:30`
+);
+
+// Start of tomorrow in India
+const tomorrow = new Date(todayStart);
+tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+
+// ==========================================
+// TODAY COLLECTION
+// ==========================================
+
+const todayCollectionResult = await Payment.aggregate([
+  {
+    $match: {
+      paymentDate: {
+        $gte: todayStart,
+        $lt: tomorrow,
+      },
+
+      status: "Success",
+    },
+  },
+
+  {
+    $group: {
+      _id: null,
+
+      total: {
+        $sum: "$amount",
+      },
+    },
+  },
+]);
+
+const todayCollection =
+  todayCollectionResult.length > 0
+    ? todayCollectionResult[0].total
+    : 0;
+
+// ==========================================
+// TODAY MEALS
+// ==========================================
+
+const todayMealsResult = await DailyEntry.aggregate([
+  {
+    $match: {
+      date: {
+        $gte: todayStart,
+        $lt: tomorrow,
+      },
+    },
+  },
+
+  {
+    $group: {
+      _id: null,
+
+      breakfast: {
+        $sum: "$breakfastQty",
+      },
+
+      lunch: {
+        $sum: "$lunchQty",
+      },
+
+      dinner: {
+        $sum: "$dinnerQty",
+      },
+    },
+  },
+]);
+
+const todayMeals =
+  todayMealsResult.length > 0
+    ? (
+        (todayMealsResult[0].breakfast || 0) +
+        (todayMealsResult[0].lunch || 0) +
+        (todayMealsResult[0].dinner || 0)
+      )
+    : 0;
+
     // ==========================================
     // API RESPONSE
     // ==========================================
 
-    res.status(200).json({
-      success: true,
+res.status(200).json({
+  success: true,
 
-      stats: {
-        totalCustomers,
-        activeCustomers,
-        totalRevenue,
-        totalPending,
-      },
+  stats: {
+    totalCustomers,
+    activeCustomers,
+    totalRevenue,
+    totalPending,
+  },
 
-      revenueChart,
+  // ==========================================
+  // TODAY ANALYTICS
+  // ==========================================
 
-      recentPayments,
+  todayCollection,
 
-      pendingBills,
+  todayMeals,
 
-      topCustomers,
-    });
+  revenueChart,
+
+  recentPayments,
+
+  pendingBills,
+
+  topCustomers,
+});
   } catch (err) {
     console.error("Dashboard Error:", err);
 

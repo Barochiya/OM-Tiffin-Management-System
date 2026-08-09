@@ -1,29 +1,43 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  FaArrowLeft,
+  FaEdit,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaUser,
+  FaUtensils,
+  FaRupeeSign,
+  FaCheckCircle,
+} from "react-icons/fa";
 
 import { getCustomerById } from "../services/customerService";
 
 export default function ViewCustomer() {
-  const { id } = useParams();
   const navigate = useNavigate();
+  const { id } = useParams();
 
-  const [loading, setLoading] = useState(true);
   const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadCustomer();
-  }, []);
+  }, [id]);
 
   const loadCustomer = async () => {
     try {
-      const res = await getCustomerById(id);
-      setCustomer(res.data);
+      setLoading(true);
+
+      const response = await getCustomerById(id);
+      setCustomer(response?.data || response);
     } catch (error) {
-      console.error(error);
-      alert("Failed to load customer");
+      console.error("Load customer error:", error);
+
+      alert(
+        error.response?.data?.message ||
+          "❌ Failed to load customer"
+      );
+
       navigate("/customers");
     } finally {
       setLoading(false);
@@ -32,285 +46,279 @@ export default function ViewCustomer() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen text-2xl">
-        Loading Customer...
+      <div className="w-full min-h-[60vh] flex items-center justify-center">
+        <div className="text-slate-500">
+          Loading customer details...
+        </div>
+      </div>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <div className="w-full min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <p className="text-slate-600">Customer not found.</p>
+
+        <button
+          type="button"
+          onClick={() => navigate("/customers")}
+          className="bg-blue-600 text-white px-5 py-3 rounded-xl"
+        >
+          Back to Customers
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="flex">
-      <Sidebar />
-
-      <div className="ml-64 w-full min-h-screen bg-slate-100">
-        <Navbar />
-
-        <div className="p-8">
-          <div className="bg-white rounded-xl shadow-md p-8 max-w-3xl mx-auto">
-
-            <h1 className="text-3xl font-bold mb-6">
+    <div className="w-full min-w-0">
+      <div className="w-full max-w-6xl mx-auto">
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">
               Customer Details
             </h1>
 
-            <div className="space-y-8">
+            <p className="text-gray-500 mt-2">
+              View customer information and pricing
+            </p>
+          </div>
 
-  {/* Customer Information */}
+          <div className="flex gap-3">
+            <Link
+              to="/customers"
+              className="inline-flex items-center gap-2 border border-slate-300 hover:bg-white px-4 py-3 rounded-xl font-semibold text-slate-700"
+            >
+              <FaArrowLeft />
+              Back
+            </Link>
 
-  <div className="border rounded-xl p-6">
-
-    <h2 className="text-xl font-bold mb-5">
-      👤 Customer Information
-    </h2>
-
-    <div className="grid grid-cols-2 gap-5">
-
-      <div>
-        <p className="text-gray-500">Customer Name</p>
-        <p className="font-semibold text-lg">
-          {customer.customerName}
-        </p>
-      </div>
-
-      <div>
-        <p className="text-gray-500">Phone</p>
-        <p>{customer.phone}</p>
-      </div>
-
-      <div>
-        <p className="text-gray-500">Meal Type</p>
-        <p>{customer.mealType}</p>
-      </div>
-
-      <div>
-        <p className="text-gray-500">Status</p>
-
-        <span
-          className={`px-3 py-1 rounded-full text-sm font-semibold ${
-            customer.status === "Active"
-              ? "bg-green-100 text-green-700"
-              : "bg-red-100 text-red-700"
-          }`}
-        >
-          {customer.status}
-        </span>
-
-      </div>
-
-      <div className="col-span-2">
-        <p className="text-gray-500">Address</p>
-        <p>{customer.address}</p>
-      </div>
-
-    </div>
-
-  </div>
-
-  {/* Pricing */}
-
-  <div className="border rounded-xl p-6">
-
-    <h2 className="text-xl font-bold mb-5">
-      💰 Pricing Information
-    </h2>
-
-    {customer.pricing?.pricingType === "custom" ? (
-
-      <div className="grid grid-cols-2 gap-5">
-
-        <div>
-          <p className="text-gray-500">
-            Pricing Type
-          </p>
-
-          <p className="font-semibold text-green-600">
-            Custom Pricing
-          </p>
+            <Link
+              to={`/edit-customer/${customer._id}`}
+              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-xl font-semibold"
+            >
+              <FaEdit />
+              Edit
+            </Link>
+          </div>
         </div>
 
-        <div>
-          <p className="text-gray-500">
-            Base Monthly Price
-          </p>
+        {/* Main card */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 sm:px-8 py-7 text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+              <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center">
+                <FaUser className="text-3xl" />
+              </div>
 
-          <p>₹{customer.price}</p>
-        </div>
+              <div className="min-w-0">
+                <h2 className="text-2xl sm:text-3xl font-bold break-words">
+                  {customer.customerName}
+                </h2>
 
-        <div>
-          <p className="text-gray-500">
-            Breakfast Price
-          </p>
+                <p className="mt-1 opacity-90">
+                  {customer.phone}
+                </p>
+              </div>
 
-          <p>₹{customer.pricing.breakfastPrice}</p>
-        </div>
+              <span
+                className={`sm:ml-auto inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold ${
+                  customer.status === "Active"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                <FaCheckCircle />
+                {customer.status || "Active"}
+              </span>
+            </div>
+          </div>
 
-        <div>
-          <p className="text-gray-500">
-            Lunch Price
-          </p>
+          <div className="p-6 sm:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="rounded-2xl border border-slate-200 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <FaUser className="text-xl text-blue-600" />
+                  <h3 className="text-xl font-bold text-slate-800">
+                    Customer Information
+                  </h3>
+                </div>
 
-          <p>₹{customer.pricing.lunchPrice}</p>
-        </div>
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Customer Name
+                    </p>
+                    <p className="text-lg font-semibold text-slate-800 mt-1">
+                      {customer.customerName}
+                    </p>
+                  </div>
 
-        <div>
-          <p className="text-gray-500">
-            Dinner Price
-          </p>
+                  <div className="flex items-start gap-3">
+                    <FaPhone className="text-green-600 mt-1" />
 
-          <p>₹{customer.pricing.dinnerPrice}</p>
-        </div>
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        Phone
+                      </p>
+                      <p className="font-semibold mt-1">
+                        {customer.phone}
+                      </p>
+                    </div>
+                  </div>
 
-        <div>
-          <p className="text-gray-500">
-            Extra Charge
-          </p>
+                  <div className="flex items-start gap-3">
+                    <FaMapMarkerAlt className="text-red-500 mt-1" />
 
-          <p>
-            ₹{customer.pricing.extraCharge}
-          </p>
-        </div>
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        Address
+                      </p>
+                      <p className="font-semibold mt-1 leading-6">
+                        {customer.address || "-"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-        <div className="col-span-2">
-          <p className="text-gray-500">
-            Extra Charge Reason
-          </p>
+              <div className="rounded-2xl border border-slate-200 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <FaUtensils className="text-xl text-orange-500" />
+                  <h3 className="text-xl font-bold text-slate-800">
+                    Meal & Payment
+                  </h3>
+                </div>
 
-          <p>
-            {customer.pricing.extraReason || "-"}
-          </p>
-        </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Meal Type
+                    </p>
+                    <p className="font-semibold mt-1">
+                      {customer.mealType || "-"}
+                    </p>
+                  </div>
 
-        <div>
-          <p className="text-gray-500">
-            Discount
-          </p>
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Monthly Price
+                    </p>
+                    <p className="font-semibold text-green-600 mt-1">
+                      ₹{customer.price || 0}
+                    </p>
+                  </div>
 
-          <p>
-            {customer.pricing.discount}
-            {customer.pricing.discountType === "percentage"
-              ? "%"
-              : " ₹"}
-          </p>
-        </div>
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Payment Status
+                    </p>
+                    <span
+                      className={`inline-block mt-1 px-3 py-1 rounded-full text-sm font-semibold ${
+                        customer.paymentStatus === "Paid"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {customer.paymentStatus || "Pending"}
+                    </span>
+                  </div>
 
-        <div>
-          <p className="text-gray-500">
-            Discount Type
-          </p>
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Pending Amount
+                    </p>
+                    <p className="font-semibold text-red-600 mt-1">
+                      ₹{customer.pendingAmount || 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <p>
-            {customer.pricing.discountType}
-          </p>
-        </div>
+            {/* Pricing */}
+            <div className="mt-6 rounded-2xl border border-slate-200 p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <FaRupeeSign className="text-xl text-indigo-600" />
 
-      </div>
+                <h3 className="text-xl font-bold text-slate-800">
+                  Customer Pricing
+                </h3>
+              </div>
 
-    ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-orange-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-500">
+                    Breakfast
+                  </p>
+                  <p className="text-2xl font-bold text-orange-600 mt-1">
+                    ₹
+                    {customer.pricing?.breakfastPrice ??
+                      0}
+                  </p>
+                </div>
 
-      <div>
+                <div className="bg-green-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-500">
+                    Lunch
+                  </p>
+                  <p className="text-2xl font-bold text-green-600 mt-1">
+                    ₹
+                    {customer.pricing?.lunchPrice ??
+                      0}
+                  </p>
+                </div>
 
-        <p className="text-gray-500">
-          Monthly Price
-        </p>
+                <div className="bg-indigo-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-500">
+                    Dinner
+                  </p>
+                  <p className="text-2xl font-bold text-indigo-600 mt-1">
+                    ₹
+                    {customer.pricing?.dinnerPrice ??
+                      0}
+                  </p>
+                </div>
 
-        <h2 className="text-3xl font-bold text-green-600 mt-2">
-          ₹{customer.price}
-        </h2>
+                <div className="bg-slate-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-500">
+                    Pricing Type
+                  </p>
+                  <p className="text-lg font-bold text-slate-800 mt-2 capitalize">
+                    {customer.pricing?.pricingType ||
+                      "default"}
+                  </p>
+                </div>
+              </div>
 
-      </div>
+              {(customer.pricing?.extraCharge ||
+                customer.pricing?.discount) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Extra Charge
+                    </p>
+                    <p className="font-semibold mt-1">
+                      ₹{customer.pricing?.extraCharge || 0}
+                    </p>
+                  </div>
 
-    )}
-
-  </div>
-
-
-
-  {/* Payment */}
-
-  <div className="border rounded-xl p-6">
-
-    <h2 className="text-xl font-bold mb-5">
-      💳 Payment Information
-    </h2>
-   
-
-    <div className="grid grid-cols-2 gap-5">
-
-      <div>
-        <p className="text-gray-500">
-          Payment Status
-        </p>
-
-        <p
-          className={
-            customer.paymentStatus === "Paid"
-              ? "text-green-600 font-semibold"
-              : "text-red-600 font-semibold"
-          }
-        >
-          {customer.paymentStatus}
-        </p>
-
-      </div>
-
-      <div>
-        <p className="text-gray-500">
-          Pending Amount
-        </p>
-
-        <p>
-          ₹{customer.pendingAmount}
-        </p>
-      </div>
-
-      <div>
-        <p className="text-gray-500">
-          Payment Month
-        </p>
-
-        <p>
-          {customer.paymentMonth}
-        </p>
-      </div>
-
-      <div>
-        <p className="text-gray-500">
-          Payment Date
-        </p>
-
-        <p>
-          {customer.paymentDate
-            ? new Date(customer.paymentDate).toLocaleDateString()
-            : "-"}
-        </p>
-      </div>
-      
-
-    </div>
-
-  </div>
-
-           {/* Buttons */}
-
-<div className="flex gap-4 mt-8">
-
-  <button
-    onClick={() => navigate("/customers")}
-    className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg"
-  >
-    ← Back
-  </button>
-
-  <button
-    onClick={() => navigate(`/edit-customer/${customer._id}`)}
-    className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-lg"
-  >
-    ✏ Edit Customer
-  </button>
-
-</div>
-
-</div>
-
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      Discount
+                    </p>
+                    <p className="font-semibold mt-1">
+                      {customer.pricing?.discount || 0}
+                      {customer.pricing?.discountType ===
+                      "percentage"
+                        ? "%"
+                        : " ₹"}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

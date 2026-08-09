@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
 import { getCustomers } from "../services/customerService";
 
 export default function Announcement() {
@@ -9,12 +7,15 @@ export default function Announcement() {
   const [audience, setAudience] = useState("all");
   const [customers, setCustomers] = useState([]);
 
+  // ==============================
+  // Load Customers
+  // ==============================
   const loadCustomers = async () => {
     try {
       const res = await getCustomers();
       setCustomers(res.data || []);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load customers:", err);
     }
   };
 
@@ -22,6 +23,9 @@ export default function Announcement() {
     loadCustomers();
   }, []);
 
+  // ==============================
+  // Quick Templates
+  // ==============================
   const applyTemplate = (type) => {
     switch (type) {
       case "holiday":
@@ -85,6 +89,9 @@ Thank You 🙏`);
     }
   };
 
+  // ==============================
+  // Send Announcement
+  // ==============================
   const sendAnnouncement = () => {
     let filtered = customers;
 
@@ -128,199 +135,386 @@ Thank You 🙏`);
     );
   };
 
+  // ==============================
+  // Preview
+  // ==============================
+  const showPreview = () => {
+    alert(
+      `Preview for "${title || "Announcement"}"`
+    );
+  };
+
   return (
-    <div className="flex">
-      <Sidebar />
+    <div className="min-h-screen bg-slate-100">
 
-      <div className="flex-1 ml-64 min-h-screen bg-slate-100">
-        <Navbar />
+      {/* Main Content */}
+      <main className="w-full px-4 py-6 sm:px-6 lg:px-8">
 
-        <div className="p-8">
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-white rounded-3xl shadow-xl p-8">
-                              <h1 className="text-3xl font-bold text-slate-800">
-                📢 Announcement Center
-              </h1>
+        <div className="mx-auto w-full max-w-7xl">
 
-              <p className="text-gray-500 mt-2">
-                Send announcements to your customers.
-              </p>
+          {/* Page Heading */}
+          <div className="mb-6">
 
-              {/* Announcement Title */}
-
-              <div className="mt-8">
-                <label className="font-semibold">
-                  Announcement Title
-                </label>
-
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full mt-2 border rounded-xl p-3"
-                  placeholder="Holiday Notice"
-                />
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-2xl shadow-sm">
+                📢
               </div>
 
-              {/* Message */}
+              <div>
+                <h1 className="text-2xl font-bold text-slate-800 sm:text-3xl">
+                  Announcement Center
+                </h1>
 
-              <div className="mt-6">
-                <label className="font-semibold">
-                  Message
-                </label>
-
-                <textarea
-                  rows={10}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full mt-2 border rounded-xl p-3"
-                  placeholder="Type your announcement..."
-                />
+                <p className="mt-1 text-sm text-slate-500 sm:text-base">
+                  Send announcements and important updates to your customers.
+                </p>
               </div>
+            </div>
 
-              {/* Audience */}
+          </div>
 
-              <div className="mt-6">
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
 
-                <label className="font-semibold">
-                  Send To
-                </label>
+            {/* =====================================
+                LEFT - Announcement Form
+            ===================================== */}
+            <div className="xl:col-span-2">
 
-                <select
-                  value={audience}
-                  onChange={(e) => setAudience(e.target.value)}
-                  className="w-full mt-2 border rounded-xl p-3"
-                >
-                  <option value="all">
-                    👥 All Customers
-                  </option>
+              <div className="rounded-3xl bg-white p-5 shadow-sm sm:p-7">
 
-                  <option value="active">
-                    ✅ Active Customers
-                  </option>
+                {/* Section Header */}
+                <div className="mb-6 border-b border-slate-100 pb-5">
 
-                  <option value="pending">
-                    💰 Pending Payment Customers
-                  </option>
+                  <h2 className="text-xl font-bold text-slate-800">
+                    Create Announcement
+                  </h2>
 
-                  <option value="lunch">
-                    🍛 Lunch Customers
-                  </option>
-
-                  <option value="dinner">
-                    🌙 Dinner Customers
-                  </option>
-
-                  <option value="both">
-                    🍱 Lunch + Dinner Customers
-                  </option>
-
-                </select>
-
-              </div>
-
-              {/* Quick Templates */}
-
-              <div className="mt-8">
-
-                <h2 className="text-xl font-bold mb-4">
-
-                  📋 Quick Templates
-
-                </h2>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-
-                  <button
-                    onClick={() => applyTemplate("holiday")}
-                    className="bg-orange-100 hover:bg-orange-200 rounded-xl p-4 font-semibold"
-                  >
-                    🍱 Holiday
-                  </button>
-
-                  <button
-                    onClick={() => applyTemplate("festival")}
-                    className="bg-purple-100 hover:bg-purple-200 rounded-xl p-4 font-semibold"
-                  >
-                    🪔 Festival
-                  </button>
-
-                  <button
-                    onClick={() => applyTemplate("delay")}
-                    className="bg-red-100 hover:bg-red-200 rounded-xl p-4 font-semibold"
-                  >
-                    🚚 Delivery Delay
-                  </button>
-
-                  <button
-                    onClick={() => applyTemplate("menu")}
-                    className="bg-green-100 hover:bg-green-200 rounded-xl p-4 font-semibold"
-                  >
-                    🍛 Today's Menu
-                  </button>
-
-                  <button
-                    onClick={() => applyTemplate("payment")}
-                    className="bg-blue-100 hover:bg-blue-200 rounded-xl p-4 font-semibold"
-                  >
-                    💰 Payment Reminder
-                  </button>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Write your message and select the customers who should receive it.
+                  </p>
 
                 </div>
 
-              </div>
-                            {/* WhatsApp Preview */}
+                {/* Announcement Title */}
+                <div className="mb-6">
 
-              <div className="mt-8 rounded-2xl border bg-slate-50 p-6">
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Announcement Title
+                  </label>
 
-                <h3 className="text-xl font-bold mb-4">
-                  📱 WhatsApp Preview
-                </h3>
-
-                <div className="bg-white rounded-xl border p-5 whitespace-pre-wrap">
-
-                  <strong>
-                    {title || "Announcement Title"}
-                  </strong>
-
-                  <br />
-                  <br />
-
-                  {message ||
-                    "Your announcement message will appear here..."}
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. Holiday Notice"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
 
                 </div>
 
-              </div>
+                {/* Message */}
+                <div className="mb-6">
 
-              {/* Action Buttons */}
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Message
+                  </label>
 
-              <div className="mt-8 flex flex-wrap gap-4">
+                  <textarea
+                    rows={9}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Type your announcement..."
+                    className="w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
 
-                <button
-                  onClick={sendAnnouncement}
-                  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-semibold transition"
-                >
-                  📢 Send Announcement
-                </button>
+                  <p className="mt-2 text-right text-xs text-slate-400">
+                    {message.length} characters
+                  </p>
 
-                <button
-                  onClick={() =>
-                    alert(
-                      `Preview for "${title || "Announcement"}"`
-                    )
-                  }
-                  className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl font-semibold transition"
-                >
-                  👀 Preview
-                </button>
+                </div>
+
+                {/* Audience */}
+                <div className="mb-7">
+
+                  <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    Send To
+                  </label>
+
+                  <select
+                    value={audience}
+                    onChange={(e) => setAudience(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  >
+                    <option value="all">
+                      👥 All Customers
+                    </option>
+
+                    <option value="active">
+                      ✅ Active Customers
+                    </option>
+
+                    <option value="pending">
+                      💰 Pending Payment Customers
+                    </option>
+
+                    <option value="lunch">
+                      🍛 Lunch Customers
+                    </option>
+
+                    <option value="dinner">
+                      🌙 Dinner Customers
+                    </option>
+
+                    <option value="both">
+                      🍱 Lunch + Dinner Customers
+                    </option>
+                  </select>
+
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3 sm:flex-row">
+
+                  <button
+                    onClick={sendAnnouncement}
+                    className="flex-1 rounded-xl bg-green-600 px-6 py-3.5 font-semibold text-white shadow-sm transition hover:bg-green-700 hover:shadow-md"
+                  >
+                    📢 Send Announcement
+                  </button>
+
+                  <button
+                    onClick={showPreview}
+                    className="flex-1 rounded-xl bg-blue-600 px-6 py-3.5 font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md"
+                  >
+                    👀 Preview
+                  </button>
+
+                </div>
 
               </div>
 
             </div>
+
+            {/* =====================================
+                RIGHT - Preview
+            ===================================== */}
+            <div className="xl:col-span-1">
+
+              <div className="rounded-3xl bg-white p-5 shadow-sm sm:p-6">
+
+                {/* Preview Header */}
+                <div className="mb-5">
+
+                  <div className="flex items-center gap-3">
+
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-100 text-xl">
+                      📱
+                    </div>
+
+                    <div>
+                      <h2 className="text-lg font-bold text-slate-800">
+                        WhatsApp Preview
+                      </h2>
+
+                      <p className="text-xs text-slate-500">
+                        Customer message preview
+                      </p>
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* WhatsApp Message */}
+                <div className="rounded-2xl bg-slate-50 p-3">
+
+                  <div className="rounded-2xl rounded-tl-sm border border-slate-200 bg-white p-4 shadow-sm">
+
+                    <h3 className="mb-3 font-bold text-slate-800">
+                      {title || "Announcement Title"}
+                    </h3>
+
+                    <div className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">
+                      {message ||
+                        "Your announcement message will appear here..."}
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* Customer Count */}
+                <div className="mt-5 rounded-2xl bg-blue-50 p-4">
+
+                  <div className="flex items-center justify-between">
+
+                    <div>
+                      <p className="text-xs font-medium text-blue-600">
+                        Selected Audience
+                      </p>
+
+                      <p className="mt-1 text-lg font-bold text-blue-800">
+                        {(() => {
+                          switch (audience) {
+                            case "active":
+                              return customers.filter(
+                                (c) => c.status === "Active"
+                              ).length;
+
+                            case "pending":
+                              return customers.filter(
+                                (c) => c.paymentStatus !== "Paid"
+                              ).length;
+
+                            case "lunch":
+                              return customers.filter(
+                                (c) => c.mealType === "Lunch"
+                              ).length;
+
+                            case "dinner":
+                              return customers.filter(
+                                (c) => c.mealType === "Dinner"
+                              ).length;
+
+                            case "both":
+                              return customers.filter(
+                                (c) => c.mealType === "Both"
+                              ).length;
+
+                            default:
+                              return customers.length;
+                          }
+                        })()} Customers
+                      </p>
+                    </div>
+
+                    <div className="text-3xl">
+                      👥
+                    </div>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
           </div>
+
+          {/* =====================================
+              Quick Templates
+          ===================================== */}
+          <div className="mt-6 rounded-3xl bg-white p-5 shadow-sm sm:p-7">
+
+            <div className="mb-5">
+
+              <h2 className="text-xl font-bold text-slate-800">
+                📋 Quick Templates
+              </h2>
+
+              <p className="mt-1 text-sm text-slate-500">
+                Select a template to quickly prepare your announcement.
+              </p>
+
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+              <button
+                onClick={() => applyTemplate("holiday")}
+                className="rounded-2xl border border-orange-100 bg-orange-50 p-4 text-left font-semibold text-orange-700 transition hover:bg-orange-100"
+              >
+                <div className="mb-2 text-2xl">
+                  🍱
+                </div>
+
+                <div>
+                  Holiday Notice
+                </div>
+
+                <p className="mt-1 text-xs font-normal text-orange-600">
+                  Inform customers about holidays.
+                </p>
+              </button>
+
+              <button
+                onClick={() => applyTemplate("festival")}
+                className="rounded-2xl border border-purple-100 bg-purple-50 p-4 text-left font-semibold text-purple-700 transition hover:bg-purple-100"
+              >
+                <div className="mb-2 text-2xl">
+                  🪔
+                </div>
+
+                <div>
+                  Festival Wishes
+                </div>
+
+                <p className="mt-1 text-xs font-normal text-purple-600">
+                  Send festive greetings.
+                </p>
+              </button>
+
+              <button
+                onClick={() => applyTemplate("delay")}
+                className="rounded-2xl border border-red-100 bg-red-50 p-4 text-left font-semibold text-red-700 transition hover:bg-red-100"
+              >
+                <div className="mb-2 text-2xl">
+                  🚚
+                </div>
+
+                <div>
+                  Delivery Delay
+                </div>
+
+                <p className="mt-1 text-xs font-normal text-red-600">
+                  Notify customers about delays.
+                </p>
+              </button>
+
+              <button
+                onClick={() => applyTemplate("menu")}
+                className="rounded-2xl border border-green-100 bg-green-50 p-4 text-left font-semibold text-green-700 transition hover:bg-green-100"
+              >
+                <div className="mb-2 text-2xl">
+                  🍛
+                </div>
+
+                <div>
+                  Today's Menu
+                </div>
+
+                <p className="mt-1 text-xs font-normal text-green-600">
+                  Share today's meal menu.
+                </p>
+              </button>
+
+              <button
+                onClick={() => applyTemplate("payment")}
+                className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-left font-semibold text-blue-700 transition hover:bg-blue-100"
+              >
+                <div className="mb-2 text-2xl">
+                  💰
+                </div>
+
+                <div>
+                  Payment Reminder
+                </div>
+
+                <p className="mt-1 text-xs font-normal text-blue-600">
+                  Remind customers about pending payments.
+                </p>
+              </button>
+
+            </div>
+
+          </div>
+
         </div>
-      </div>
+
+      </main>
+
     </div>
   );
 }

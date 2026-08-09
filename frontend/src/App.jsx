@@ -13,6 +13,7 @@ import PriceSettings from "./pages/PriceSettings";
 import Billing from "./pages/Billing";
 import Payments from "./pages/Payments";
 import PaymentReceipt from "./pages/PaymentReceipt";
+import Announcement from "./pages/Announcement";
 
 export default function App() {
   return (
@@ -82,6 +83,7 @@ export default function App() {
           path="/payment-receipt/:id"
           element={<PaymentReceipt />}
         />
+        <Route path="/announcement" element={<Announcement />} />
 
       </Route>
 

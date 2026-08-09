@@ -10,10 +10,9 @@ const Navbar = ({ setSidebarOpen }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white shadow-md px-4 lg:px-8 py-4 flex items-center justify-between">
-
+   <header className="sticky top-0 z-30 w-full max-w-full min-w-0 overflow-hidden bg-white shadow-md px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">
       {/* Left */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
 
         {/* Mobile Menu */}
         <button
@@ -24,11 +23,11 @@ const Navbar = ({ setSidebarOpen }) => {
         </button>
 
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 truncate">
             Dashboard
           </h1>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-xs sm:text-sm text-gray-500 truncate">
             Welcome to OM Tiffin Management System
           </p>
         </div>
@@ -36,7 +35,7 @@ const Navbar = ({ setSidebarOpen }) => {
       </div>
 
       {/* Right */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
 
         {/* Notification */}
         <button className="relative p-2 rounded-full hover:bg-gray-100">

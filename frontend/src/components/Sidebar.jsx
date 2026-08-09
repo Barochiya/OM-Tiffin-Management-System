@@ -1,10 +1,25 @@
 import { Link, useLocation } from "react-router-dom";
 
-const Sidebar = () => {
+const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
   const location = useLocation();
 
   return (
-    <div className="fixed left-0 top-0 w-64 h-screen bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-2xl flex flex-col print:!hidden">
+    <>
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+        />
+      )}
+
+      <aside
+        className={`fixed left-0 top-0 z-50 w-64 h-screen bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-2xl flex flex-col print:!hidden transform transition-transform duration-300 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
 
       {/* Logo */}
       <div className="flex items-center gap-4 p-6 border-b border-blue-500">
@@ -123,7 +138,8 @@ const Sidebar = () => {
         </div>
       </div>
 
-    </div>
+      </aside>
+    </>
   );
 };
 

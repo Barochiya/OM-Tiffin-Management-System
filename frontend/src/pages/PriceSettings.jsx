@@ -7,8 +7,6 @@ import {
   FaSave,
 } from "react-icons/fa";
 
-import Sidebar from "../components/Sidebar";
-import Navbar from "../components/Navbar";
 
 import {
   getPrices,
@@ -170,7 +168,7 @@ if (res.data?.data) {
 
         <Navbar />
 
-        <div className="p-4 lg:p-8">
+        <div className="w-full max-w-full min-w-0 p-4 sm:p-6 lg:p-8">
 
           {/* Header */}
 
@@ -192,7 +190,7 @@ if (res.data?.data) {
 
           {/* Summary Cards */}
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-8">
 
             {cards.map((card) => (
 
@@ -238,11 +236,11 @@ if (res.data?.data) {
 
           {/* Form */}
 
-          <div className="bg-white rounded-2xl shadow-lg p-8">
+          <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 lg:p-8">
 
             <form
               onSubmit={handleSubmit}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              className="grid grid-cols-1 md:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
                             {/* Breakfast */}
 
@@ -259,7 +257,7 @@ if (res.data?.data) {
                   name="breakfast"
                   value={prices.breakfast}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full max-w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-orange-500 outline-none"
                 />
 
               </div>
@@ -279,7 +277,7 @@ if (res.data?.data) {
                   name="lunch"
                   value={prices.lunch}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 outline-none"
+                  className="w-full max-w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 outline-none"
                 />
 
               </div>
@@ -299,7 +297,7 @@ if (res.data?.data) {
                   name="dinner"
                   value={prices.dinner}
                   onChange={handleChange}
-                  className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
+                  className="w-full max-w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-indigo-500 outline-none"
                 />
 
               </div>

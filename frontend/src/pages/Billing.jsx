@@ -12,6 +12,25 @@ import { generateBill } from "../services/billService";
 export default function Billing() {
 
   // =====================================
+// EXTRA ITEM SYMBOL
+// =====================================
+
+const getExtraItemSymbol = (itemName) => {
+  const name = String(itemName || "").trim().toLowerCase();
+
+  const symbols = {
+    roti: "🫓",
+    papad: "🥠",
+    curd: "🥣",
+    rice: "🍚",
+    sabji: "🥗",
+    sweet: "🍬",
+  };
+
+  return symbols[name] || "🍽️";
+};
+
+  // =====================================
   // STATES
   // =====================================
 
@@ -161,26 +180,25 @@ const handleWhatsAppShare = () => {
       ? cleanPhone
       : `91${cleanPhone}`;
 
-  const message = `🍱 *OM TIFFIN SERVICE*
+  const message = `OM TIFFIN SERVICE
 
 Hello ${customerData?.customerName || bill?.customerName || ""},
 
 Your invoice details:
 
-🧾 Invoice: ${bill?.invoiceNo || "-"}
-📅 Month: ${bill?.month || month}/${bill?.year || year}
-💰 Total Amount: ₹${bill?.totalAmount || 0}
-💵 Paid Amount: ₹${bill?.paidAmount || 0}
-⏳ Pending Amount: ₹${bill?.pendingAmount || 0}
+Invoice: ${bill?.invoiceNo || "-"}
+Month: ${bill?.month || month}/${bill?.year || year}
+Total Amount: Rs. ${bill?.totalAmount || 0}
+Paid Amount: Rs. ${bill?.paidAmount || 0}
+Pending Amount: Rs. ${bill?.pendingAmount || 0}
 
-Thank you for choosing *OM TIFFIN SERVICE* 🙏`;
+Thank you for choosing OM TIFFIN SERVICE.`;
 
   window.open(
     `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`,
     "_blank"
   );
 };
-
   // =====================================
   // UI
   // =====================================
@@ -793,8 +811,8 @@ Thank you for choosing *OM TIFFIN SERVICE* 🙏`;
                         key={itemIndex}
                         className="font-medium"
                       >
-
-                        🥘 {item.description || "Extra Item"}
+{getExtraItemSymbol(item.description)}{" "}
+{item.description || "Extra Item"}
 
                       </div>
 
@@ -1186,15 +1204,11 @@ Thank you for choosing *OM TIFFIN SERVICE* 🙏`;
 
       <p>
 
-        📞 +91 94093 80470
+        📞 +91 70162 97983
 
       </p>
 
-      <p>
-
-        📧 omtiffinservice@gmail.com
-
-      </p>
+      
 
       <p>
 

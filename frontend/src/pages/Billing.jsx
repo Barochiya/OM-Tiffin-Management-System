@@ -3,7 +3,7 @@ import QRCode from "react-qr-code";
 import { useReactToPrint } from "react-to-print";
 import { FaUsers, FaFileInvoice, FaCalendarAlt, FaMoneyBillWave } from "react-icons/fa";
 import { FaWhatsapp } from "react-icons/fa";
-import { sendInvoiceWhatsApp } from "../services/whatsappService";
+
 import logo from "../assets/logo.png";
 
 import { getCustomersForEntry } from "../services/dailyEntryService";
@@ -136,9 +136,50 @@ export default function Billing() {
   // =====================================
 
   const customerData =
-    customers.find(
-      (c) => c._id === customer
-    );
+  customers.find(
+    (c) => c._id === (bill?.customer || customer)
+  );
+
+const handleWhatsAppShare = () => {
+  const phone =
+    customerData?.phone ||
+    customerData?.mobile ||
+    bill?.phone ||
+    bill?.customer?.phone;
+
+  if (!phone) {
+    alert("Customer phone number not found.");
+    return;
+  }
+
+  const cleanPhone = String(phone).replace(/\D/g, "");
+
+  const whatsappPhone =
+    cleanPhone.length === 10
+      ? `91${cleanPhone}`
+      : cleanPhone.startsWith("91")
+      ? cleanPhone
+      : `91${cleanPhone}`;
+
+  const message = `🍱 *OM TIFFIN SERVICE*
+
+Hello ${customerData?.customerName || bill?.customerName || ""},
+
+Your invoice details:
+
+🧾 Invoice: ${bill?.invoiceNo || "-"}
+📅 Month: ${bill?.month || month}/${bill?.year || year}
+💰 Total Amount: ₹${bill?.totalAmount || 0}
+💵 Paid Amount: ₹${bill?.paidAmount || 0}
+⏳ Pending Amount: ₹${bill?.pendingAmount || 0}
+
+Thank you for choosing *OM TIFFIN SERVICE* 🙏`;
+
+  window.open(
+    `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`,
+    "_blank"
+  );
+};
 
   // =====================================
   // UI
@@ -510,16 +551,10 @@ export default function Billing() {
 
                 </p>
 
-                <p>
-
-                  <strong>Mobile :</strong>
-
-                  {" "}
-
-                  {customerData?.mobile}
-
-                </p>
-
+               <p>
+  <strong>Mobile :</strong>{" "}
+  {customerData?.phone || "-"}
+</p>
                 <p>
 
                   <strong>Address :</strong>
@@ -959,7 +994,7 @@ export default function Billing() {
   </button>
 
   <button
-  onClick={() => sendInvoiceWhatsApp(bill)}
+  onClick={handleWhatsAppShare}
   className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl flex items-center gap-2"
 >
   <FaWhatsapp />

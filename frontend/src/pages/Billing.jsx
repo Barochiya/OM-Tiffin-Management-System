@@ -609,31 +609,46 @@ Thank you for choosing *OM TIFFIN SERVICE* 🙏`;
 
             </div>
 
-            {/* Meals Table */}
-            {/* Meals Table */}
+          {/* Date Wise Meals Table */}
 
 <div className="mt-8 overflow-x-auto">
 
-  <table className="min-w-full border border-gray-300">
+  <h3 className="text-2xl font-bold text-slate-800 mb-5">
+    📅 Date-wise Meal Details
+  </h3>
+
+  <table className="min-w-full border border-gray-300 text-sm">
 
     <thead className="bg-blue-700 text-white">
 
       <tr>
 
-        <th className="border px-4 py-3">
-          Description
+        <th className="border px-3 py-3 whitespace-nowrap">
+          Date
         </th>
 
-        <th className="border px-4 py-3">
-          Qty
+        <th className="border px-3 py-3 whitespace-nowrap">
+          Breakfast
         </th>
 
-        <th className="border px-4 py-3">
-          Rate
+        <th className="border px-3 py-3 whitespace-nowrap">
+          Lunch
         </th>
 
-        <th className="border px-4 py-3">
-          Amount
+        <th className="border px-3 py-3 whitespace-nowrap">
+          Dinner
+        </th>
+
+        <th className="border px-3 py-3">
+          Extra Item
+        </th>
+
+        <th className="border px-3 py-3 whitespace-nowrap">
+          Extra Amount
+        </th>
+
+        <th className="border px-3 py-3 whitespace-nowrap">
+          Total
         </th>
 
       </tr>
@@ -642,104 +657,228 @@ Thank you for choosing *OM TIFFIN SERVICE* 🙏`;
 
     <tbody>
 
-      <tr>
+      {bill.dailyDetails && bill.dailyDetails.length > 0 ? (
 
-        <td className="border px-4 py-3">
+        bill.dailyDetails.map((day, index) => {
 
-          Lunch Meals
+          const date = new Date(day.date).toLocaleDateString(
+            "en-IN",
+            {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            }
+          );
 
-        </td>
+          const extraItems = Array.isArray(day.extraItems)
+            ? day.extraItems
+            : [];
 
-        <td className="border px-4 py-3 text-center">
+          return (
 
-          {bill.totalLunch}
+            <tr
+              key={index}
+              className="hover:bg-slate-50"
+            >
 
-        </td>
+              {/* Date */}
 
-        <td className="border px-4 py-3 text-center">
+              <td className="border px-3 py-4 font-semibold whitespace-nowrap">
 
-          ₹{bill.lunchPrice}
+                {date}
 
-        </td>
+              </td>
 
-        <td className="border px-4 py-3 text-right">
+              {/* Breakfast */}
 
-          ₹{bill.lunchAmount}
+              <td className="border px-3 py-4 text-center">
 
-        </td>
+                {Number(day.breakfastQty || 0) > 0 ? (
 
-      </tr>
+                  <div>
 
-      <tr>
+                    <div className="font-semibold">
+                      {day.breakfastQty} × ₹
+                      {day.breakfastAmount /
+                        Number(day.breakfastQty || 1)}
+                    </div>
 
-        <td className="border px-4 py-3">
+                    <div className="text-green-600 font-bold">
+                      ₹{day.breakfastAmount || 0}
+                    </div>
 
-          Dinner Meals
+                  </div>
 
-        </td>
+                ) : (
 
-        <td className="border px-4 py-3 text-center">
+                  <span className="text-gray-400">
+                    —
+                  </span>
 
-          {bill.totalDinner}
+                )}
 
-        </td>
+              </td>
 
-        <td className="border px-4 py-3 text-center">
+              {/* Lunch */}
 
-          ₹{bill.dinnerPrice}
+              <td className="border px-3 py-4 text-center">
 
-        </td>
+                {Number(day.lunchQty || 0) > 0 ? (
 
-        <td className="border px-4 py-3 text-right">
+                  <div>
 
-          ₹{bill.dinnerAmount}
+                    <div className="font-semibold">
+                      {day.lunchQty} × ₹
+                      {day.lunchAmount /
+                        Number(day.lunchQty || 1)}
+                    </div>
 
-        </td>
+                    <div className="text-green-600 font-bold">
+                      ₹{day.lunchAmount || 0}
+                    </div>
 
-      </tr>
+                  </div>
 
-      <tr>
+                ) : (
 
-        <td className="border px-4 py-3">
+                  <span className="text-gray-400">
+                    —
+                  </span>
 
-          Extra Charges
+                )}
 
-        </td>
+              </td>
 
-        <td className="border px-4 py-3 text-center">
+              {/* Dinner */}
 
-          -
+              <td className="border px-3 py-4 text-center">
 
-        </td>
+                {Number(day.dinnerQty || 0) > 0 ? (
 
-        <td className="border px-4 py-3 text-center">
+                  <div>
 
-          -
+                    <div className="font-semibold">
+                      {day.dinnerQty} × ₹
+                      {day.dinnerAmount /
+                        Number(day.dinnerQty || 1)}
+                    </div>
 
-        </td>
+                    <div className="text-green-600 font-bold">
+                      ₹{day.dinnerAmount || 0}
+                    </div>
 
-        <td className="border px-4 py-3 text-right">
+                  </div>
 
-          ₹{bill.extraCharges}
+                ) : (
 
-        </td>
+                  <span className="text-gray-400">
+                    —
+                  </span>
 
-      </tr>
+                )}
+
+              </td>
+
+              {/* Extra Item */}
+
+              <td className="border px-3 py-4">
+
+                {extraItems.length > 0 ? (
+
+                  <div className="space-y-1">
+
+                    {extraItems.map((item, itemIndex) => (
+
+                      <div
+                        key={itemIndex}
+                        className="font-medium"
+                      >
+
+                        🥘 {item.description || "Extra Item"}
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                ) : (
+
+                  <span className="text-gray-400">
+                    —
+                  </span>
+
+                )}
+
+              </td>
+
+              {/* Extra Amount */}
+
+              <td className="border px-3 py-4 text-right">
+
+                {Number(day.extraAmount || 0) > 0 ? (
+
+                  <span className="font-bold text-orange-600">
+                    ₹{day.extraAmount}
+                  </span>
+
+                ) : (
+
+                  <span className="text-gray-400">
+                    ₹0
+                  </span>
+
+                )}
+
+              </td>
+
+              {/* Daily Total */}
+
+              <td className="border px-3 py-4 text-right font-bold text-green-700 whitespace-nowrap">
+
+                ₹{day.dailyTotal || 0}
+
+              </td>
+
+            </tr>
+
+          );
+
+        })
+
+      ) : (
+
+        <tr>
+
+          <td
+            colSpan="7"
+            className="border px-4 py-8 text-center text-gray-500"
+          >
+
+            No date-wise meal records found.
+
+          </td>
+
+        </tr>
+
+      )}
+
+      {/* Grand Total */}
 
       <tr className="bg-slate-100 font-bold">
 
         <td
-          colSpan="3"
-          className="border px-4 py-3 text-right"
+          colSpan="6"
+          className="border px-4 py-4 text-right text-lg"
         >
 
           Grand Total
 
         </td>
 
-        <td className="border px-4 py-3 text-right text-green-700">
+        <td className="border px-4 py-4 text-right text-lg text-green-700">
 
-          ₹{bill.totalAmount}
+          ₹{bill.totalAmount || 0}
 
         </td>
 
@@ -752,6 +891,8 @@ Thank you for choosing *OM TIFFIN SERVICE* 🙏`;
 </div>
 
 {/* Payment Summary */}
+
+
 
 <div className="grid md:grid-cols-2 gap-6 mt-8">
 

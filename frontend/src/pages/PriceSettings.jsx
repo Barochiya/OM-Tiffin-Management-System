@@ -162,11 +162,11 @@ if (res.data?.data) {
 
     <div className="min-h-screen bg-slate-100">
 
-      <Sidebar />
+     
 
       <div className="lg:ml-64">
 
-        <Navbar />
+       
 
         <div className="w-full max-w-full min-w-0 p-4 sm:p-6 lg:p-8">
 

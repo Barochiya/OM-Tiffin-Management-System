@@ -8,67 +8,69 @@ const applyAdvance = require("../utils/advanceHelper");
 // Generate Bill
 // =======================================
 
-
-
 const generateBill = async (req, res) => {
   try {
+    const { customer, month, year, cycle } = req.body;
 
-    const {
-      customer,
-      month,
-      year,
-      cycle,
-    } = req.body;
+    // ===============================
+    // Validate Request
+    // ===============================
+    if (!customer || !month || !year || !cycle) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer, month, year and billing cycle are required.",
+      });
+    }
+
+    if (!["1", "2"].includes(String(cycle))) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid billing cycle. Use 1 or 2.",
+      });
+    }
 
     // ===============================
     // Billing Period
     // ===============================
-
     let startDate;
     let endDate;
 
-    if (cycle === "1") {
-
+    if (String(cycle) === "1") {
+      // 1st to 15th
       startDate = new Date(year, month - 1, 1);
       endDate = new Date(year, month - 1, 16);
-
     } else {
-
+      // 16th to month end
       startDate = new Date(year, month - 1, 16);
       endDate = new Date(year, month, 1);
-
     }
 
     // ===============================
-// Get Entries
-// ===============================
+    // Get Daily Entries
+    // ===============================
+    const entries = await DailyEntry.find({
+      customer,
+      date: {
+        $gte: startDate,
+        $lt: endDate,
+      },
+    }).sort({ date: 1 });
 
-const entries = await DailyEntry.find({
-  customer,
-  date: {
-    $gte: startDate,
-    $lt: endDate,
-  },
-}).sort({ date: 1 });
+    console.log("===== DAILY ENTRIES =====");
 
-console.log("===== DAILY ENTRIES =====");
-
-entries.forEach((entry) => {
-
-  console.log({
-    date: entry.date,
-    breakfastQty: entry.breakfastQty,
-    lunchQty: entry.lunchQty,
-    dinnerQty: entry.dinnerQty,
-    extraItems: entry.extraItems,
-  });
-
-});
+    entries.forEach((entry) => {
+      console.log({
+        date: entry.date,
+        breakfastQty: entry.breakfastQty,
+        lunchQty: entry.lunchQty,
+        dinnerQty: entry.dinnerQty,
+        extraItems: entry.extraItems,
+      });
+    });
 
     // ===============================
     // Get Price
     // ===============================
-
     const price = await Price.findOne().sort({
       createdAt: -1,
     });
@@ -80,285 +82,301 @@ entries.forEach((entry) => {
       });
     }
 
-// ===============================
-// Remove Empty Days
-// ===============================
+    // ===============================
+    // Remove Empty Days
+    // ===============================
+    const filteredEntries = entries.filter((entry) => {
+      const breakfastQty = Number(entry.breakfastQty || 0);
+      const lunchQty = Number(entry.lunchQty || 0);
+      const dinnerQty = Number(entry.dinnerQty || 0);
 
-const filteredEntries = entries.filter((entry) => {
-  return (
-    entry.breakfastQty > 0 ||
-    entry.lunchQty > 0 ||
-    entry.dinnerQty > 0 ||
-    (entry.extraItems || []).length > 0
-  );
-});
+      const extraItems = Array.isArray(entry.extraItems)
+        ? entry.extraItems
+        : [];
 
-// ===============================
-// Date Wise Details
-// ===============================
+      return (
+        breakfastQty > 0 ||
+        lunchQty > 0 ||
+        dinnerQty > 0 ||
+        extraItems.some((item) => Number(item?.amount || 0) > 0)
+      );
+    });
 
-const dailyDetails = filteredEntries.map((entry) => {
+    // ===============================
+    // Date-Wise Details
+    // ===============================
+    const dailyDetails = filteredEntries.map((entry) => {
+      const breakfastQty = Number(entry.breakfastQty || 0);
+      const lunchQty = Number(entry.lunchQty || 0);
+      const dinnerQty = Number(entry.dinnerQty || 0);
 
-  const breakfastAmount =
-    entry.breakfastQty * price.breakfast;
+      const breakfastAmount =
+        breakfastQty * Number(price.breakfast || 0);
 
-  const lunchAmount =
-    entry.lunchQty * price.lunch;
+      const lunchAmount =
+        lunchQty * Number(price.lunch || 0);
 
-  const dinnerAmount =
-    entry.dinnerQty * price.dinner;
+      const dinnerAmount =
+        dinnerQty * Number(price.dinner || 0);
 
- const extraAmount = (entry.extraItems || []).reduce(
-  (total, item) => total + (item.amount || 0),
-  0
-);
+      const extraItems = Array.isArray(entry.extraItems)
+        ? entry.extraItems.map((item) => ({
+            description: item?.description || "",
+            amount: Number(item?.amount || 0),
+          }))
+        : [];
 
-  return {
+      const extraAmount = extraItems.reduce(
+        (total, item) => total + Number(item.amount || 0),
+        0
+      );
 
-  date: entry.date,
+      const dailyTotal =
+        breakfastAmount +
+        lunchAmount +
+        dinnerAmount +
+        extraAmount;
 
-  breakfastQty: entry.breakfastQty,
+      return {
+        date: entry.date,
 
-  lunchQty: entry.lunchQty,
+        breakfastQty,
+        lunchQty,
+        dinnerQty,
 
-  dinnerQty: entry.dinnerQty,
+        breakfastAmount,
+        lunchAmount,
+        dinnerAmount,
 
-  extraAmount,
+        extraItems,
+        extraAmount,
 
-  extraItems: entry.extraItems || [],
+        dailyTotal,
 
-  breakfastAmount,
+        remark: entry.remark || "",
+      };
+    });
 
-  lunchAmount,
+    // ===============================
+    // Total Quantity
+    // ===============================
+    let breakfastQty = 0;
+    let lunchQty = 0;
+    let dinnerQty = 0;
+    let totalExtraAmount = 0;
 
-  dinnerAmount,
+    filteredEntries.forEach((entry) => {
+      const breakfast = Number(entry.breakfastQty || 0);
+      const lunch = Number(entry.lunchQty || 0);
+      const dinner = Number(entry.dinnerQty || 0);
 
-  total:
-    breakfastAmount +
-    lunchAmount +
-    dinnerAmount +
-    extraAmount,
+      breakfastQty += breakfast;
+      lunchQty += lunch;
+      dinnerQty += dinner;
 
-};
+      const extraItems = Array.isArray(entry.extraItems)
+        ? entry.extraItems
+        : [];
 
+      const extra = extraItems.reduce(
+        (sum, item) => sum + Number(item?.amount || 0),
+        0
+      );
 
-});
+      totalExtraAmount += extra;
+    });
 
-// ===============================
-// Total Qty
-// ===============================
+    // ===============================
+    // Overall Amount
+    // ===============================
+    const breakfastAmount =
+      breakfastQty * Number(price.breakfast || 0);
 
-let breakfastQty = 0;
-let lunchQty = 0;
-let dinnerQty = 0;
-let totalExtraAmount = 0;
+    const lunchAmount =
+      lunchQty * Number(price.lunch || 0);
 
-filteredEntries.forEach((entry) => {
+    const dinnerAmount =
+      dinnerQty * Number(price.dinner || 0);
 
-  console.log("Entry =>", {
-    date: entry.date,
-    breakfastQty: entry.breakfastQty,
-    lunchQty: entry.lunchQty,
-    dinnerQty: entry.dinnerQty,
-    extraAmount: entry.extraAmount,
-  });
+    const totalAmount =
+      breakfastAmount +
+      lunchAmount +
+      dinnerAmount +
+      totalExtraAmount;
 
-  breakfastQty += entry.breakfastQty;
-  lunchQty += entry.lunchQty;
-  dinnerQty += entry.dinnerQty;
+    // ===============================
+    // Customer
+    // ===============================
+    const customerData = await Tiffin.findById(customer);
 
-  const extra = (entry.extraItems || []).reduce(
-  (sum, item) => sum + (item.amount || 0),
-  0
-);
+    if (!customerData) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found.",
+      });
+    }
 
-totalExtraAmount += extra;
-});
+    // ===============================
+    // Don't Generate Empty Bill
+    // ===============================
+    if (totalAmount === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No meals found for selected billing cycle.",
+      });
+    }
 
-// ===============================
-// Amount
-// ===============================
+    // ===============================
+    // Existing Bill
+    // ===============================
+    let bill = await Bill.findOne({
+      customer,
+      month,
+      year,
+      cycle: String(cycle),
+    });
 
-const breakfastAmount =
-  breakfastQty * price.breakfast;
+    // ===============================
+    // Generate Invoice Number
+    // Only for New Bill
+    // ===============================
+    let invoiceNo;
 
-const lunchAmount =
-  lunchQty * price.lunch;
+    if (!bill) {
+      const monthText = String(month).padStart(2, "0");
+      const prefix = `OMTS-${year}${monthText}`;
 
-const dinnerAmount =
-  dinnerQty * price.dinner;
+      const lastInvoice = await Bill.findOne({
+        invoiceNo: { $regex: `^${prefix}-` },
+      }).sort({ createdAt: -1 });
 
-const totalAmount =
-  breakfastAmount +
-  lunchAmount +
-  dinnerAmount +
-  totalExtraAmount;
-  // ===============================
-// Advance Adjustment
-// ===============================
+      if (lastInvoice?.invoiceNo) {
+        const parts = lastInvoice.invoiceNo.split("-");
+        const lastNumber = parseInt(parts[2], 10);
 
-const customerData = await Tiffin.findById(customer);
+        invoiceNo = `${prefix}-${String(
+          Number.isNaN(lastNumber) ? 1 : lastNumber + 1
+        ).padStart(4, "0")}`;
+      } else {
+        invoiceNo = `${prefix}-0001`;
+      }
+    }
 
-
-
-  // Don't generate bill if no meals found
-if (totalAmount === 0) {
-  return res.status(400).json({
-    success: false,
-    message: "No meals found for selected billing cycle."
-  });
-}
-
-// ===============================
-// Generate Invoice Number
-// ===============================
-
-const monthText = String(month).padStart(2, "0");
-
-const prefix = `OMTS-${year}${monthText}`;
-
-const lastInvoice = await Bill.findOne({
-  invoiceNo: { $regex: `^${prefix}` },
-}).sort({ createdAt: -1 });
-
-let invoiceNo;
-
-if (lastInvoice) {
-
-  const lastNumber = parseInt(
-    lastInvoice.invoiceNo.split("-")[2]
-  );
-
-  invoiceNo = `${prefix}-${String(lastNumber + 1).padStart(4, "0")}`;
-
-} else {
-
-  invoiceNo = `${prefix}-0001`;
-
-}
-
-// ===============================
-// Existing Bill
-// ===============================
-
-let bill = await Bill.findOne({
-  customer,
-  month,
-  year,
-  cycle,
-});
-    
-
+    // ===============================
+    // Update Existing Bill
+    // ===============================
     if (bill) {
-
       bill.breakfastQty = breakfastQty;
       bill.lunchQty = lunchQty;
       bill.dinnerQty = dinnerQty;
 
       bill.breakfastAmount = breakfastAmount;
-        bill.lunchAmount = lunchAmount;
-        bill.dinnerAmount = dinnerAmount;
+      bill.lunchAmount = lunchAmount;
+      bill.dinnerAmount = dinnerAmount;
 
-        // Extra Charges
-        bill.extraAmount = totalExtraAmount;
+      bill.extraAmount = totalExtraAmount;
 
-        bill.totalAmount = totalAmount;
+      // IMPORTANT:
+      // Save complete date-wise details
+      bill.dailyDetails = dailyDetails;
 
-       // Apply Advance
-applyAdvance(customerData, bill);
+      bill.totalAmount = totalAmount;
 
-     bill.pendingAmount = Math.max(
-    0,
-    totalAmount - bill.paidAmount
-);
+      // Keep existing paid amount and apply advance
+      applyAdvance(customerData, bill);
+
+      bill.pendingAmount = Math.max(
+        0,
+        totalAmount - Number(bill.paidAmount || 0)
+      );
 
       if (bill.pendingAmount <= 0) {
-
         bill.pendingAmount = 0;
         bill.status = "Paid";
-
-      } else if (bill.paidAmount > 0) {
-
+      } else if (Number(bill.paidAmount || 0) > 0) {
         bill.status = "Partial";
-
       } else {
-
         bill.status = "Pending";
-
       }
-
     } else {
+      // ===============================
+      // Create New Bill
+      // ===============================
+      bill = new Bill({
+        invoiceNo,
 
- bill = new Bill({
+        customer,
+        month,
+        year,
+        cycle: String(cycle),
 
-  invoiceNo,
+        breakfastQty,
+        lunchQty,
+        dinnerQty,
 
-  customer,
-  month,
-  year,
-  cycle,
+        breakfastAmount,
+        lunchAmount,
+        dinnerAmount,
 
-  breakfastQty,
-  lunchQty,
-  dinnerQty,
+        extraAmount: totalExtraAmount,
 
-  breakfastAmount,
-  lunchAmount,
-  dinnerAmount,
+        // IMPORTANT:
+        // Save date-wise details
+        dailyDetails,
 
-  // Extra Charges
-  extraAmount: totalExtraAmount,
+        totalAmount,
 
-  totalAmount,
+        paidAmount: 0,
+        pendingAmount: totalAmount,
+        status: "Pending",
+      });
 
-paidAmount: 0,
-pendingAmount: totalAmount,
-status: "Pending",
-});
+      // Apply customer advance
+      applyAdvance(customerData, bill);
 
-applyAdvance(customerData, bill);
+      bill.pendingAmount = Math.max(
+        0,
+        totalAmount - Number(bill.paidAmount || 0)
+      );
 
+      if (bill.pendingAmount <= 0) {
+        bill.pendingAmount = 0;
+        bill.status = "Paid";
+      } else if (Number(bill.paidAmount || 0) > 0) {
+        bill.status = "Partial";
+      } else {
+        bill.status = "Pending";
+      }
     }
 
-   
+    // ===============================
+    // Save Customer Advance Changes
+    // ===============================
+    if (customerData.isModified()) {
+      await customerData.save();
+    }
 
-if (customerData.isModified()) {
-    await customerData.save();
-}
-
+    // ===============================
+    // Save Bill
+    // ===============================
     await bill.save();
 
     // ===============================
     // Response
     // ===============================
-
-    res.json({
-
+    return res.json({
       success: true,
-
-      data: {
-
-        ...bill.toObject(),
-
-        dailyDetails,
-
-      },
-
+      data: bill,
     });
-
   } catch (error) {
+    console.error("Generate Bill Error:", error);
 
-    console.log(error);
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
-
-
 
 // =======================================
 // Get Latest Bill of Customer
@@ -370,8 +388,7 @@ const getLatestBill = async (req, res) => {
 
     const bill = await Bill.findOne({
       customer: customerId,
-    })
-      .sort({ createdAt: -1 });
+    }).sort({ createdAt: -1 });
 
     if (!bill) {
       return res.json({
@@ -380,20 +397,17 @@ const getLatestBill = async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: bill,
     });
-
   } catch (error) {
+    console.error("Get Latest Bill Error:", error);
 
-    console.log(error);
-
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
-
   }
 };
 

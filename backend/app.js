@@ -17,7 +17,7 @@ const priceRoutes = require("./routes/priceRoutes");
 const dailyEntryRoutes = require("./routes/dailyEntryRoutes");
 const billRoutes = require("./routes/billRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-
+const announcementRoutes = require("./routes/announcementRoutes");
 // Razorpay Payment Gateway
 const paymentGatewayRoutes = require("./routes/paymentGatewayRoutes");
 const whatsappRoutes = require("./routes/whatsappRoutes");
@@ -32,9 +32,10 @@ const errorHandler = require("./middleware/errorMiddleware");
 app.use(
   cors({
     origin: [
-      "https://om-tiffin-management-system.vercel.app",
-      "http://localhost:5173",
-    ],
+  "https://om-tiffin-management-system-1.onrender.com",
+  "https://om-tiffin-management-system.vercel.app",
+  "http://localhost:5173",
+],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
@@ -51,6 +52,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // WhatsApp Webhook
 app.use("/api/whatsapp", whatsappRoutes);
+app.use("/api/announcements", announcementRoutes);
 
 // ===============================
 // Request Logger

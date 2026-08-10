@@ -186,80 +186,86 @@ Thank You 🙏`);
   // SEND ANNOUNCEMENT
   // =========================================
 
-  const sendAnnouncement = async () => {
-    if (!title.trim()) {
-      alert("Please enter an announcement title.");
-      return;
-    }
+ const sendAnnouncement = async () => {
+  if (!title.trim()) {
+    alert("Please enter an announcement title.");
+    return;
+  }
 
-    if (!message.trim()) {
-      alert("Please enter an announcement message.");
-      return;
-    }
+  if (!message.trim()) {
+    alert("Please enter an announcement message.");
+    return;
+  }
 
-    if (filteredCustomers.length === 0) {
-      alert("No customers found for the selected audience.");
-      return;
-    }
+  if (filteredCustomers.length === 0) {
+    alert("No customers found for the selected audience.");
+    return;
+  }
 
-    if (customersWithPhone.length === 0) {
-      alert(
-        "No customers with valid phone numbers were found in the selected audience."
-      );
-      return;
-    }
+  if (customersWithPhone.length === 0) {
+    alert(
+      "No customers with valid phone numbers were found."
+    );
+    return;
+  }
 
-    const confirmed = window.confirm(
-      `Send this announcement to ${customersWithPhone.length} customer(s)?`
+  const confirmed = window.confirm(
+    `Send announcement to ${customersWithPhone.length} customer(s)?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    setSending(true);
+
+    const customerIds = customersWithPhone
+      .map((customer) => customer._id)
+      .filter(Boolean);
+
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL}/api/announcements/send`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          title: title.trim(),
+          message: message.trim(),
+          audience,
+          customerIds,
+        }),
+      }
     );
 
-    if (!confirmed) return;
+    const data = await response.json();
 
-    try {
-      setSending(true);
-
-      /*
-       * IMPORTANT:
-       *
-       * WhatsApp Cloud API production sending is not connected yet.
-       *
-       * We intentionally do NOT fake a successful send here.
-       * After Meta production verification is completed, this
-       * function will call the backend WhatsApp API.
-       */
-
-      console.log("Announcement prepared:", {
-        title,
-        message,
-        audience,
-        totalCustomers: filteredCustomers.length,
-        customersWithPhone: customersWithPhone.length,
-        customers: customersWithPhone.map((customer) => ({
-          id: customer._id,
-          name: customer.customerName,
-          phone:
-            customer.phone ||
-            customer.mobile ||
-            customer.whatsappNumber,
-        })),
-      });
-
-      alert(
-        `✅ Announcement is ready.\n\n` +
-          `Audience: ${customersWithPhone.length} customer(s)\n\n` +
-          `WhatsApp API sending will be enabled after Meta Production setup is completed.`
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Failed to prepare announcement."
       );
-    } catch (error) {
-      console.error("Announcement error:", error);
-
-      alert(
-        error?.response?.data?.message ||
-          "❌ Failed to prepare announcement."
-      );
-    } finally {
-      setSending(false);
     }
-  };
+
+    console.log("Announcement API response:", data);
+
+    alert(
+      `✅ Announcement prepared successfully!\n\n` +
+      `Customers: ${customerIds.length}\n\n` +
+      `WhatsApp sending will be connected after Meta Production setup.`
+    );
+  } catch (error) {
+    console.error("❌ Announcement error:", error);
+
+    alert(
+      error.message ||
+        "❌ Something went wrong while sending announcement."
+    );
+  } finally {
+    setSending(false);
+  }
+};
 
   // =========================================
   // RENDER

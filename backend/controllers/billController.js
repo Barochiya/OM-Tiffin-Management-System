@@ -3,6 +3,7 @@ const DailyEntry = require("../models/DailyEntry");
 const Price = require("../models/Price");
 const Tiffin = require("../models/Tiffin");
 const applyAdvance = require("../utils/advanceHelper");
+const { sendPdfBillWhatsApp } = require("../utils/whatsappSender");
 
 // =======================================
 // Generate Bill
@@ -411,7 +412,101 @@ const getLatestBill = async (req, res) => {
   }
 };
 
+
+// =======================================
+// Send Generated Bill PDF via WhatsApp
+// =======================================
+
+const sendBillWhatsApp = async (req, res) => {
+  try {
+    const billId = req.headers["x-bill-id"];
+
+    if (!billId) {
+      return res.status(400).json({
+        success: false,
+        message: "billId is required.",
+      });
+    }
+
+    const pdfBuffer = Buffer.isBuffer(req.body)
+      ? req.body
+      : null;
+
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "PDF file is required.",
+      });
+    }
+
+    const bill = await Bill.findById(billId);
+
+    if (!bill) {
+      return res.status(404).json({
+        success: false,
+        message: "Bill not found.",
+      });
+    }
+
+    const customer = await Tiffin.findById(bill.customer);
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found.",
+      });
+    }
+
+    if (!customer.phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer phone number not found.",
+      });
+    }
+
+    const filename =
+      `OM-Tiffin-${bill.invoiceNo || bill._id}.pdf`;
+
+    const result = await sendPdfBillWhatsApp({
+      phone: customer.phone,
+      pdfBuffer,
+      filename,
+      customerName: customer.customerName,
+      invoiceNo: bill.invoiceNo,
+      totalAmount: bill.totalAmount,
+    });
+
+    return res.json({
+      success: true,
+      message: "Bill PDF sent successfully on WhatsApp.",
+      data: {
+        messageId: result?.messages?.[0]?.id || null,
+        invoiceNo: bill.invoiceNo,
+        customerName: customer.customerName,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Send Bill WhatsApp Error:",
+      error.response?.data || error
+    );
+
+    const metaMessage =
+      error.meta?.message ||
+      error.message ||
+      "Failed to send bill on WhatsApp.";
+
+    return res.status(error.status || 500).json({
+      success: false,
+      message: metaMessage,
+      metaError: error.meta || null,
+    });
+  }
+};
+
+
 module.exports = {
   generateBill,
   getLatestBill,
+  sendBillWhatsApp,
 };

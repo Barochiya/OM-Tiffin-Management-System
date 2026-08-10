@@ -3,11 +3,12 @@ import QRCode from "react-qr-code";
 import { useReactToPrint } from "react-to-print";
 import { FaUsers, FaFileInvoice, FaCalendarAlt, FaMoneyBillWave } from "react-icons/fa";
 import { FaWhatsapp } from "react-icons/fa";
+import html2pdf from "html2pdf.js";
 
 import logo from "../assets/logo.png";
 
 import { getCustomersForEntry } from "../services/dailyEntryService";
-import { generateBill } from "../services/billService";
+import { generateBill, sendBillWhatsApp } from "../services/billService";
 
 export default function Billing() {
 
@@ -49,6 +50,7 @@ const getExtraItemSymbol = (itemName) => {
   const [cycle, setCycle] = useState("1");
 
   const [bill, setBill] = useState(null);
+  const [sendingBill, setSendingBill] = useState(false);
 
   const billRef = useRef(null);
 
@@ -158,6 +160,92 @@ const getExtraItemSymbol = (itemName) => {
   customers.find(
     (c) => c._id === (bill?.customer || customer)
   );
+
+const getPdfOptions = () => ({
+  margin: 6,
+  filename: `OM-Tiffin-${bill?.invoiceNo || "Bill"}.pdf`,
+  image: {
+    type: "jpeg",
+    quality: 0.96,
+  },
+  html2canvas: {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+  },
+  jsPDF: {
+    unit: "mm",
+    format: "a4",
+    orientation: "portrait",
+  },
+  pagebreak: {
+    mode: ["css", "legacy"],
+  },
+  ignoreElements: (element) =>
+    element.classList?.contains("no-pdf"),
+});
+
+const createBillPdf = async () => {
+  if (!bill || !billRef.current) {
+    throw new Error("Generate a bill before creating the PDF.");
+  }
+
+  return html2pdf()
+    .set(getPdfOptions())
+    .from(billRef.current)
+    .toPdf()
+    .outputPdf("blob");
+};
+
+const handleDownloadPdf = async () => {
+  try {
+    await html2pdf()
+      .set(getPdfOptions())
+      .from(billRef.current)
+      .save();
+  } catch (error) {
+    console.error("PDF Download Error:", error);
+    alert("Failed to create PDF.");
+  }
+};
+
+const handleSendBillWhatsApp = async () => {
+  if (!bill?._id) {
+    alert("Please generate the bill first.");
+    return;
+  }
+
+  if (!customerData?.phone) {
+    alert("Customer phone number not found.");
+    return;
+  }
+
+  try {
+    setSendingBill(true);
+
+    const pdfBlob = await createBillPdf();
+
+    const result = await sendBillWhatsApp(
+      bill._id,
+      pdfBlob
+    );
+
+    alert(
+      result?.message ||
+        "✅ Bill PDF sent successfully on WhatsApp."
+    );
+  } catch (error) {
+    console.error("WhatsApp Bill Error:", error);
+
+    alert(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to send bill on WhatsApp."
+    );
+  } finally {
+    setSendingBill(false);
+  }
+};
 
 const handleWhatsAppShare = () => {
   const phone =
@@ -1128,7 +1216,7 @@ Thank you for choosing OM TIFFIN SERVICE.`;
 
 {/* Buttons */}
 
-<div className="flex flex-wrap gap-4 mt-10">
+<div className="no-pdf flex flex-wrap gap-4 mt-10">
 
   <button
 
@@ -1143,13 +1231,10 @@ Thank you for choosing OM TIFFIN SERVICE.`;
   </button>
 
   <button
-
+    onClick={handleDownloadPdf}
     className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl"
-
   >
-
     📄 Download PDF
-
   </button>
 
   <button
@@ -1159,6 +1244,14 @@ Thank you for choosing OM TIFFIN SERVICE.`;
   <FaWhatsapp />
   Share on WhatsApp
 </button>
+  <button
+    onClick={handleSendBillWhatsApp}
+    disabled={sendingBill}
+    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
+  >
+    <FaWhatsapp />
+    {sendingBill ? "Sending PDF..." : "Send Bill PDF"}
+  </button>
 
 </div>
 

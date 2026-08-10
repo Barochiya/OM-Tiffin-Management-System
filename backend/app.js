@@ -41,6 +41,7 @@ app.use(
     allowedHeaders: [
       "Content-Type",
       "Authorization",
+      "X-Bill-ID",
     ],
   })
 );

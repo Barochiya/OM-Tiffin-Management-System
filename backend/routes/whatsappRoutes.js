@@ -1,42 +1,68 @@
 const express = require("express");
 
 const router = express.Router();
-const WHATSAPP_GRAPH_VERSION = "v26.0";
 
-// ===============================
+const {
+  sendWhatsAppMessage,
+  sendWhatsAppTemplate,
+} = require("../utils/whatsappSender");
+// =====================================================
 // WhatsApp Webhook Verification
-// ===============================
+// =====================================================
 
 router.get("/webhook", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
-  const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
+  const verifyToken =
+    process.env.WHATSAPP_VERIFY_TOKEN;
 
-  if (mode === "subscribe" && token === VERIFY_TOKEN) {
-    console.log("✅ WhatsApp Webhook Verified");
-    return res.status(200).send(challenge);
+  if (
+    mode === "subscribe" &&
+    token &&
+    verifyToken &&
+    token === verifyToken
+  ) {
+    console.log(
+      "✅ WhatsApp Webhook Verified"
+    );
+
+    return res
+      .status(200)
+      .send(challenge);
   }
 
-  console.log("❌ WhatsApp Webhook Verification Failed");
+  console.log(
+    "❌ WhatsApp Webhook Verification Failed"
+  );
+
   return res.sendStatus(403);
 });
 
-// ===============================
+// =====================================================
 // WhatsApp Incoming Webhook
-// ===============================
+// =====================================================
 
 router.post("/webhook", (req, res) => {
-  console.log("📩 WhatsApp Webhook Received");
-  console.log(JSON.stringify(req.body, null, 2));
+  console.log(
+    "📩 WhatsApp Webhook Received"
+  );
 
-  // Meta requires a quick 200 response
-  res.sendStatus(200);
+  console.log(
+    JSON.stringify(
+      req.body,
+      null,
+      2
+    )
+  );
+
+  // Meta requires quick 200 response
+  return res.sendStatus(200);
 });
 
 // =====================================================
-// WhatsApp Cloud API - Send Template Message
+// Send WhatsApp Message
 // =====================================================
 
 router.post("/send", async (req, res) => {
@@ -44,17 +70,29 @@ router.post("/send", async (req, res) => {
     // -------------------------------------------------
     // 1. Security check
     // -------------------------------------------------
-    const sendSecret = req.headers["x-whatsapp-send-secret"];
 
-    if (!process.env.WHATSAPP_SEND_SECRET) {
-      console.error("❌ WHATSAPP_SEND_SECRET is not configured");
+    const sendSecret =
+      req.headers["x-whatsapp-send-secret"];
+
+    const configuredSecret =
+      process.env.WHATSAPP_SEND_SECRET;
+
+    if (!configuredSecret) {
+      console.error(
+        "❌ WHATSAPP_SEND_SECRET is not configured"
+      );
+
       return res.status(500).json({
         success: false,
-        message: "WhatsApp send secret is not configured",
+        message:
+          "WhatsApp send secret is not configured",
       });
     }
 
-    if (sendSecret !== process.env.WHATSAPP_SEND_SECRET) {
+    if (
+      !sendSecret ||
+      sendSecret !== configuredSecret
+    ) {
       return res.status(401).json({
         success: false,
         message: "Unauthorized",
@@ -62,129 +100,109 @@ router.post("/send", async (req, res) => {
     }
 
     // -------------------------------------------------
-    // 2. Check required environment variables
+    // 2. Get request data
     // -------------------------------------------------
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-    if (!accessToken) {
-      return res.status(500).json({
-        success: false,
-        message: "WHATSAPP_ACCESS_TOKEN is not configured",
-      });
-    }
-
-    if (!phoneNumberId) {
-      return res.status(500).json({
-        success: false,
-        message: "WHATSAPP_PHONE_NUMBER_ID is not configured",
-      });
-    }
-
-    // -------------------------------------------------
-    // 3. Get request data
-    // -------------------------------------------------
     const {
       to,
-      templateName = "3p_direct_integration_test_template",
+      type = "template",
+      message,
+      templateName,
       languageCode = "en_US",
-    } = req.body;
+      components,
+      previewUrl = false,
+    } = req.body || {};
+
+    // -------------------------------------------------
+    // 3. Basic validation
+    // -------------------------------------------------
 
     if (!to) {
       return res.status(400).json({
         success: false,
-        message: "Recipient phone number (to) is required",
+        message:
+          "Recipient phone number (to) is required",
       });
     }
 
     // -------------------------------------------------
-    // 4. Normalize phone number
+    // 4. Send Text Message
     // -------------------------------------------------
-    let normalizedTo = String(to).replace(/\D/g, "");
 
-if (normalizedTo.length === 10) {
-  normalizedTo = "91" + normalizedTo;
-}
+    if (type === "text") {
+      if (!message) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Message is required for text messages",
+        });
+      }
 
-    if (!normalizedTo) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid recipient phone number",
+      const data =
+        await sendWhatsAppMessage({
+          to,
+          message,
+          previewUrl,
+        });
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "WhatsApp text message sent successfully",
+        data,
       });
     }
 
     // -------------------------------------------------
-    // 5. Meta Graph API URL
+    // 5. Send Template Message
     // -------------------------------------------------
-    const url =
-      `https://graph.facebook.com/${WHATSAPP_GRAPH_VERSION}/` +
-      `${phoneNumberId}/messages`;
 
-    // -------------------------------------------------
-    // 6. WhatsApp template payload
-    // -------------------------------------------------
-    const payload = {
-      messaging_product: "whatsapp",
-      to: normalizedTo,
-      type: "template",
-      template: {
-        name: templateName,
-        language: {
-          code: languageCode,
-        },
-      },
-    };
+    if (type === "template") {
+      const finalTemplateName =
+        templateName ||
+        "3p_direct_integration_test_template";
 
-    console.log("📤 Sending WhatsApp template:", {
-      to: normalizedTo,
-      templateName,
-      languageCode,
-    });
+      const data =
+        await sendWhatsAppTemplate({
+          to,
+          templateName:
+            finalTemplateName,
+          languageCode,
+          components,
+        });
 
-    // -------------------------------------------------
-    // 7. Send request to Meta
-    // -------------------------------------------------
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
-
-    // -------------------------------------------------
-    // 8. Handle Meta error
-    // -------------------------------------------------
-    if (!response.ok) {
-      console.error("❌ WhatsApp API error:", data);
-
-      return res.status(response.status).json({
-        success: false,
-        message: "WhatsApp API request failed",
-        error: data,
+      return res.status(200).json({
+        success: true,
+        message:
+          "WhatsApp template message sent successfully",
+        data,
       });
     }
 
     // -------------------------------------------------
-    // 9. Success
+    // 6. Unsupported type
     // -------------------------------------------------
-    console.log("✅ WhatsApp message sent:", data);
 
-    return res.status(200).json({
-      success: true,
-      message: "WhatsApp message sent successfully",
-      data,
+    return res.status(400).json({
+      success: false,
+      message:
+        "Unsupported WhatsApp message type. Use 'text' or 'template'.",
     });
   } catch (error) {
-    console.error("❌ WhatsApp send error:", error);
+    console.error(
+      "❌ WhatsApp send error:",
+      error
+    );
 
-    return res.status(500).json({
+    return res.status(
+      error.status || 500
+    ).json({
       success: false,
-      message: "Internal server error while sending WhatsApp message",
-      error: error.message,
+      message:
+        error.message ||
+        "Internal server error while sending WhatsApp message",
+      code: error.code || undefined,
+      error: error.meta || undefined,
     });
   }
 });

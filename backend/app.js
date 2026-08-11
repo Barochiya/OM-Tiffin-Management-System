@@ -31,10 +31,11 @@ const errorHandler = require("./middleware/errorMiddleware");
 
 app.use(
   cors({
-    origin: [
+   origin: [
   "https://om-tiffin-management-system-1.onrender.com",
   "https://om-tiffin-management-system.vercel.app",
   "http://localhost:5173",
+  "http://localhost:5174",
 ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

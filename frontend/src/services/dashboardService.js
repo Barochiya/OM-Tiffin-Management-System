@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
-  "https://om-tiffin-management-system.onrender.com";
+  "http://localhost:5000";
 
 const api = axios.create({
   baseURL: API_URL,

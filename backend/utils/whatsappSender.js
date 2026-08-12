@@ -410,6 +410,78 @@ const sendPdfBillWhatsApp = async ({
 };
 
 // =====================================================
+// Send PDF Payment Receipt
+// =====================================================
+
+const sendPdfPaymentReceiptWhatsApp = async ({
+  phone,
+  pdfBuffer,
+  filename,
+  customerName,
+  receiptNo,
+  amount,
+  paymentMethod,
+  paymentDate,
+}) => {
+  const to = normalizeIndianPhone(phone);
+
+  if (!to) {
+    const error = new Error(
+      "Customer phone number is invalid."
+    );
+
+    error.code = "INVALID_PHONE";
+
+    throw error;
+  }
+
+  const media = await uploadPdf({
+    pdfBuffer,
+    filename,
+  });
+
+  if (!media?.id) {
+    const error = new Error(
+      "WhatsApp payment receipt PDF media upload failed."
+    );
+
+    error.code = "MEDIA_UPLOAD_FAILED";
+
+    throw error;
+  }
+
+  const formattedDate = paymentDate
+    ? new Date(paymentDate).toLocaleDateString("en-GB")
+    : new Date().toLocaleDateString("en-GB");
+
+  const caption =
+    `OM TIFFIN SERVICE\n\n` +
+    `Payment Received Successfully\n\n` +
+    `Customer : ${
+      customerName || "Customer"
+    }\n\n` +
+    `Receipt No : ${
+      receiptNo || "N/A"
+    }\n\n` +
+    `Amount : ₹${Number(
+      amount || 0
+    )}\n\n` +
+    `Payment Method : ${
+      paymentMethod || "Cash"
+    }\n\n` +
+    `Date : ${formattedDate}\n\n` +
+    `Thank you for choosing OM TIFFIN SERVICE.`;
+
+  return sendWhatsAppDocument({
+    to,
+    mediaId: media.id,
+    filename:
+      filename || "OM-Tiffin-Payment-Receipt.pdf",
+    caption,
+  });
+};
+
+// =====================================================
 // Export
 // =====================================================
 
@@ -420,4 +492,5 @@ module.exports = {
   sendWhatsAppTemplate,
   sendWhatsAppDocument,
   sendPdfBillWhatsApp,
+  sendPdfPaymentReceiptWhatsApp,
 };

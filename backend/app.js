@@ -40,10 +40,11 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Bill-ID",
-    ],
+  "Content-Type",
+  "Authorization",
+  "X-Bill-ID",
+  "X-Payment-Id",
+],
   })
 );
 

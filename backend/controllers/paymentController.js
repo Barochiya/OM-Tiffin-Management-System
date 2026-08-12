@@ -4,6 +4,7 @@ const Tiffin = require("../models/Tiffin");
 
 const {
   sendWhatsAppMessage,
+  sendPdfPaymentReceiptWhatsApp,
 } = require("../utils/whatsappSender");
 
 // ===============================
@@ -271,3 +272,122 @@ exports.getPaymentHistoryByBill =
       });
     }
   };
+
+  // =======================================
+// Send Payment Receipt PDF via WhatsApp
+// =======================================
+
+exports.sendPaymentReceiptWhatsApp = async (
+  req,
+  res
+) => {
+  try {
+    const paymentId =
+      req.headers["x-payment-id"];
+
+    if (!paymentId) {
+      return res.status(400).json({
+        success: false,
+        message: "paymentId is required.",
+      });
+    }
+
+    const pdfBuffer = Buffer.isBuffer(req.body)
+      ? req.body
+      : null;
+
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "PDF file is required.",
+      });
+    }
+
+    const payment =
+      await Payment.findById(paymentId)
+        .populate("customer")
+        .populate("bill");
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment not found.",
+      });
+    }
+
+    const customer = payment.customer;
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found.",
+      });
+    }
+
+    if (!customer.phone) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Customer phone number not found.",
+      });
+    }
+
+    const receiptNo =
+      payment.receiptNo ||
+      payment._id
+        ?.toString()
+        .slice(-6)
+        .toUpperCase();
+
+    const filename =
+      `OM-Tiffin-Payment-Receipt-${
+        receiptNo || payment._id
+      }.pdf`;
+
+    const result =
+      await sendPdfPaymentReceiptWhatsApp({
+        phone: customer.phone,
+        pdfBuffer,
+        filename,
+        customerName:
+          customer.customerName,
+        receiptNo,
+        amount: payment.amount,
+        paymentMethod:
+          payment.paymentMethod,
+        paymentDate:
+          payment.paymentDate,
+      });
+
+    return res.json({
+      success: true,
+      message:
+        "Payment receipt PDF sent successfully on WhatsApp.",
+      data: {
+        messageId:
+          result?.messages?.[0]?.id || null,
+        receiptNo,
+        customerName:
+          customer.customerName,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Send Payment Receipt WhatsApp Error:",
+      error.response?.data || error
+    );
+
+    const metaMessage =
+      error.meta?.message ||
+      error.message ||
+      "Failed to send payment receipt on WhatsApp.";
+
+    return res.status(
+      error.status || 500
+    ).json({
+      success: false,
+      message: metaMessage,
+      metaError: error.meta || null,
+    });
+  }
+};

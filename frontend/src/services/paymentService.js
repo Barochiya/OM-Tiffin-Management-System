@@ -90,3 +90,28 @@ export const getPaymentById = async (id) => {
 
   return response.data;
 };
+
+// ===============================
+// Send Payment Receipt PDF via WhatsApp
+// ===============================
+export const sendPaymentReceiptWhatsApp = async (
+  paymentId,
+  pdfBlob
+) => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.post(
+    "/payments/send-whatsapp",
+    pdfBlob,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/pdf",
+        "X-Payment-Id": paymentId,
+      },
+    }
+  );
+
+  return response.data;
+};
+

@@ -27,6 +27,16 @@ router.get(
   paymentController.getPaymentHistoryByBill
 );
 
+// Send Payment Receipt PDF via WhatsApp
+router.post(
+  "/send-whatsapp",
+  express.raw({
+    type: "application/pdf",
+    limit: "10mb",
+  }),
+  paymentController.sendPaymentReceiptWhatsApp
+);
+
 // Single Payment
 router.get(
   "/:id",

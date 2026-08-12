@@ -172,6 +172,48 @@ const getPdfOptions = () => ({
     scale: 2,
     useCORS: true,
     logging: false,
+
+    onclone: (clonedDocument) => {
+      const clonedBill = clonedDocument.querySelector(
+        '[data-pdf-bill="true"]'
+      );
+
+      if (!clonedBill) return;
+
+      const elements = [
+        clonedBill,
+        ...clonedBill.querySelectorAll("*"),
+      ];
+
+      elements.forEach((element) => {
+        const computedStyle =
+          clonedDocument.defaultView.getComputedStyle(element);
+
+        const color = computedStyle.color;
+        const backgroundColor =
+          computedStyle.backgroundColor;
+        const borderColor =
+          computedStyle.borderColor;
+
+        if (color && color.includes("oklch")) {
+          element.style.color = "#374151";
+        }
+
+        if (
+          backgroundColor &&
+          backgroundColor.includes("oklch")
+        ) {
+          element.style.backgroundColor = "#ffffff";
+        }
+
+        if (
+          borderColor &&
+          borderColor.includes("oklch")
+        ) {
+          element.style.borderColor = "#d1d5db";
+        }
+      });
+    },
   },
   jsPDF: {
     unit: "mm",
@@ -570,9 +612,10 @@ Thank you for choosing OM TIFFIN SERVICE.`;
                 {bill && (
 
           <div
-            ref={billRef}
-            className="bg-white rounded-2xl shadow-xl mt-8 p-8"
-          >
+  ref={billRef}
+  data-pdf-bill="true"
+  className="bg-white rounded-2xl shadow-xl mt-8 p-8"
+>
 
             {/* Invoice Header */}
 

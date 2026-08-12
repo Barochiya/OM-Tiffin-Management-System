@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   FaMoneyBillWave,
@@ -20,6 +20,7 @@ import {
 } from "../services/paymentService";
 
 export default function Payments() {
+   const navigate = useNavigate();
 
   // ===========================
   // STATES
@@ -147,11 +148,15 @@ export default function Payments() {
 
       };
 
-      await addPayment(paymentData);
+     const savedPayment = await addPayment(paymentData);
 
-      await loadPayments();
+await loadPayments();
 
-      alert("✅ Payment Saved Successfully");
+alert("✅ Payment Saved Successfully");
+
+if (savedPayment?._id) {
+  navigate(`/payment-receipt/${savedPayment._id}`);
+}
 
       setBill("");
 

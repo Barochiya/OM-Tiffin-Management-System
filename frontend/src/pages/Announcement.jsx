@@ -250,11 +250,17 @@ Thank You 🙏`);
 
     console.log("Announcement API response:", data);
 
-    alert(
-      `✅ Announcement prepared successfully!\n\n` +
-      `Customers: ${customerIds.length}\n\n` +
-      `WhatsApp sending will be connected after Meta Production setup.`
-    );
+const sent = data.data?.sent || 0;
+const failed = data.data?.failed || 0;
+const total = data.data?.totalCustomers || customerIds.length;
+
+alert(
+  `✅ Announcement Sending Completed!\n\n` +
+  `Total Customers: ${total}\n` +
+  `WhatsApp Sent: ${sent}\n` +
+  `Failed: ${failed}`
+);
+
   } catch (error) {
     console.error("❌ Announcement error:", error);
 

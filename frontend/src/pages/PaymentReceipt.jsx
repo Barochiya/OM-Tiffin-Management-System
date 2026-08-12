@@ -16,13 +16,16 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 
-import { sendReceiptWhatsApp } from "../services/whatsappService";
+import html2pdf from "html2pdf.js";
 
 
 
 import logo from "../assets/logo.png";
 
-import { getPaymentById } from "../services/paymentService";
+import {
+  getPaymentById,
+  sendPaymentReceiptWhatsApp,
+} from "../services/paymentService";
 
 export default function PaymentReceipt() {
 
@@ -33,6 +36,11 @@ export default function PaymentReceipt() {
   const [payment, setPayment] = useState(null);
 
   const [loading, setLoading] = useState(true);
+
+  const [sendingWhatsApp, setSendingWhatsApp] =
+  useState(false);
+
+  const autoSendStarted = useRef(false);
 
   useEffect(() => {
 
@@ -61,6 +69,53 @@ export default function PaymentReceipt() {
     }
 
   };
+
+    // =======================================
+  // Automatically Send Receipt PDF
+  // =======================================
+
+  useEffect(() => {
+    if (
+      !payment ||
+      !receiptRef.current ||
+      autoSendStarted.current
+    ) {
+      return;
+    }
+
+    const sendAutomatically = async () => {
+      try {
+        autoSendStarted.current = true;
+
+        setSendingWhatsApp(true);
+
+        // Give the browser a moment to finish rendering
+        await new Promise((resolve) =>
+          setTimeout(resolve, 500)
+        );
+
+        const pdfBlob = await createReceiptPdf();
+
+        await sendPaymentReceiptWhatsApp(
+          payment._id,
+          pdfBlob
+        );
+
+        console.log(
+          "✅ Payment receipt PDF sent automatically on WhatsApp."
+        );
+      } catch (error) {
+        console.error(
+          "Automatic Receipt WhatsApp Error:",
+          error
+        );
+      } finally {
+        setSendingWhatsApp(false);
+      }
+    };
+
+    sendAutomatically();
+  }, [payment]);
 
   if (loading) {
 
@@ -116,6 +171,8 @@ export default function PaymentReceipt() {
 
   const paymentMethod =
 
+  
+
     payment.paymentMethod === "Cash"
 
       ? "💵 Cash"
@@ -129,23 +186,108 @@ export default function PaymentReceipt() {
       ? "💳 Card"
 
       : "🌐 Razorpay";
+
+      // =======================================
+// Generate Payment Receipt PDF
+// =======================================
+
+const getReceiptPdfOptions = () => ({
+  margin: 6,
+
+  filename: `OM-Tiffin-Payment-Receipt-${
+    receiptNumber || payment?._id || "Receipt"
+  }.pdf`,
+
+  image: {
+    type: "jpeg",
+    quality: 0.96,
+  },
+
+  html2canvas: {
+    scale: 2,
+    useCORS: true,
+    logging: false,
+  },
+
+  jsPDF: {
+    unit: "mm",
+    format: "a4",
+    orientation: "portrait",
+  },
+
+  pagebreak: {
+    mode: ["css", "legacy"],
+  },
+
+  ignoreElements: (element) =>
+    element.classList?.contains("no-pdf"),
+});
+
+const createReceiptPdf = async () => {
+  if (!payment || !receiptRef.current) {
+    throw new Error(
+      "Payment receipt is not ready."
+    );
+  }
+
+  return html2pdf()
+    .set(getReceiptPdfOptions())
+    .from(receiptRef.current)
+    .toPdf()
+    .outputPdf("blob");
+};
+
+// =======================================
+// Send Payment Receipt PDF on WhatsApp
+// =======================================
+
+const handleSendReceiptWhatsApp = async () => {
+  if (!payment?._id) {
+    alert("Payment receipt is not ready.");
+    return;
+  }
+
+  try {
+    setSendingWhatsApp(true);
+
+    const pdfBlob = await createReceiptPdf();
+
+    const result =
+      await sendPaymentReceiptWhatsApp(
+        payment._id,
+        pdfBlob
+      );
+
+    alert(
+      result?.message ||
+        "Payment receipt PDF sent successfully on WhatsApp."
+    );
+  } catch (error) {
+    console.error(
+      "Payment Receipt WhatsApp Error:",
+      error
+    );
+
+    alert(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to send payment receipt on WhatsApp."
+    );
+  } finally {
+    setSendingWhatsApp(false);
+  }
+};
        return (
   <div className="w-full min-h-screen bg-slate-100 print:bg-white">
 
-    <div className="w-full px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:py-8">
+    <div className="w-full px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:py-8 print:p-0">
 
       <div
-        ref={receiptRef}
-        className="relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-6xl mx-auto overflow-hidden print:shadow-none print:rounded-none"
-      >
+  ref={receiptRef}
+  className="receipt relative bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-6xl mx-auto overflow-hidden print:shadow-none print:rounded-none print:max-w-none print:w-full"
+>
 
-          <div
-
-            ref={receiptRef}
-
-            className="relative bg-white rounded-3xl shadow-2xl max-w-6xl mx-auto overflow-hidden print:shadow-none"
-
-          >
+          
 
             {/* Top Ribbon */}
 
@@ -597,43 +739,49 @@ export default function PaymentReceipt() {
 
             {/* Action Buttons */}
 
-            <div className="flex flex-wrap justify-center gap-4 px-10 pb-10 print:hidden">
+            <div className="no-pdf flex flex-wrap justify-center gap-4 px-10 pb-10 print:hidden">
+
+            <button
+  onClick={() => window.print()}
+  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl transition"
+>
+  <FaPrint />
+  Print Receipt
+</button>
+
+<button
+  onClick={async () => {
+    try {
+      await html2pdf()
+        .set(getReceiptPdfOptions())
+        .from(receiptRef.current)
+        .save();
+    } catch (error) {
+      console.error(
+        "Receipt PDF Error:",
+        error
+      );
+
+      alert("Failed to create receipt PDF.");
+    }
+  }}
+  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl transition"
+>
+  <FaFilePdf />
+  Save as PDF
+</button>
 
               <button
+  onClick={handleSendReceiptWhatsApp}
+  disabled={sendingWhatsApp}
+  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl transition"
+>
+  <FaWhatsapp />
 
-                onClick={() => window.print()}
-
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl transition"
-
-              >
-
-                <FaPrint />
-
-                Print Receipt
-
-              </button>
-
-              <button
-
-                onClick={() => window.print()}
-
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl transition"
-
-              >
-
-                <FaFilePdf />
-
-                Save as PDF
-
-              </button>
-
-              <button
-                  onClick={() => sendReceiptWhatsApp(payment)}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl transition"
-                >
-                  <FaWhatsapp />
-                  Share on WhatsApp
-              </button>
+  {sendingWhatsApp
+    ? "Sending Receipt..."
+    : "Send Receipt PDF"}
+</button>
 
             </div>
 
@@ -643,7 +791,6 @@ export default function PaymentReceipt() {
 
       </div>
 
-    </div>
 
   );
 

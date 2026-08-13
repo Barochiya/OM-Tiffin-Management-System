@@ -148,6 +148,12 @@ export default function Payments() {
 
       };
 
+      console.log({
+  customer,
+  bill,
+  amount,
+});
+
      const savedPayment = await addPayment(paymentData);
 
 await loadPayments();
@@ -169,9 +175,11 @@ if (savedPayment?._id) {
       if (customer) {
 
         const res =
-          await getBillsByCustomer(customer);
+  await getBillsByCustomer(customerId);
 
-        setBills(res);
+console.log("Bills:", res);
+
+setBills(Array.isArray(res) ? res : []);
 
       }
 

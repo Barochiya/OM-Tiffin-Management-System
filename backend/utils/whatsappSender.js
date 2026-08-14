@@ -395,7 +395,7 @@ const sendPdfBillWhatsApp = async ({
   const caption =
   `🏆 *OM TIFFIN SERVICE* 🏆\n\n` +
   `━━━━━━━━━━━━━━\n\n` +
-  `✅ *Payment Received Successfully*\n\n` +
+  `✅ *PAYMENT RECEIVED SUCCESSFULLY*\n\n` +
   `👤 *Customer:* ${customerName || "Customer"}\n\n` +
   `📄 *Receipt No:* ${receiptNo || "N/A"}\n\n` +
   `💰 *Amount:* ₹${Number(amount || 0)}\n\n` +
@@ -403,7 +403,8 @@ const sendPdfBillWhatsApp = async ({
   `📅 *Date:* ${formattedDate}\n\n` +
   `━━━━━━━━━━━━━━\n\n` +
   `🙏 Thank you for choosing\n` +
-  `🌿 *OM TIFFIN SERVICE* 🌿`;
+  `🌿 *OM TIFFIN SERVICE* 🌿\n\n` +
+  `🍱 Fresh Food • 🚚 On-Time Delivery • ❤️ Trusted Service`;
 
   const result = await sendWhatsAppDocument({
   to,
@@ -464,22 +465,18 @@ const sendPdfPaymentReceiptWhatsApp = async ({
     : new Date().toLocaleDateString("en-GB");
 
   const caption =
-    `OM TIFFIN SERVICE\n\n` +
-    `Payment Received Successfully\n\n` +
-    `Customer : ${
-      customerName || "Customer"
-    }\n\n` +
-    `Receipt No : ${
-      receiptNo || "N/A"
-    }\n\n` +
-    `Amount : ₹${Number(
-      amount || 0
-    )}\n\n` +
-    `Payment Method : ${
-      paymentMethod || "Cash"
-    }\n\n` +
-    `Date : ${formattedDate}\n\n` +
-    `Thank you for choosing OM TIFFIN SERVICE.`;
+  `🏆 *OM TIFFIN SERVICE* 🏆\n\n` +
+  `━━━━━━━━━━━━━━\n\n` +
+  `✅ *PAYMENT RECEIVED SUCCESSFULLY*\n\n` +
+  `👤 *Customer:* ${customerName || "Customer"}\n\n` +
+  `📄 *Receipt No:* ${receiptNo || "N/A"}\n\n` +
+  `💰 *Amount:* ₹${Number(amount || 0)}\n\n` +
+  `💳 *Payment Method:* ${paymentMethod || "Cash"}\n\n` +
+  `📅 *Date:* ${formattedDate}\n\n` +
+  `━━━━━━━━━━━━━━\n\n` +
+  `🙏 Thank you for choosing\n` +
+  `🌿 *OM TIFFIN SERVICE* 🌿\n\n` +
+  `🍱 Fresh Food • 🚚 On-Time Delivery • ❤️ Trusted Service`;
 
   return sendWhatsAppDocument({
     to,

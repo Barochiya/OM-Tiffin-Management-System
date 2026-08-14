@@ -161,11 +161,10 @@ export default function PaymentReceipt() {
 
   }
 
-  const receiptNumber =
-
-    payment.receiptNo ||
-
-    payment._id.slice(-6).toUpperCase();
+  const receiptNo = payment._id
+  .toString()
+  .slice(-6)
+  .toUpperCase();
 
   const paymentDate = new Date(payment.paymentDate);
 
@@ -195,7 +194,7 @@ const getReceiptPdfOptions = () => ({
   margin: 6,
 
   filename: `OM-Tiffin-Payment-Receipt-${
-    receiptNumber || payment?._id || "Receipt"
+    receiptNo || payment?._id || "Receipt"
   }.pdf`,
 
   image: {
@@ -409,7 +408,7 @@ const handleSendReceiptWhatsApp = async () => {
 
                 <h3 className="text-xl font-bold">
 
-                  {receiptNumber}
+                  {receiptNo}
 
                 </h3>
 
@@ -462,10 +461,8 @@ const handleSendReceiptWhatsApp = async () => {
                 </p>
 
                 <span className="inline-block bg-green-600 text-white px-4 py-1 rounded-full">
-
-                  {payment.status}
-
-                </span>
+  {payment.bill?.status}
+</span>
 
               </div>
 
@@ -611,10 +608,8 @@ const handleSendReceiptWhatsApp = async () => {
                     </span>
 
                     <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">
-
-                      {payment.status}
-
-                    </span>
+  {payment.bill?.status}
+</span>
 
                   </div>
 
@@ -624,7 +619,7 @@ const handleSendReceiptWhatsApp = async () => {
 
                       value={JSON.stringify({
 
-                        receipt: receiptNumber,
+                        receipt: receiptNo,
 
                         invoice: payment.bill?.invoiceNo,
 
@@ -632,7 +627,7 @@ const handleSendReceiptWhatsApp = async () => {
 
                         amount: payment.amount,
 
-                        status: payment.status,
+                        status: payment.bill?.status,
 
                       })}
 

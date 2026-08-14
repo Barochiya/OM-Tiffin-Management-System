@@ -15,7 +15,7 @@ import {
 
 import {
   addPayment,
-  getBillsByCustomer,
+  getPendingBills,
   getPayments,
 } from "../services/paymentService";
 
@@ -106,23 +106,17 @@ export default function Payments() {
   // ===========================
 
   const handleCustomerChange = async (customerId) => {
+  setCustomer(customerId);
 
-    setCustomer(customerId);
+  try {
+    const res =
+      await getPendingBills(customerId);
 
-    try {
-
-      const res =
-        await getBillsByCustomer(customerId);
-
-      setBills(res);
-
-    } catch (error) {
-
-      console.log(error);
-
-    }
-
-  };
+    setBills(res);
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   // ===========================
   // SAVE PAYMENT

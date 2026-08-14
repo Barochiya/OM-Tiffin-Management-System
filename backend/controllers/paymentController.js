@@ -101,11 +101,10 @@ exports.addPayment = async (req, res) => {
 
     try {
       if (customerData.phone) {
-        const receiptNo =
-          payment._id
-            ?.toString()
-            .slice(-6)
-            .toUpperCase();
+        const receiptNo = payment._id
+  .toString()
+  .slice(-6)
+  .toUpperCase();
 
         const message =
           `🧾 *OM TIFFIN SERVICE*\n\n` +

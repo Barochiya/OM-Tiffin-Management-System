@@ -337,19 +337,20 @@ const sendWhatsAppDocument = async ({
   }
 
   console.log("📤 Sending WhatsApp document:", {
-    to: normalizedTo,
-    filename,
-  });
+  to: normalizedTo,
+  filename,
+});
 
-  const data = await sendMetaMessageRequest(
-    payload
-  );
 
-  console.log("✅ WhatsApp document sent:", data);
 
-  return data;
+const data = await sendMetaMessageRequest(
+  payload
+);
+
+console.log("✅ WhatsApp document sent:", data);
+
+return data;
 };
-
 // =====================================================
 // Send PDF Bill
 // =====================================================
@@ -378,6 +379,8 @@ const sendPdfBillWhatsApp = async ({
     pdfBuffer,
     filename,
   });
+  
+  
 
   if (!media?.id) {
     const error = new Error(
@@ -400,13 +403,17 @@ const sendPdfBillWhatsApp = async ({
     )}\n\n` +
     `Thank you for choosing OM TIFFIN SERVICE. 🙏`;
 
-  return sendWhatsAppDocument({
-    to,
-    mediaId: media.id,
-    filename:
-      filename || "OM-Tiffin-Bill.pdf",
-    caption,
-  });
+  const result = await sendWhatsAppDocument({
+  to,
+  mediaId: media.id,
+  filename:
+    filename || "OM-Tiffin-Payment-Receipt.pdf",
+  caption,
+});
+
+
+
+return result;
 };
 
 // =====================================================

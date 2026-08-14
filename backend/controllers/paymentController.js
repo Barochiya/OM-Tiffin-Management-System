@@ -281,9 +281,22 @@ exports.sendPaymentReceiptWhatsApp = async (
   req,
   res
 ) => {
+
+  console.log("=== SEND WHATSAPP API CALLED ===");
+
+  console.log("Headers:", req.headers);
+
+  console.log(
+    "Body Length:",
+    req.body?.length
+  );
+
   try {
+
     const paymentId =
       req.headers["x-payment-id"];
+
+    // बाकी code...
 
     if (!paymentId) {
       return res.status(400).json({

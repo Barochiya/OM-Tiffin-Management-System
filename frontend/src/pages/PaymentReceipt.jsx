@@ -74,48 +74,48 @@ export default function PaymentReceipt() {
   // Automatically Send Receipt PDF
   // =======================================
 
-  useEffect(() => {
-    if (
-      !payment ||
-      !receiptRef.current ||
-      autoSendStarted.current
-    ) {
-      return;
-    }
+  // useEffect(() => {
+  //   if (
+  //     !payment ||
+  //     !receiptRef.current ||
+  //     autoSendStarted.current
+  //   ) {
+  //     return;
+  //   }
 
-    const sendAutomatically = async () => {
-      try {
-        autoSendStarted.current = true;
+  //   const sendAutomatically = async () => {
+  //     try {
+  //       autoSendStarted.current = true;
 
-        setSendingWhatsApp(true);
+  //       setSendingWhatsApp(true);
 
-        // Give the browser a moment to finish rendering
-        await new Promise((resolve) =>
-          setTimeout(resolve, 500)
-        );
+  //       // Give the browser a moment to finish rendering
+  //       await new Promise((resolve) =>
+  //         setTimeout(resolve, 500)
+  //       );
 
-        const pdfBlob = await createReceiptPdf();
+  //       const pdfBlob = await createReceiptPdf();
 
-        await sendPaymentReceiptWhatsApp(
-          payment._id,
-          pdfBlob
-        );
+  //       await sendPaymentReceiptWhatsApp(
+  //         payment._id,
+  //         pdfBlob
+  //       );
 
-        console.log(
-          "✅ Payment receipt PDF sent automatically on WhatsApp."
-        );
-      } catch (error) {
-        console.error(
-          "Automatic Receipt WhatsApp Error:",
-          error
-        );
-      } finally {
-        setSendingWhatsApp(false);
-      }
-    };
+  //       console.log(
+  //         "✅ Payment receipt PDF sent automatically on WhatsApp."
+  //       );
+  //     } catch (error) {
+  //       console.error(
+  //         "Automatic Receipt WhatsApp Error:",
+  //         error
+  //       );
+  //     } finally {
+  //       setSendingWhatsApp(false);
+  //     }
+  //   };
 
-    sendAutomatically();
-  }, [payment]);
+  //   sendAutomatically();
+  // }, [payment]);
 
   if (loading) {
 

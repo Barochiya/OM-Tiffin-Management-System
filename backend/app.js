@@ -50,6 +50,14 @@ app.use(
 
 app.options("*", cors());
 
+app.use(
+  "/api/payments/send-whatsapp",
+  express.raw({
+    type: "application/pdf",
+    limit: "10mb",
+  })
+);
+
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));

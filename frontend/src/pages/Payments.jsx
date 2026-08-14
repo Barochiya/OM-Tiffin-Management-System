@@ -134,6 +134,13 @@ export default function Payments() {
 
       setLoading(true);
 
+      console.log({
+  customer,
+  bill,
+  amount,
+  paymentMethod,
+});
+
       const paymentData = {
 
         customer,
@@ -148,40 +155,20 @@ export default function Payments() {
 
       };
 
-      console.log({
-  customer,
-  bill,
-  amount,
-});
+     
 
-     const savedPayment = await addPayment(paymentData);
+const savedPayment = await addPayment(paymentData);
 
 await loadPayments();
 
-alert("✅ Payment Saved Successfully");
+setBill("");
+setAmount("");
+setRemark("");
+setPaymentMethod("Cash");
 
 if (savedPayment?._id) {
   navigate(`/payment-receipt/${savedPayment._id}`);
 }
-
-      setBill("");
-
-      setAmount("");
-
-      setRemark("");
-
-      setPaymentMethod("Cash");
-
-      if (customer) {
-
-        const res =
-  await getBillsByCustomer(customerId);
-
-console.log("Bills:", res);
-
-setBills(Array.isArray(res) ? res : []);
-
-      }
 
     } catch (error) {
 

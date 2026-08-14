@@ -30,6 +30,10 @@ router.get(
 // Send Payment Receipt PDF via WhatsApp
 router.post(
   "/send-whatsapp",
+  express.raw({
+    type: "application/pdf",
+    limit: "10mb",
+  }),
   paymentController.sendPaymentReceiptWhatsApp
 );
 

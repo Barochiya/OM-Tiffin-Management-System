@@ -74,7 +74,44 @@ export default function PaymentReceipt() {
   // Automatically Send Receipt PDF
   // =======================================
 
- 
+ useEffect(() => {
+  if (
+    !payment ||
+    !receiptRef.current ||
+    autoSendStarted.current
+  ) {
+    return;
+  }
+
+  const timer = setTimeout(async () => {
+    try {
+      autoSendStarted.current = true;
+
+      setSendingWhatsApp(true);
+
+      const pdfBlob =
+        await createReceiptPdf();
+
+      await sendPaymentReceiptWhatsApp(
+        payment._id,
+        pdfBlob
+      );
+
+      console.log(
+        "✅ Payment receipt PDF sent automatically."
+      );
+    } catch (error) {
+      console.error(
+        "Auto PDF Send Error:",
+        error
+      );
+    } finally {
+      setSendingWhatsApp(false);
+    }
+  }, 1000);
+
+  return () => clearTimeout(timer);
+}, [payment]);
 
   if (loading) {
 

@@ -393,15 +393,17 @@ const sendPdfBillWhatsApp = async ({
   }
 
   const caption =
-    `OM TIFFIN SERVICE\n\n` +
-    `Hello ${customerName || "Customer"},\n\n` +
-    `Your bill ${
-      invoiceNo ? `(${invoiceNo}) ` : ""
-    }is attached as a PDF.\n` +
-    `Total Amount: ₹${Number(
-      totalAmount || 0
-    )}\n\n` +
-    `Thank you for choosing OM TIFFIN SERVICE. 🙏`;
+  `🏆 *OM TIFFIN SERVICE* 🏆\n\n` +
+  `━━━━━━━━━━━━━━\n\n` +
+  `✅ *Payment Received Successfully*\n\n` +
+  `👤 *Customer:* ${customerName || "Customer"}\n\n` +
+  `📄 *Receipt No:* ${receiptNo || "N/A"}\n\n` +
+  `💰 *Amount:* ₹${Number(amount || 0)}\n\n` +
+  `💳 *Payment Method:* ${paymentMethod || "Cash"}\n\n` +
+  `📅 *Date:* ${formattedDate}\n\n` +
+  `━━━━━━━━━━━━━━\n\n` +
+  `🙏 Thank you for choosing\n` +
+  `🌿 *OM TIFFIN SERVICE* 🌿`;
 
   const result = await sendWhatsAppDocument({
   to,

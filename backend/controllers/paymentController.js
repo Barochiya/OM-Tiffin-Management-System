@@ -125,10 +125,7 @@ exports.addPayment = async (req, res) => {
           ).toLocaleDateString("en-GB")}\n\n` +
           `🙏 Thank you for choosing OM TIFFIN SERVICE.`;
 
-        await sendWhatsAppMessage({
-          to: customerData.phone,
-          message,
-        });
+        
 
         console.log(
           "✅ Payment receipt sent on WhatsApp"

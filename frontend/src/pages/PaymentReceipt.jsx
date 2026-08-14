@@ -74,45 +74,7 @@ export default function PaymentReceipt() {
   // Automatically Send Receipt PDF
   // =======================================
 
- useEffect(() => {
-  if (
-    !payment ||
-    !receiptRef.current ||
-    autoSendStarted.current
-  ) {
-    return;
-  }
-
-  const sendAutomatically = async () => {
-    try {
-      autoSendStarted.current = true;
-
-      setSendingWhatsApp(true);
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000)
-      );
-
-      const pdfBlob =
-        await createReceiptPdf();
-
-      await sendPaymentReceiptWhatsApp(
-        payment._id,
-        pdfBlob
-      );
-
-      console.log(
-        "Receipt PDF sent automatically."
-      );
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setSendingWhatsApp(false);
-    }
-  };
-
-  sendAutomatically();
-}, [payment]);
+ 
 
   if (loading) {
 

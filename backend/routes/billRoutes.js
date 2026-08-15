@@ -12,6 +12,7 @@ const {
   generateAllBills,
   getLatestBill,
   sendBillWhatsApp,
+  getBillDeliveryStatus,
 } = require("../controllers/billController");
 
 const protect = require("../middleware/authMiddleware");
@@ -28,6 +29,12 @@ router.post(
 router.get(
   "/customer/:customerId",
   getLatestBill
+);
+
+router.get(
+  "/delivery-status",
+  protect,
+  getBillDeliveryStatus
 );
 
 // Send Bill PDF

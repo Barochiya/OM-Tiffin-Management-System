@@ -71,6 +71,22 @@ export const sendAllBillsWhatsApp = async (
       },
     }
   );
+  return response.data;
+};
+
+// Get Bill Delivery Status
+
+export const getBillDeliveryStatus = async () => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.get(
+    "/bills/delivery-status",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   return response.data;
 };

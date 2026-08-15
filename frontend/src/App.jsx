@@ -14,6 +14,7 @@ import Billing from "./pages/Billing";
 import Payments from "./pages/Payments";
 import PaymentReceipt from "./pages/PaymentReceipt";
 import Announcement from "./pages/Announcement";
+import BillDeliveryStatus from "./pages/BillDeliveryStatus";
 
 export default function App() {
   return (
@@ -84,6 +85,10 @@ export default function App() {
           element={<PaymentReceipt />}
         />
         <Route path="/announcement" element={<Announcement />} />
+        <Route
+  path="/bill-delivery-status"
+  element={<BillDeliveryStatus />}
+/>
 
       </Route>
 

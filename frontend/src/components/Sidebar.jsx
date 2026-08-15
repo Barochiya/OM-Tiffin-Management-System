@@ -120,6 +120,17 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
           💳 Payments
         </Link>
 
+        <Link
+  to="/bill-delivery-status"
+  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+    location.pathname === "/bill-delivery-status"
+      ? "bg-white text-blue-700 font-semibold shadow"
+      : "hover:bg-blue-600"
+  }`}
+>
+  📨 Bill Delivery Status
+</Link>
+
       </nav>
 
       {/* Footer */}
@@ -128,6 +139,8 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
           <div className="w-11 h-11 rounded-full bg-white text-blue-700 flex items-center justify-center font-bold text-lg">
             A
           </div>
+
+          
 
           <div>
             <p className="font-semibold">Om Tiffin Services</p>

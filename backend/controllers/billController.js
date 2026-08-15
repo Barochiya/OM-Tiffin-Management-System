@@ -450,12 +450,20 @@ const sendBillWhatsApp = async (req, res) => {
       });
     }
 
-    if (!customer.phone) {
-      return res.status(400).json({
-        success: false,
-        message: "Customer phone number not found.",
-      });
-    }
+   if (!customer.phone) {
+  bill.whatsappDelivery = {
+    delivered: false,
+    sentAt: null,
+    reason: "Mobile number missing",
+  };
+
+  await bill.save();
+
+  return res.status(400).json({
+    success: false,
+    message: "Customer phone number not found.",
+  });
+}
 
     const pdfBuffer = req.file?.buffer;
 
@@ -473,20 +481,27 @@ if (!pdfBuffer) {
 
     const result =
       await sendPdfBillWhatsApp({
-        phone: customer.phone,
-        pdfBuffer,
-        filename,
-        customerName:
-          customer.customerName,
-        invoiceNo: bill.invoiceNo,
-        totalAmount: bill.totalAmount,
-      });
+  phone: customer.phone,
+  pdfBuffer,
+  filename,
+  customerName: customer.customerName,
+  invoiceNo: bill.invoiceNo,
+  totalAmount: bill.totalAmount,
+});
 
-    return res.json({
-      success: true,
-      message:
-        "Bill PDF sent successfully on WhatsApp.",
-    });
+bill.whatsappDelivery = {
+  delivered: true,
+  sentAt: new Date(),
+  reason: "Delivered",
+};
+
+await bill.save();
+
+return res.json({
+  success: true,
+  message:
+    "Bill PDF sent successfully on WhatsApp.",
+});
   } catch (error) {
     console.error(error);
 
@@ -607,9 +622,68 @@ completedCustomers.push({
   }
 };
 
+// =======================================
+// Get Bill Delivery Status
+// =======================================
+
+const getBillDeliveryStatus = async (req, res) => {
+  try {
+    const bills = await Bill.find()
+      .populate(
+        "customer",
+        "customerName phone"
+      )
+      .sort({
+        createdAt: -1,
+      });
+
+    const deliveryStatus = bills.map(
+      (bill) => ({
+        billId: bill._id,
+
+        customer:
+          bill.customer?.customerName ||
+          "Unknown",
+
+        invoice:
+          bill.invoiceNo || "-",
+
+        month: bill.month,
+
+        year: bill.year,
+
+        cycle: bill.cycle,
+
+        delivered:
+          bill.whatsappDelivery
+            ?.delivered || false,
+
+        sentAt:
+          bill.whatsappDelivery
+            ?.sentAt || null,
+
+        reason:
+          bill.whatsappDelivery
+            ?.reason || "Not sent yet",
+      })
+    );
+
+    return res.json({
+      success: true,
+      data: deliveryStatus,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   generateBill,
   generateAllBills,
   getLatestBill,
   sendBillWhatsApp,
+  getBillDeliveryStatus,
 };

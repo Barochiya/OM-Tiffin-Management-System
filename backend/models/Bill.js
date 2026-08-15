@@ -212,19 +212,44 @@ const billSchema = new mongoose.Schema(
       default: 0,
     },
 
-    // ==========================
-    // Payment Status
-    // ==========================
-    status: {
-      type: String,
-      enum: ["Paid", "Partial", "Pending"],
-      default: "Pending",
-    },
+  
+// ==========================
+// Payment Status
+// ==========================
+
+status: {
+  type: String,
+  enum: ["Paid", "Partial", "Pending"],
+  default: "Pending",
+},
+
+// ==========================
+// WhatsApp Delivery Status
+// ==========================
+
+whatsappDelivery: {
+  delivered: {
+    type: Boolean,
+    default: false,
   },
-  {
-    timestamps: true,
-  }
+
+  sentAt: {
+    type: Date,
+    default: null,
+  },
+
+  reason: {
+    type: String,
+    default: "Not sent yet",
+  },
+},
+
+},
+{
+  timestamps: true,
+}
 );
+
 
 
 // ======================================================

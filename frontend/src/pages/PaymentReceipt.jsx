@@ -1,5 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { useParams } from "react-router-dom";
+import {
+  useParams,
+  useLocation,
+} from "react-router-dom";
 
 import QRCode from "react-qr-code";
 
@@ -30,6 +33,12 @@ import {
 export default function PaymentReceipt() {
 
   const { id } = useParams();
+  const location = useLocation();
+
+const autoSend =
+  new URLSearchParams(
+    location.search
+  ).get("autosend") === "true";
 
   const receiptRef = useRef();
 
@@ -40,7 +49,8 @@ export default function PaymentReceipt() {
   const [sendingWhatsApp, setSendingWhatsApp] =
   useState(false);
 
-  const autoSendStarted = useRef(false);
+  
+   const autoSendStarted = useRef(false);
 
   useEffect(() => {
 
@@ -74,44 +84,45 @@ export default function PaymentReceipt() {
   // Automatically Send Receipt PDF
   // =======================================
 
- useEffect(() => {
-  if (
-    !payment ||
-    !receiptRef.current ||
-    autoSendStarted.current
-  ) {
-    return;
-  }
+  useEffect(() => {
+   if (
+  !payment ||
+  !receiptRef.current ||
+  autoSendStarted.current ||
+  !autoSend
+) {
+  return;
+}
 
-  const timer = setTimeout(async () => {
-    try {
-      autoSendStarted.current = true;
+   const timer = setTimeout(async () => {
+     try {
+       autoSendStarted.current = true;
 
-      setSendingWhatsApp(true);
+       setSendingWhatsApp(true);
 
-      const pdfBlob =
-        await createReceiptPdf();
+       const pdfBlob =
+       await createReceiptPdf();
 
       await sendPaymentReceiptWhatsApp(
-        payment._id,
-        pdfBlob
-      );
+         payment._id,
+         pdfBlob
+       );
 
       console.log(
         "✅ Payment receipt PDF sent automatically."
       );
-    } catch (error) {
-      console.error(
+     } catch (error) {
+       console.error(
         "Auto PDF Send Error:",
         error
       );
     } finally {
       setSendingWhatsApp(false);
-    }
-  }, 1000);
+     }
+   }, 1000);
 
-  return () => clearTimeout(timer);
-}, [payment]);
+   return () => clearTimeout(timer);
+ }, [payment]);
 
   if (loading) {
 

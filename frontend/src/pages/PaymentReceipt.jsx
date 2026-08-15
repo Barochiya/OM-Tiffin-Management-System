@@ -210,10 +210,11 @@ const getReceiptPdfOptions = () => ({
   },
 
   html2canvas: {
-    scale: 2,
-    useCORS: true,
-    logging: false,
-  },
+  scale: 1.5,
+  useCORS: true,
+  logging: false,
+  letterRendering: true,
+},
 
   jsPDF: {
     unit: "mm",
@@ -235,6 +236,10 @@ const createReceiptPdf = async () => {
       "Payment receipt is not ready."
     );
   }
+
+  await new Promise((resolve) =>
+    setTimeout(resolve, 2000)
+  );
 
   return html2pdf()
     .set(getReceiptPdfOptions())

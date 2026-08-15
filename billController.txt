@@ -4,7 +4,6 @@ const Price = require("../models/Price");
 const Tiffin = require("../models/Tiffin");
 const applyAdvance = require("../utils/advanceHelper");
 const { sendPdfBillWhatsApp } = require("../utils/whatsappSender");
-const generateBillPdf = require("../utils/billPdfGenerator");
 
 // =======================================
 // Generate Bill
@@ -366,7 +365,6 @@ const generateBill = async (req, res) => {
     // ===============================
     // Response
     // ===============================
-    await bill.populate("customer");
     return res.json({
       success: true,
       data: bill,
@@ -421,12 +419,23 @@ const getLatestBill = async (req, res) => {
 
 const sendBillWhatsApp = async (req, res) => {
   try {
-    const billId = req.body.billId;
+    const billId = req.headers["x-bill-id"];
 
     if (!billId) {
       return res.status(400).json({
         success: false,
         message: "billId is required.",
+      });
+    }
+
+    const pdfBuffer = Buffer.isBuffer(req.body)
+      ? req.body
+      : null;
+
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "PDF file is required.",
       });
     }
 
@@ -439,9 +448,7 @@ const sendBillWhatsApp = async (req, res) => {
       });
     }
 
-    const customer = await Tiffin.findById(
-      bill.customer
-    );
+    const customer = await Tiffin.findById(bill.customer);
 
     if (!customer) {
       return res.status(404).json({
@@ -457,42 +464,42 @@ const sendBillWhatsApp = async (req, res) => {
       });
     }
 
-    const pdfBuffer = req.file?.buffer;
-
-if (!pdfBuffer) {
-  return res.status(400).json({
-    success: false,
-    message: "PDF file not found.",
-  });
-}
-
     const filename =
-      `OM-Tiffin-${
-        bill.invoiceNo || bill._id
-      }.pdf`;
+      `OM-Tiffin-${bill.invoiceNo || bill._id}.pdf`;
 
-    const result =
-      await sendPdfBillWhatsApp({
-        phone: customer.phone,
-        pdfBuffer,
-        filename,
-        customerName:
-          customer.customerName,
-        invoiceNo: bill.invoiceNo,
-        totalAmount: bill.totalAmount,
-      });
+    const result = await sendPdfBillWhatsApp({
+      phone: customer.phone,
+      pdfBuffer,
+      filename,
+      customerName: customer.customerName,
+      invoiceNo: bill.invoiceNo,
+      totalAmount: bill.totalAmount,
+    });
 
     return res.json({
       success: true,
-      message:
-        "Bill PDF sent successfully on WhatsApp.",
+      message: "Bill PDF sent successfully on WhatsApp.",
+      data: {
+        messageId: result?.messages?.[0]?.id || null,
+        invoiceNo: bill.invoiceNo,
+        customerName: customer.customerName,
+      },
     });
   } catch (error) {
-    console.error(error);
+    console.error(
+      "Send Bill WhatsApp Error:",
+      error.response?.data || error
+    );
 
-    return res.status(500).json({
+    const metaMessage =
+      error.meta?.message ||
+      error.message ||
+      "Failed to send bill on WhatsApp.";
+
+    return res.status(error.status || 500).json({
       success: false,
-      message: error.message,
+      message: metaMessage,
+      metaError: error.meta || null,
     });
   }
 };
@@ -507,12 +514,10 @@ const generateAllBills = async (req, res) => {
     const { month, year, cycle } = req.body;
 
     const customers = await Tiffin.find({
-      status: "Active",
+      isActive: true,
     });
 
-    const completedCustomers = [];
-
-    const failedCustomers = [];
+    const results = [];
 
     for (const customer of customers) {
       try {
@@ -539,69 +544,22 @@ const generateAllBills = async (req, res) => {
 
         await generateBill(fakeReq, fakeRes);
 
-        if (!generatedBill) {
-          failedCustomers.push({
-            customer: customer.customerName,
-            reason: "Bill generation failed",
-          });
-
-          continue;
+        if (generatedBill) {
+          results.push(generatedBill);
         }
-
-        if (!customer.phone) {
-          failedCustomers.push({
-            customer: customer.customerName,
-            reason: "Phone number not found",
-          });
-
-          continue;
-        }
-
-      const pdfBuffer = await generateBillPdf(
-  generatedBill,
-  customer
-);
-
-await sendPdfBillWhatsApp({
-  phone: customer.phone,
-  pdfBuffer,
-  filename: `OM-Tiffin-${
-    generatedBill.invoiceNo
-  }.pdf`,
-  customerName: customer.customerName,
-  invoiceNo: generatedBill.invoiceNo,
-  totalAmount: generatedBill.totalAmount,
-});
-
-completedCustomers.push({
-  customer: customer.customerName,
-  billId: generatedBill._id,
-});
       } catch (error) {
-        failedCustomers.push({
-          customer: customer.customerName,
-          reason: error.message,
-        });
+        console.log(error);
       }
     }
 
     return res.json({
       success: true,
-
-      total: customers.length,
-
-      completed: completedCustomers.length,
-
-      failed: failedCustomers.length,
-
-      completedCustomers,
-
-      failedCustomers,
+      total: results.length,
+      data: results,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-
       message: error.message,
     });
   }

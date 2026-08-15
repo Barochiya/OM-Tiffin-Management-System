@@ -393,19 +393,17 @@ const sendPdfBillWhatsApp = async ({
   }
 
   const caption =
-  `🏆 *OM TIFFIN SERVICE* 🏆\n\n` +
+  `🍱 *OM TIFFIN SERVICE* 🍱\n\n` +
   `━━━━━━━━━━━━━━\n\n` +
-  `✅ *PAYMENT RECEIVED SUCCESSFULLY*\n\n` +
+  `🧾 *NEW BILL GENERATED*\n\n` +
   `👤 *Customer:* ${customerName || "Customer"}\n\n` +
-  `📄 *Receipt No:* ${receiptNo || "N/A"}\n\n` +
-  `💰 *Amount:* ₹${Number(amount || 0)}\n\n` +
-  `💳 *Payment Method:* ${paymentMethod || "Cash"}\n\n` +
-  `📅 *Date:* ${formattedDate}\n\n` +
+  `📄 *Invoice No:* ${invoiceNo || "N/A"}\n\n` +
+  `💰 *Total Amount:* ₹${Number(totalAmount || 0)}\n\n` +
+  `📅 *Date:* ${new Date().toLocaleDateString("en-GB")}\n\n` +
   `━━━━━━━━━━━━━━\n\n` +
   `🙏 Thank you for choosing\n` +
-  `🌿 *OM TIFFIN SERVICE* 🌿\n\n` +
-  `🍱 Fresh Food • 🚚 On-Time Delivery • ❤️ Trusted Service`;
-
+  `🌿 *OM TIFFIN SERVICE* 🌿`;
+  
   const result = await sendWhatsAppDocument({
   to,
   mediaId: media.id,

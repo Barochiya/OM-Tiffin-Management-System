@@ -1,9 +1,15 @@
 const express = require("express");
+const multer = require("multer");
 
 const router = express.Router();
 
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
+
 const {
   generateBill,
+  generateAllBills,
   getLatestBill,
   sendBillWhatsApp,
 } = require("../controllers/billController");
@@ -13,23 +19,23 @@ const protect = require("../middleware/authMiddleware");
 // Generate Monthly Bill
 router.post("/generate", generateBill);
 
+router.post(
+  "/generate-all",
+  protect,
+  generateAllBills
+);
+
 router.get(
   "/customer/:customerId",
   getLatestBill
 );
 
-
-
-// Send the generated PDF bill to the customer's WhatsApp number.
+// Send Bill PDF
 router.post(
   "/send-whatsapp",
   protect,
-  express.raw({
-    type: "application/pdf",
-    limit: "10mb",
-  }),
+  upload.single("pdf"),
   sendBillWhatsApp
 );
 
 module.exports = router;
-

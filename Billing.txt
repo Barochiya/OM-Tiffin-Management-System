@@ -58,7 +58,7 @@ const [progress, setProgress] = useState(0);
 const [completed, setCompleted] = useState(0);
 
 const [totalCustomers, setTotalCustomers] = useState(0);
-
+const [failedCustomers, setFailedCustomers] = useState([]);
 
   const billRef = useRef(null);
 
@@ -158,8 +158,13 @@ const handleGenerateAllBills = async () => {
   setTotalCustomers(activeCustomers.length);
 
   try {
-    for (let i = 0; i < activeCustomers.length; i++) {
-      const currentCustomer = activeCustomers[i];
+    for (
+      let i = 0;
+      i < activeCustomers.length;
+      i++
+    ) {
+      const currentCustomer =
+        activeCustomers[i];
 
       try {
         await generateBill({
@@ -183,23 +188,12 @@ const handleGenerateAllBills = async () => {
 
       setProgress(
         Math.round(
-          (current / activeCustomers.length) * 100
+          (current /
+            activeCustomers.length) *
+            100
         )
       );
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 100)
-      );
     }
-
-    setProgress(100);
-    setCompleted(activeCustomers.length);
-
-    setBulkGenerating(false);
-
-    await new Promise((resolve) =>
-      setTimeout(resolve, 200)
-    );
 
     if (failedCustomersList.length > 0) {
       alert(
@@ -208,14 +202,18 @@ const handleGenerateAllBills = async () => {
         )}`
       );
     } else {
-      alert("All bills generated successfully.");
+      alert(
+        "All bills generated successfully."
+      );
     }
   } catch (error) {
     console.error(error);
 
+    alert(
+      "Failed to generate bills."
+    );
+  } finally {
     setBulkGenerating(false);
-
-    alert("Failed to generate bills.");
   }
 };
     // =====================================
@@ -235,22 +233,13 @@ const handleGenerateAllBills = async () => {
   };
 
   // =====================================
-// CUSTOMER DATA
-// =====================================
+  // CUSTOMER DATA
+  // =====================================
 
-const customerId =
-  typeof bill?.customer === "object"
-    ? bill?.customer?._id
-    : bill?.customer || customer;
-
-const customerData =
+  const customerData =
   customers.find(
-    (c) =>
-      String(c._id) === String(customerId)
+    (c) => c._id === (bill?.customer || customer)
   );
-
-console.log("Customer ID:", customerId);
-console.log("Customer Data:", customerData);
 
 const getPdfOptions = () => ({
   margin: 6,
@@ -358,36 +347,22 @@ const handleSendBillWhatsApp = async () => {
 
     const pdfBlob = await createBillPdf();
 
-    const formData = new FormData();
-
-    formData.append(
-      "pdf",
-      pdfBlob,
-      `OM-Tiffin-${bill.invoiceNo}.pdf`
+    const result = await sendBillWhatsApp(
+      bill._id,
+      pdfBlob
     );
-
-    formData.append(
-      "billId",
-      bill._id
-    );
-
-    const result =
-      await sendBillWhatsApp(formData);
 
     alert(
       result?.message ||
-      "Bill PDF sent successfully on WhatsApp."
+        "✅ Bill PDF sent successfully on WhatsApp."
     );
   } catch (error) {
-    console.error(
-      "WhatsApp Bill Error:",
-      error
-    );
+    console.error("WhatsApp Bill Error:", error);
 
     alert(
       error.response?.data?.message ||
-      error.message ||
-      "Failed to send bill on WhatsApp."
+        error.message ||
+        "Failed to send bill on WhatsApp."
     );
   } finally {
     setSendingBill(false);

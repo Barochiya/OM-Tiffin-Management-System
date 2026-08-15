@@ -56,3 +56,21 @@ export const sendBillWhatsApp = async (
 
   return response.data;
 };
+
+export const sendAllBillsWhatsApp = async (
+  billData
+) => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.post(
+    "/bills/generate-all",
+    billData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};

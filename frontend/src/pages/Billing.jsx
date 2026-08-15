@@ -8,7 +8,11 @@ import html2pdf from "html2pdf.js";
 import logo from "../assets/logo.png";
 
 import { getCustomersForEntry } from "../services/dailyEntryService";
-import { generateBill, sendBillWhatsApp } from "../services/billService";
+import {
+  generateBill,
+  sendBillWhatsApp,
+  sendAllBillsWhatsApp,
+} from "../services/billService";
 
 export default function Billing() {
 
@@ -50,6 +54,7 @@ const getExtraItemSymbol = (itemName) => {
   const [cycle, setCycle] = useState("1");
 
   const [bill, setBill] = useState(null);
+  const [bulkBill, setBulkBill] = useState(null);
   const [sendingBill, setSendingBill] = useState(false);
   const [bulkGenerating, setBulkGenerating] = useState(false);
 
@@ -152,6 +157,8 @@ const handleGenerateAllBills = async () => {
 
   const failedCustomersList = [];
 
+
+
   setBulkGenerating(true);
   setProgress(0);
   setCompleted(0);
@@ -162,20 +169,21 @@ const handleGenerateAllBills = async () => {
       const currentCustomer = activeCustomers[i];
 
       try {
-        await generateBill({
-          customer: currentCustomer._id,
-          month,
-          year,
-          cycle,
-        });
-      } catch (error) {
-        failedCustomersList.push(
-          `${currentCustomer.customerName} - ${
-            error.response?.data?.message ||
-            error.message
-          }`
-        );
-      }
+  await generateBill({
+  customer: currentCustomer._id,
+  month,
+  year,
+  cycle,
+});
+
+} catch (error) {
+  failedCustomersList.push(
+    `${currentCustomer.customerName} - ${
+      error.response?.data?.message ||
+      error.message
+    }`
+  );
+}
 
       const current = i + 1;
 
@@ -192,10 +200,67 @@ const handleGenerateAllBills = async () => {
       );
     }
 
-    setProgress(100);
     setCompleted(activeCustomers.length);
 
-    setBulkGenerating(false);
+setProgress(100);
+
+await new Promise((resolve) =>
+  setTimeout(resolve, 500)
+);
+
+const sendWhatsApp = window.confirm(
+  "All bills generated successfully.\n\nSend all bills to WhatsApp?"
+);
+
+setBulkGenerating(false);
+
+if (!sendWhatsApp) {
+  return;
+}
+
+let successCount = 0;
+let failedCount = 0;
+
+for (const currentCustomer of activeCustomers) {
+  try {
+    const response = await generateBill({
+      customer: currentCustomer._id,
+      month,
+      year,
+      cycle,
+    });
+
+    const generatedBill = response.data;
+
+    const pdfBlob =
+      await createBulkPdf(generatedBill);
+
+    const formData = new FormData();
+
+    formData.append(
+      "pdf",
+      pdfBlob,
+      `OM-Tiffin-${generatedBill.invoiceNo}.pdf`
+    );
+
+    formData.append(
+      "billId",
+      generatedBill._id
+    );
+
+    await sendBillWhatsApp(formData);
+
+    successCount++;
+  } catch (error) {
+    console.error(error);
+
+    failedCount++;
+  }
+}
+
+alert(
+  `WhatsApp bills sent successfully.\n\nSuccess: ${successCount}\nFailed: ${failedCount}`
+);
 
     await new Promise((resolve) =>
       setTimeout(resolve, 200)
@@ -328,6 +393,29 @@ const createBillPdf = async () => {
     .from(billRef.current)
     .toPdf()
     .outputPdf("blob");
+};
+
+const createBulkPdf = async (customerBill) => {
+  const oldBill = bill;
+
+  setBill(customerBill);
+
+  await new Promise((resolve) =>
+    setTimeout(resolve, 1000)
+  );
+
+  const pdfBlob = await html2pdf()
+    .set({
+      ...getPdfOptions(),
+      filename: `OM-Tiffin-${customerBill.invoiceNo}.pdf`,
+    })
+    .from(billRef.current)
+    .toPdf()
+    .outputPdf("blob");
+
+  setBill(oldBill);
+
+  return pdfBlob;
 };
 
 const handleDownloadPdf = async () => {

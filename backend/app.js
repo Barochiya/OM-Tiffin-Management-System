@@ -34,6 +34,8 @@ app.use(
    origin: [
   "https://om-tiffin-management-system-1.onrender.com",
   "https://om-tiffin-management-system.vercel.app",
+  "https://omtiffinservices.com",
+  "https://www.omtiffinservices.com",
   "http://localhost:5173",
   "http://localhost:5174",
 ],

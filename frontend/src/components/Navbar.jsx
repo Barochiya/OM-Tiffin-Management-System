@@ -1,8 +1,54 @@
+import { useEffect, useState } from "react";
 import { FaBars, FaBell, FaSignOutAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
+import { getBillDeliveryStatus } from "../services/billService";
+
 const Navbar = ({ setSidebarOpen }) => {
   const navigate = useNavigate();
+
+  const [notificationCount, setNotificationCount] =
+    useState(0);
+
+  useEffect(() => {
+    loadNotifications();
+
+    const interval = setInterval(
+      loadNotifications,
+      30000
+    );
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      const response =
+        await getBillDeliveryStatus();
+
+      const data =
+        response.data || [];
+
+      const failed =
+        data.filter(
+          (item) =>
+            !item.delivered &&
+            item.reason !== "Not sent yet"
+        ).length;
+
+      const notSent =
+        data.filter(
+          (item) =>
+            item.reason === "Not sent yet"
+        ).length;
+
+      setNotificationCount(
+        failed + notSent
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -10,11 +56,10 @@ const Navbar = ({ setSidebarOpen }) => {
   };
 
   return (
-   <header className="sticky top-0 z-30 w-full max-w-full min-w-0 overflow-hidden bg-white shadow-md px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">
-      {/* Left */}
+    <header className="sticky top-0 z-30 w-full max-w-full min-w-0 overflow-hidden bg-white shadow-md px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">
+
       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
 
-        {/* Mobile Menu */}
         <button
           onClick={() => setSidebarOpen(true)}
           className="lg:hidden text-2xl text-slate-700"
@@ -34,21 +79,24 @@ const Navbar = ({ setSidebarOpen }) => {
 
       </div>
 
-      {/* Right */}
       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
 
-        {/* Notification */}
-        <button className="relative p-2 rounded-full hover:bg-gray-100">
-
+        <button
+          title="Bill Notifications"
+          onClick={() =>
+            navigate("/bill-delivery-status")
+          }
+          className="relative p-2 rounded-full hover:bg-gray-100"
+        >
           <FaBell className="text-xl text-slate-600" />
 
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-[10px] w-5 h-5 flex items-center justify-center">
-            3
-          </span>
-
+          {notificationCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-[10px] w-5 h-5 flex items-center justify-center">
+              {notificationCount}
+            </span>
+          )}
         </button>
 
-        {/* Admin */}
         <div className="hidden md:flex items-center gap-3">
 
           <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
@@ -67,12 +115,12 @@ const Navbar = ({ setSidebarOpen }) => {
 
         </div>
 
-        {/* Logout */}
         <button
           onClick={handleLogout}
           className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
         >
           <FaSignOutAlt />
+
           <span className="hidden md:block">
             Logout
           </span>

@@ -7,10 +7,29 @@ const tiffinSchema = new mongoose.Schema(
         required: true,
     },
 
-    phone: {
-        type: String,
-        required: true,
+   phone: {
+  type: String,
+  required: [true, "Phone number is required"],
+
+  validate: {
+    validator: function (value) {
+      const phone = value
+        .replace(/\D/g, "")
+        .replace(/^91/, "");
+
+      return /^[6-9]\d{9}$/.test(phone);
     },
+
+    message:
+      "❌ Invalid WhatsApp number",
+  },
+
+  set: function (value) {
+    return value
+      .replace(/\D/g, "")
+      .replace(/^91/, "");
+  },
+},
 
     address: {
         type: String,

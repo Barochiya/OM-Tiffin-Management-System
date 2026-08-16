@@ -603,24 +603,28 @@ const updateTiffin = async (req, res) => {
         });
 
 
-    } catch (error) {
+    } 
 
-        console.error(
-            "❌ Update Tiffin Error:",
-            error
-        );
+    catch (error) {
+  console.error(
+    "❌ Create Tiffin Error:",
+    error
+  );
 
+  if (error.errors?.phone) {
+    return res.status(400).json({
+      success: false,
+      message: "❌ Invalid mobile number",
+    });
+  }
 
-        res.status(500).json({
-
-            success: false,
-
-            message:
-                error.message,
-
-        });
-
-    }
+  return res.status(400).json({
+    success: false,
+    message:
+      error.message ||
+      "Failed to create customer",
+  });
+}
 };
 
 

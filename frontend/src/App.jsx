@@ -15,6 +15,7 @@ import Payments from "./pages/Payments";
 import PaymentReceipt from "./pages/PaymentReceipt";
 import Announcement from "./pages/Announcement";
 import BillDeliveryStatus from "./pages/BillDeliveryStatus";
+import BusinessInfo from "./pages/BusinessInfo";
 
 export default function App() {
   return (
@@ -30,6 +31,11 @@ export default function App() {
       <Route
         path="/login"
         element={<Login />}
+      />
+
+      <Route
+        path="/business-info"
+        element={<BusinessInfo />}
       />
 
       {/* Admin Layout */}

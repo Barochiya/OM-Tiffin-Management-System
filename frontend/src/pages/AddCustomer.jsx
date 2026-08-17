@@ -53,34 +53,18 @@ export default function AddCustomer() {
 
     const { name, value } = e.target;
 
-if (name === "phone") {
+let cleanPhone = formData.phone.replace(/\D/g, "");
 
-  const cleanPhone = value.replace(/\D/g, "");
+if (
+  cleanPhone.startsWith("91") &&
+  cleanPhone.length > 10
+) {
+  cleanPhone = cleanPhone.slice(2);
+}
 
-  let phoneToValidate = cleanPhone;
-
-  if (
-    cleanPhone.length === 12 &&
-    cleanPhone.startsWith("91")
-  ) {
-    phoneToValidate = cleanPhone.slice(2);
-  }
-
-  if (
-    phoneToValidate.length > 0 &&
-    !/^[6-9]\d{0,9}$/.test(phoneToValidate)
-  ) {
-
-    setPhoneError(
-      "Invalid WhatsApp number"
-    );
-
-  } else {
-
-    setPhoneError("");
-
-  }
-
+if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+  setPhoneError("Invalid WhatsApp number");
+  return;
 }
 
     if (
@@ -139,8 +123,7 @@ if (name === "phone") {
   e.preventDefault();
 
   const cleanPhone = formData.phone
-    .replace(/\D/g, "")
-    .replace(/^91/, "");
+  .replace(/\D/g, "");
 
   if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
 

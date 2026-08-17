@@ -64,7 +64,6 @@ const [formData, setFormData] =
         customerName: customer?.customerName || "",
         phone: (customer?.phone || "")
   .replace(/\D/g, "")
-  .replace(/^91/, "")
   .slice(-10),
         address: customer?.address || "",
         mealType: customer?.mealType || "Lunch",
@@ -116,12 +115,12 @@ const [formData, setFormData] =
 
     if (name === "phone") {
   const cleanPhone =
-    value.replace(/\D/g, "")
-      .replace(/^91/, "");
+    value.replace(/\D/g, "");
 
   if (
-    cleanPhone.length > 0 &&
-    !/^[6-9]\d{0,9}$/.test(cleanPhone)
+    cleanPhone.length > 10 ||
+    (cleanPhone.length > 0 &&
+      !/^[6-9]\d{0,9}$/.test(cleanPhone))
   ) {
     setPhoneError(
       "Invalid mobile number"
@@ -173,29 +172,16 @@ const [formData, setFormData] =
    const cleanPhone =
   formData.phone.replace(/\D/g, "");
 
-let phoneToValidate =
-  cleanPhone;
-
-if (
-  cleanPhone.length === 12 &&
-  cleanPhone.startsWith("91")
-) {
-  phoneToValidate =
-    cleanPhone.slice(2);
-}
-
 if (
   !/^[6-9]\d{9}$/.test(
-    phoneToValidate
+    cleanPhone
   )
 ) {
-
   setPhoneError(
     "Invalid WhatsApp number"
   );
 
   return;
-
 }
 
     try {

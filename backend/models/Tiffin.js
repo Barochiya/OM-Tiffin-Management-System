@@ -14,8 +14,7 @@ const tiffinSchema = new mongoose.Schema(
   validate: {
     validator: function (value) {
       const phone = value
-        .replace(/\D/g, "")
-        .replace(/^91/, "");
+  .replace(/\D/g, "");
 
       return /^[6-9]\d{9}$/.test(phone);
     },
@@ -25,10 +24,9 @@ const tiffinSchema = new mongoose.Schema(
   },
 
   set: function (value) {
-    return value
-      .replace(/\D/g, "")
-      .replace(/^91/, "");
-  },
+  return value
+    .replace(/\D/g, "");
+}
 },
 
     address: {

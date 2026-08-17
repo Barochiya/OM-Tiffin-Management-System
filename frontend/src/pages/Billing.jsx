@@ -58,6 +58,7 @@ const getExtraItemSymbol = (itemName) => {
   const [sendingBill, setSendingBill] = useState(false);
   const [bulkGenerating, setBulkGenerating] = useState(false);
   const [generatingBill, setGeneratingBill] = useState(false);
+  const [actionsCompleted, setActionsCompleted] = useState(false);
 
 const [progress, setProgress] = useState(0);
 
@@ -125,15 +126,17 @@ const handleGenerate = async () => {
 
     const generatedBill = res.data;
 
-    setBill(generatedBill);
+setBill(generatedBill);
 
-    await new Promise((resolve) =>
-      setTimeout(resolve, 1000)
-    );
+setActionsCompleted(false);
 
-    const pdfBlob = await createBulkPdf(
-      generatedBill
-    );
+await new Promise((resolve) =>
+  setTimeout(resolve, 1000)
+);
+
+const pdfBlob = await createBulkPdf(
+  generatedBill
+);
 
     const formData = new FormData();
 
@@ -412,8 +415,6 @@ const getPdfOptions = () => ({
   pagebreak: {
     mode: ["css", "legacy"],
   },
-  ignoreElements: (element) =>
-    element.classList?.contains("no-pdf"),
 });
 
 const createBillPdf = async () => {
@@ -457,8 +458,12 @@ const handleDownloadPdf = async () => {
       .set(getPdfOptions())
       .from(billRef.current)
       .save();
+
+    setActionsCompleted(true);
+
   } catch (error) {
     console.error("PDF Download Error:", error);
+
     alert("Failed to create PDF.");
   }
 };
@@ -493,12 +498,14 @@ const handleSendBillWhatsApp = async () => {
     );
 
     const result =
-      await sendBillWhatsApp(formData);
+  await sendBillWhatsApp(formData);
 
-    alert(
-      result?.message ||
-      "Bill PDF sent successfully on WhatsApp."
-    );
+setActionsCompleted(true);
+
+alert(
+  result?.message ||
+  "Bill PDF sent successfully on WhatsApp."
+);
   } catch (error) {
     console.error(
       "WhatsApp Bill Error:",
@@ -554,6 +561,7 @@ Thank you for choosing OM TIFFIN SERVICE.`;
     `https://wa.me/${whatsappPhone}?text=${encodeURIComponent(message)}`,
     "_blank"
   );
+setActionsCompleted(true);
 };
   // =====================================
   // UI
@@ -823,23 +831,10 @@ Thank you for choosing OM TIFFIN SERVICE.`;
 
   <div className="flex flex-wrap gap-4">
 
-    <button
+   <button
   onClick={handleGenerate}
   disabled={generatingBill}
-  className="
-    bg-blue-700
-    hover:bg-blue-800
-    disabled:opacity-70
-    disabled:cursor-not-allowed
-    text-white
-    px-8
-    py-3
-    rounded-xl
-    font-bold
-    flex
-    items-center
-    gap-3
-  "
+  className="bg-blue-700 hover:bg-blue-800 disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
 >
   {generatingBill && (
     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -1550,43 +1545,40 @@ Thank you for choosing OM TIFFIN SERVICE.`;
 
 {/* Buttons */}
 
-<div className="no-pdf flex flex-wrap gap-4 mt-10">
-
+<div className="flex flex-wrap gap-4 mt-10">
   <button
-
     onClick={handlePrint}
-
-    className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl"
-
+    disabled={actionsCompleted}
+    className="bg-blue-700 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl"
   >
-
     🖨 Print Invoice
-
   </button>
 
   <button
     onClick={handleDownloadPdf}
-    className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl"
+    disabled={actionsCompleted}
+    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl"
   >
     📄 Download PDF
   </button>
 
   <button
-  onClick={handleWhatsAppShare}
-  className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl flex items-center gap-2"
->
-  <FaWhatsapp />
-  Share on WhatsApp
-</button>
+    onClick={handleWhatsAppShare}
+    disabled={actionsCompleted}
+    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
+  >
+    <FaWhatsapp />
+    Share on WhatsApp
+  </button>
+
   <button
     onClick={handleSendBillWhatsApp}
-    disabled={sendingBill}
-    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
+    disabled={sendingBill || actionsCompleted}
+    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
   >
     <FaWhatsapp />
     {sendingBill ? "Sending PDF..." : "Send Bill PDF"}
   </button>
-
 </div>
 
 {/* Footer */}

@@ -55,12 +55,20 @@ export default function AddCustomer() {
 
 if (name === "phone") {
 
-  const cleanPhone =
-    value.replace(/\D/g, "").replace(/^91/, "");
+  const cleanPhone = value.replace(/\D/g, "");
+
+  let phoneToValidate = cleanPhone;
 
   if (
-    cleanPhone.length > 0 &&
-    !/^[6-9]\d{0,9}$/.test(cleanPhone)
+    cleanPhone.length === 12 &&
+    cleanPhone.startsWith("91")
+  ) {
+    phoneToValidate = cleanPhone.slice(2);
+  }
+
+  if (
+    phoneToValidate.length > 0 &&
+    !/^[6-9]\d{0,9}$/.test(phoneToValidate)
   ) {
 
     setPhoneError(

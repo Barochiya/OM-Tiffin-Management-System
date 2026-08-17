@@ -170,16 +170,32 @@ const [formData, setFormData] =
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    const cleanPhone = formData.phone
-  .replace(/\D/g, "")
-  .replace(/^91/, "");
+   const cleanPhone =
+  formData.phone.replace(/\D/g, "");
 
-if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
+let phoneToValidate =
+  cleanPhone;
+
+if (
+  cleanPhone.length === 12 &&
+  cleanPhone.startsWith("91")
+) {
+  phoneToValidate =
+    cleanPhone.slice(2);
+}
+
+if (
+  !/^[6-9]\d{9}$/.test(
+    phoneToValidate
+  )
+) {
+
   setPhoneError(
-    "Invalid mobile number"
+    "Invalid WhatsApp number"
   );
 
   return;
+
 }
 
     try {

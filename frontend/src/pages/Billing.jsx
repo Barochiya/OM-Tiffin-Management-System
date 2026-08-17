@@ -57,6 +57,7 @@ const getExtraItemSymbol = (itemName) => {
   const [bulkBill, setBulkBill] = useState(null);
   const [sendingBill, setSendingBill] = useState(false);
   const [bulkGenerating, setBulkGenerating] = useState(false);
+  const [generatingBill, setGeneratingBill] = useState(false);
 
 const [progress, setProgress] = useState(0);
 
@@ -113,6 +114,8 @@ const handleGenerate = async () => {
   }
 
   try {
+    setGeneratingBill(true);
+
     const res = await generateBill({
       customer,
       month,
@@ -155,9 +158,11 @@ const handleGenerate = async () => {
 
     alert(
       error.response?.data?.message ||
-        error.message ||
-        "Failed to generate bill."
+      error.message ||
+      "Failed to generate bill."
     );
+  } finally {
+    setGeneratingBill(false);
   }
 };
 
@@ -819,11 +824,31 @@ Thank you for choosing OM TIFFIN SERVICE.`;
   <div className="flex flex-wrap gap-4">
 
     <button
-      onClick={handleGenerate}
-      className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-xl font-bold"
-    >
-      Generate Bill
-    </button>
+  onClick={handleGenerate}
+  disabled={generatingBill}
+  className="
+    bg-blue-700
+    hover:bg-blue-800
+    disabled:opacity-70
+    disabled:cursor-not-allowed
+    text-white
+    px-8
+    py-3
+    rounded-xl
+    font-bold
+    flex
+    items-center
+    gap-3
+  "
+>
+  {generatingBill && (
+    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+  )}
+
+  {generatingBill
+    ? "Generating..."
+    : "Generate Bill"}
+</button>
 
     <button
       onClick={handleGenerateAllBills}

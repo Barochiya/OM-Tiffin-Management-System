@@ -120,15 +120,43 @@ const handleGenerate = async () => {
       cycle,
     });
 
-    setBill(res.data);
+    const generatedBill = res.data;
 
-    alert("✅ Bill Generated Successfully");
+    setBill(generatedBill);
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000)
+    );
+
+    const pdfBlob = await createBulkPdf(
+      generatedBill
+    );
+
+    const formData = new FormData();
+
+    formData.append(
+      "pdf",
+      pdfBlob,
+      `OM-Tiffin-${generatedBill.invoiceNo}.pdf`
+    );
+
+    formData.append(
+      "billId",
+      generatedBill._id
+    );
+
+    await sendBillWhatsApp(formData);
+
+    alert(
+      "✅ Bill generated and sent to WhatsApp successfully."
+    );
   } catch (error) {
     console.error(error);
 
     alert(
       error.response?.data?.message ||
-        "Failed To Generate Bill"
+        error.message ||
+        "Failed to generate bill."
     );
   }
 };

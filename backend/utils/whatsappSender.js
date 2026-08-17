@@ -418,6 +418,103 @@ return result;
 };
 
 // =====================================================
+// Send Bill Template With PDF
+// =====================================================
+
+const sendBillTemplateWithPdf = async ({
+  phone,
+  pdfBuffer,
+  filename,
+  customerName,
+  invoiceNo,
+  totalAmount,
+}) => {
+  const to = normalizeIndianPhone(phone);
+
+  if (!to) {
+    throw new Error(
+      "Customer phone number is invalid."
+    );
+  }
+
+  const media = await uploadPdf({
+    pdfBuffer,
+    filename,
+  });
+
+  console.log("📤 Uploading PDF:", filename);
+
+console.log("📄 Media ID:", media.id);
+
+console.log("📤 Sending WhatsApp template:", {
+  to,
+  template: "om_tiffin_bill",
+  customerName,
+  invoiceNo,
+  totalAmount,
+});
+
+  if (!media?.id) {
+    throw new Error(
+      "WhatsApp PDF media upload failed."
+    );
+  }
+
+  return sendWhatsAppTemplate({
+    to,
+
+    templateName: "om_tiffin_bill",
+
+    languageCode: "en_GB",
+
+    components: [
+      {
+        type: "header",
+
+        parameters: [
+          {
+            type: "document",
+
+            document: {
+              id: media.id,
+              filename,
+            },
+          },
+        ],
+      },
+
+      {
+        type: "body",
+
+        parameters: [
+          {
+            type: "text",
+            text: customerName || "Customer",
+          },
+
+          {
+            type: "text",
+            text: invoiceNo || "N/A",
+          },
+
+          {
+            type: "text",
+            text: String(totalAmount || 0),
+          },
+
+          {
+            type: "text",
+            text: new Date().toLocaleDateString(
+              "en-GB"
+            ),
+          },
+        ],
+      },
+    ],
+  });
+};
+
+// =====================================================
 // Send PDF Payment Receipt
 // =====================================================
 
@@ -434,13 +531,9 @@ const sendPdfPaymentReceiptWhatsApp = async ({
   const to = normalizeIndianPhone(phone);
 
   if (!to) {
-    const error = new Error(
+    throw new Error(
       "Customer phone number is invalid."
     );
-
-    error.code = "INVALID_PHONE";
-
-    throw error;
   }
 
   const media = await uploadPdf({
@@ -449,39 +542,74 @@ const sendPdfPaymentReceiptWhatsApp = async ({
   });
 
   if (!media?.id) {
-    const error = new Error(
+    throw new Error(
       "WhatsApp payment receipt PDF media upload failed."
     );
-
-    error.code = "MEDIA_UPLOAD_FAILED";
-
-    throw error;
   }
 
   const formattedDate = paymentDate
-    ? new Date(paymentDate).toLocaleDateString("en-GB")
+    ? new Date(paymentDate).toLocaleDateString(
+        "en-GB"
+      )
     : new Date().toLocaleDateString("en-GB");
 
-  const caption =
-  `🏆 *OM TIFFIN SERVICE* 🏆\n\n` +
-  `━━━━━━━━━━━━━━\n\n` +
-  `✅ *PAYMENT RECEIVED SUCCESSFULLY*\n\n` +
-  `👤 *Customer:* ${customerName || "Customer"}\n\n` +
-  `📄 *Receipt No:* ${receiptNo || "N/A"}\n\n` +
-  `💰 *Amount:* ₹${Number(amount || 0)}\n\n` +
-  `💳 *Payment Method:* ${paymentMethod || "Cash"}\n\n` +
-  `📅 *Date:* ${formattedDate}\n\n` +
-  `━━━━━━━━━━━━━━\n\n` +
-  `🙏 Thank you for choosing\n` +
-  `🌿 *OM TIFFIN SERVICE* 🌿\n\n` +
-  `🍱 Fresh Food • 🚚 On-Time Delivery • ❤️ Trusted Service`;
-
-  return sendWhatsAppDocument({
+  return sendWhatsAppTemplate({
     to,
-    mediaId: media.id,
-    filename:
-      filename || "OM-Tiffin-Payment-Receipt.pdf",
-    caption,
+
+    templateName:
+      "om_tiffin_payment_receipt",
+
+    languageCode: "en_GB",
+
+    components: [
+      {
+        type: "header",
+
+        parameters: [
+          {
+            type: "document",
+
+            document: {
+              id: media.id,
+              filename,
+            },
+          },
+        ],
+      },
+
+      {
+        type: "body",
+
+        parameters: [
+          {
+            type: "text",
+            text:
+              customerName || "Customer",
+          },
+
+          {
+            type: "text",
+            text: receiptNo || "N/A",
+          },
+
+          {
+            type: "text",
+            text: String(amount || 0),
+          },
+
+          {
+            type: "text",
+            text:
+              paymentMethod || "Cash",
+          },
+
+          {
+            type: "text",
+            text: formattedDate,
+          },
+        ],
+      },
+    ],
   });
 };
 
@@ -496,5 +624,6 @@ module.exports = {
   sendWhatsAppTemplate,
   sendWhatsAppDocument,
   sendPdfBillWhatsApp,
+  sendBillTemplateWithPdf,
   sendPdfPaymentReceiptWhatsApp,
 };

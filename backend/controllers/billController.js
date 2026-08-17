@@ -3,7 +3,10 @@ const DailyEntry = require("../models/DailyEntry");
 const Price = require("../models/Price");
 const Tiffin = require("../models/Tiffin");
 const applyAdvance = require("../utils/advanceHelper");
-const { sendPdfBillWhatsApp } = require("../utils/whatsappSender");
+const {
+  sendPdfBillWhatsApp,
+  sendBillTemplateWithPdf,
+} = require("../utils/whatsappSender");
 const generateBillPdf = require("../utils/billPdfGenerator");
 
 // =======================================
@@ -480,15 +483,14 @@ if (!pdfBuffer) {
       }.pdf`;
 
     const result =
-      await sendPdfBillWhatsApp({
-  phone: customer.phone,
-  pdfBuffer,
-  filename,
-  customerName: customer.customerName,
-  invoiceNo: bill.invoiceNo,
-  totalAmount: bill.totalAmount,
-});
-
+  await sendBillTemplateWithPdf({
+    phone: customer.phone,
+    pdfBuffer,
+    filename,
+    customerName: customer.customerName,
+    invoiceNo: bill.invoiceNo,
+    totalAmount: bill.totalAmount,
+  });
 bill.whatsappDelivery = {
   delivered: true,
   sentAt: new Date(),
@@ -500,7 +502,7 @@ await bill.save();
 return res.json({
   success: true,
   message:
-    "Bill PDF sent successfully on WhatsApp.",
+  "Bill template with PDF sent successfully on WhatsApp.",
 });
   } catch (error) {
     console.error(error);
@@ -577,15 +579,23 @@ const generateAllBills = async (req, res) => {
   customer
 );
 
-await sendPdfBillWhatsApp({
+await sendBillTemplateWithPdf({
   phone: customer.phone,
+
   pdfBuffer,
+
   filename: `OM-Tiffin-${
     generatedBill.invoiceNo
   }.pdf`,
-  customerName: customer.customerName,
-  invoiceNo: generatedBill.invoiceNo,
-  totalAmount: generatedBill.totalAmount,
+
+  customerName:
+    customer.customerName,
+
+  invoiceNo:
+    generatedBill.invoiceNo,
+
+  totalAmount:
+    generatedBill.totalAmount,
 });
 
 completedCustomers.push({

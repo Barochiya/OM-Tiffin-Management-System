@@ -19,7 +19,10 @@ const {
 
 const protect = require("../middleware/authMiddleware");
 
-// Generate Monthly Bill
+// =======================================
+// Generate Bills
+// =======================================
+
 router.post("/generate", generateBill);
 
 router.post(
@@ -28,10 +31,18 @@ router.post(
   generateAllBills
 );
 
+// =======================================
+// Get Latest Bill By Customer
+// =======================================
+
 router.get(
   "/customer/:customerId",
   getLatestBill
 );
+
+// =======================================
+// Get Bill Delivery Status
+// =======================================
 
 router.get(
   "/delivery-status",
@@ -39,11 +50,19 @@ router.get(
   getBillDeliveryStatus
 );
 
+// =======================================
+// Get All Bills
+// =======================================
+
 router.get(
   "/",
   protect,
   getAllBills
 );
+
+// =======================================
+// Get Single Bill
+// =======================================
 
 router.get(
   "/:id",
@@ -51,7 +70,10 @@ router.get(
   getBillById
 );
 
-// Send Bill PDF
+// =======================================
+// Send Bill PDF On WhatsApp
+// =======================================
+
 router.post(
   "/send-whatsapp",
   protect,

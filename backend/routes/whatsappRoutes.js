@@ -6,6 +6,7 @@ const {
   sendWhatsAppMessage,
   sendWhatsAppTemplate,
 } = require("../utils/whatsappSender");
+const Bill = require("../models/Bill");
 // =====================================================
 // WhatsApp Webhook Verification
 // =====================================================
@@ -44,21 +45,163 @@ router.get("/webhook", (req, res) => {
 // WhatsApp Incoming Webhook
 // =====================================================
 
-router.post("/webhook", (req, res) => {
+router.post("/webhook", async (req, res) => {
+  console.log("📩 WhatsApp Webhook Received");
+
+  try {
+    const entry = req.body?.entry?.[0];
+
+    const changes = entry?.changes?.[0];
+
+        const statuses =
+      changes?.value?.statuses;
+
+      console.log(
+        "statuses =",
+        statuses
+      );
+
+
+    if (
+  Array.isArray(statuses) &&
+  statuses.length > 0
+) {
   console.log(
-    "📩 WhatsApp Webhook Received"
+    "Inside IF"
+  );
+
+  for (const status of statuses) {
+  console.log(
+    "Inside FOR"
+  );
+
+  console.log({
+    id: status.id,
+    status: status.status,
+    recipient:
+      status.recipient_id,
+  });
+
+ 
+
+const bill = await Bill.findOne({
+  "whatsappDelivery.messageId":
+    status.id,
+});
+
+console.log(
+  "Bill =",
+  bill
+);
+
+  if (!bill) {
+    console.log(
+      "❌ Bill not found for message:",
+      status.id
+    );
+
+    continue;
+  }
+
+  console.log(
+  "📦 Database Message ID:",
+  bill?.whatsappDelivery?.messageId
+);
+
+  const update = {};
+
+  if (status.status === "sent") {
+    update["whatsappDelivery.status"] =
+      "sent";
+
+    update["whatsappDelivery.sentAt"] =
+      new Date(
+        Number(status.timestamp) *
+          1000
+      );
+
+    update["whatsappDelivery.reason"] =
+      "Message sent";
+  }
+
+  if (
+    status.status === "delivered"
+  ) {
+    update["whatsappDelivery.status"] =
+      "delivered";
+
+    update[
+      "whatsappDelivery.delivered"
+    ] = true;
+
+    update[
+      "whatsappDelivery.deliveredAt"
+    ] = new Date(
+      Number(status.timestamp) *
+        1000
+    );
+
+    update["whatsappDelivery.reason"] =
+      "Message delivered";
+  }
+
+  if (status.status === "read") {
+    update["whatsappDelivery.status"] =
+      "read";
+
+    update[
+      "whatsappDelivery.delivered"
+    ] = true;
+
+    update["whatsappDelivery.readAt"] =
+      new Date(
+        Number(status.timestamp) *
+          1000
+    );
+
+    update["whatsappDelivery.reason"] =
+      "Message read";
+  }
+
+  if (status.status === "failed") {
+    update["whatsappDelivery.status"] =
+      "failed";
+
+    update[
+      "whatsappDelivery.failedAt"
+    ] = new Date();
+
+    update["whatsappDelivery.reason"] =
+      status.errors?.[0]?.title ||
+      "Message failed";
+  }
+
+  update["whatsappDelivery.meta"] =
+    status;
+
+  await Bill.findByIdAndUpdate(
+    bill._id,
+    {
+      $set: update,
+    }
   );
 
   console.log(
-    JSON.stringify(
-      req.body,
-      null,
-      2
-    )
+    "✅ Bill updated:",
+    bill.invoiceNo
   );
+}
+    }
 
-  // Meta requires quick 200 response
-  return res.sendStatus(200);
+    return res.sendStatus(200);
+  } catch (error) {
+    console.error(
+      "Webhook Error:",
+      error
+    );
+
+    return res.sendStatus(200);
+  }
 });
 
 // =====================================================

@@ -354,15 +354,20 @@ console.log("Customer ID:", customerId);
 console.log("Customer Data:", customerData);
 
 const getPdfOptions = () => ({
-  margin: 6,
+  margin: 2,
+
   filename: `OM-Tiffin-${bill?.invoiceNo || "Bill"}.pdf`,
+
   image: {
     type: "jpeg",
-    quality: 0.96,
+    quality: 0.9,
   },
+
   html2canvas: {
-    scale: 2,
+    scale: 1,
+
     useCORS: true,
+
     logging: false,
 
     onclone: (clonedDocument) => {
@@ -379,7 +384,9 @@ const getPdfOptions = () => ({
 
       elements.forEach((element) => {
         const computedStyle =
-          clonedDocument.defaultView.getComputedStyle(element);
+          clonedDocument.defaultView.getComputedStyle(
+            element
+          );
 
         const color = computedStyle.color;
         const backgroundColor =
@@ -387,7 +394,10 @@ const getPdfOptions = () => ({
         const borderColor =
           computedStyle.borderColor;
 
-        if (color && color.includes("oklch")) {
+        if (
+          color &&
+          color.includes("oklch")
+        ) {
           element.style.color = "#374151";
         }
 
@@ -395,26 +405,30 @@ const getPdfOptions = () => ({
           backgroundColor &&
           backgroundColor.includes("oklch")
         ) {
-          element.style.backgroundColor = "#ffffff";
+          element.style.backgroundColor =
+            "#ffffff";
         }
 
         if (
           borderColor &&
           borderColor.includes("oklch")
         ) {
-          element.style.borderColor = "#d1d5db";
+          element.style.borderColor =
+            "#d1d5db";
         }
       });
     },
   },
+
   jsPDF: {
     unit: "mm",
     format: "a4",
     orientation: "portrait",
   },
+
   pagebreak: {
-    mode: ["css", "legacy"],
-  },
+  mode: ["css", "legacy"],
+},
 });
 
 const createBillPdf = async () => {
@@ -900,7 +914,13 @@ setActionsCompleted(true);
           <div
   ref={billRef}
   data-pdf-bill="true"
-  className="bg-white rounded-2xl shadow-xl mt-8 p-8"
+  className="bg-white mt-8 p-4 max-w-none"
+  style={{
+    width: "210mm",
+    minHeight: "297mm",
+    margin: "0 auto",
+    background: "#ffffff",
+  }}
 >
 
             {/* Invoice Header */}
@@ -1046,13 +1066,13 @@ setActionsCompleted(true);
 
           {/* Date Wise Meals Table */}
 
-<div className="mt-8 overflow-x-auto">
+<div className="mt-8">
 
   <h3 className="text-2xl font-bold text-slate-800 mb-5">
     📅 Date-wise Meal Details
   </h3>
 
-  <table className="min-w-full border border-gray-300 text-sm">
+  <table className="w-full border border-gray-300 text-xs">
 
     <thead className="bg-blue-700 text-white">
 
@@ -1406,7 +1426,7 @@ setActionsCompleted(true);
 {/* QR Section */}
 {/* QR Section */}
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
+<div className="grid grid-cols-2 gap-4 mt-6">
 
   {/* QR */}
 
@@ -1419,9 +1439,9 @@ setActionsCompleted(true);
     </h3>
 
     <QRCode
-      value={`upi://pay?pa=malaybarochiya-5@oksbi&pn=OM Tiffin Service&am=${bill.pendingAmount}`}
-      size={180}
-    />
+  value={`upi://pay?pa=malaybarochiya-5@oksbi&pn=OM Tiffin Service&am=${bill.pendingAmount}`}
+  size={120}
+/>
 
     <p className="mt-4 text-sm text-gray-500 text-center">
 
@@ -1543,45 +1563,9 @@ setActionsCompleted(true);
 
 </div>
 
-{/* Buttons */}
 
-<div className="flex flex-wrap gap-4 mt-10">
-  <button
-    onClick={handlePrint}
-    disabled={actionsCompleted}
-    className="bg-blue-700 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl"
-  >
-    🖨 Print Invoice
-  </button>
 
-  <button
-    onClick={handleDownloadPdf}
-    disabled={actionsCompleted}
-    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl"
-  >
-    📄 Download PDF
-  </button>
 
-  <button
-    onClick={handleWhatsAppShare}
-    disabled={actionsCompleted}
-    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
-  >
-    <FaWhatsapp />
-    Share on WhatsApp
-  </button>
-
-  <button
-    onClick={handleSendBillWhatsApp}
-    disabled={sendingBill || actionsCompleted}
-    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
-  >
-    <FaWhatsapp />
-    {sendingBill ? "Sending PDF..." : "Send Bill PDF"}
-  </button>
-</div>
-
-{/* Footer */}
 {/* Footer */}
 
 <div className="mt-12 border-t pt-8">
@@ -1655,9 +1639,49 @@ setActionsCompleted(true);
 
 {/* Close Invoice */}
 
+
+
           </div>
 
         )}
+
+{/* Buttons */}
+
+<div className="flex flex-wrap gap-4 mt-10">
+  <button
+    onClick={handlePrint}
+    disabled={actionsCompleted}
+    className="bg-blue-700 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl"
+  >
+    🖨 Print Invoice
+  </button>
+
+  <button
+    onClick={handleDownloadPdf}
+    disabled={actionsCompleted}
+    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl"
+  >
+    📄 Download PDF
+  </button>
+
+  <button
+    onClick={handleWhatsAppShare}
+    disabled={actionsCompleted}
+    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
+  >
+    <FaWhatsapp />
+    Share on WhatsApp
+  </button>
+
+  <button
+    onClick={handleSendBillWhatsApp}
+    disabled={sendingBill || actionsCompleted}
+    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
+  >
+    <FaWhatsapp />
+    {sendingBill ? "Sending PDF..." : "Send Bill PDF"}
+  </button>
+</div>
 
       </div>
 

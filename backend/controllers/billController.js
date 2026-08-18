@@ -482,19 +482,45 @@ if (!pdfBuffer) {
         bill.invoiceNo || bill._id
       }.pdf`;
 
-    const result =
+ const result =
   await sendBillTemplateWithPdf({
     phone: customer.phone,
     pdfBuffer,
     filename,
-    customerName: customer.customerName,
+    customerName:
+      customer.customerName,
     invoiceNo: bill.invoiceNo,
-    totalAmount: bill.totalAmount,
+    totalAmount:
+      bill.totalAmount,
   });
+
+const messageId =
+  result?.messages?.[0]?.id || null;
+
 bill.whatsappDelivery = {
-  delivered: true,
+  messageId,
+
+  status: messageId
+    ? "sent"
+    : "failed",
+
+  delivered: false,
+
   sentAt: new Date(),
-  reason: "Delivered",
+
+  deliveredAt: null,
+
+  readAt: null,
+
+  failedAt: messageId
+    ? null
+    : new Date(),
+
+  reason: messageId
+    ? "Message sent to Meta"
+    : "Meta did not return a message ID",
+
+  meta: result || {},
 };
 
 await bill.save();
@@ -579,29 +605,62 @@ const generateAllBills = async (req, res) => {
   customer
 );
 
-await sendBillTemplateWithPdf({
-  phone: customer.phone,
+const response =
+  await sendBillTemplateWithPdf({
+    phone: customer.phone,
+    pdfBuffer,
+    filename: `OM-Tiffin-${generatedBill.invoiceNo}.pdf`,
+    customerName: customer.customerName,
+    invoiceNo: generatedBill.invoiceNo,
+    totalAmount: generatedBill.totalAmount,
+  });
 
-  pdfBuffer,
+if (
+  response?.messages?.[0]?.id
+) {
 
-  filename: `OM-Tiffin-${
-    generatedBill.invoiceNo
-  }.pdf`,
+  const bill =
+  await Bill.findById(
+    generatedBill._id
+  );
 
-  customerName:
-    customer.customerName,
+bill.whatsappDelivery = {
+  messageId:
+    response.messages[0].id,
 
-  invoiceNo:
-    generatedBill.invoiceNo,
+  status: "sent",
 
-  totalAmount:
-    generatedBill.totalAmount,
-});
+  delivered: false,
 
-completedCustomers.push({
-  customer: customer.customerName,
-  billId: generatedBill._id,
-});
+  sentAt: new Date(),
+
+  deliveredAt: null,
+
+  readAt: null,
+
+  failedAt: null,
+
+  reason: "Message sent to Meta",
+
+  meta: response,
+};
+
+await bill.save();
+
+  completedCustomers.push({
+    customer: customer.customerName,
+    billId: generatedBill._id,
+    messageId:
+      response.messages[0].id,
+  });
+} 
+else {
+  failedCustomers.push({
+    customer: customer.customerName,
+    reason:
+      "WhatsApp message not accepted",
+  });
+}
       } catch (error) {
         failedCustomers.push({
           customer: customer.customerName,

@@ -224,10 +224,27 @@ status: {
 },
 
 // ==========================
-// WhatsApp Delivery Status
+// WhatsApp Delivery Tracking
 // ==========================
 
 whatsappDelivery: {
+  messageId: {
+    type: String,
+    default: null,
+  },
+
+  status: {
+    type: String,
+    enum: [
+      "pending",
+      "sent",
+      "delivered",
+      "read",
+      "failed",
+    ],
+    default: "pending",
+  },
+
   delivered: {
     type: Boolean,
     default: false,
@@ -238,9 +255,29 @@ whatsappDelivery: {
     default: null,
   },
 
+  deliveredAt: {
+    type: Date,
+    default: null,
+  },
+
+  readAt: {
+    type: Date,
+    default: null,
+  },
+
+  failedAt: {
+    type: Date,
+    default: null,
+  },
+
   reason: {
     type: String,
     default: "Not sent yet",
+  },
+
+  meta: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {},
   },
 },
 

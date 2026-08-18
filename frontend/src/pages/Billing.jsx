@@ -1645,43 +1645,7 @@ setActionsCompleted(true);
 
         )}
 
-{/* Buttons */}
 
-<div className="flex flex-wrap gap-4 mt-10">
-  <button
-    onClick={handlePrint}
-    disabled={actionsCompleted}
-    className="bg-blue-700 hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl"
-  >
-    🖨 Print Invoice
-  </button>
-
-  <button
-    onClick={handleDownloadPdf}
-    disabled={actionsCompleted}
-    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl"
-  >
-    📄 Download PDF
-  </button>
-
-  <button
-    onClick={handleWhatsAppShare}
-    disabled={actionsCompleted}
-    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
-  >
-    <FaWhatsapp />
-    Share on WhatsApp
-  </button>
-
-  <button
-    onClick={handleSendBillWhatsApp}
-    disabled={sendingBill || actionsCompleted}
-    className="bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3 rounded-xl flex items-center gap-2"
-  >
-    <FaWhatsapp />
-    {sendingBill ? "Sending PDF..." : "Send Bill PDF"}
-  </button>
-</div>
 
       </div>
 

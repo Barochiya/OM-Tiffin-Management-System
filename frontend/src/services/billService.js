@@ -90,3 +90,29 @@ export const getBillDeliveryStatus = async () => {
 
   return response.data;
 };
+
+// Get All Bills
+
+export const getAllBills = async () => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.get("/bills", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+};
+
+export const getBillById = async (id) => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.get(`/bills/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+};

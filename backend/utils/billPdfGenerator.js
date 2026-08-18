@@ -92,5 +92,4 @@ Total: ₹${day.dailyTotal}`
     }
   });
 };
-
 module.exports = generateBillPdf;

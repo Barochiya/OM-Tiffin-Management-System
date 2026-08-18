@@ -11,6 +11,8 @@ const {
   generateBill,
   generateAllBills,
   getLatestBill,
+  getAllBills,
+  getBillById,
   sendBillWhatsApp,
   getBillDeliveryStatus,
 } = require("../controllers/billController");
@@ -35,6 +37,18 @@ router.get(
   "/delivery-status",
   protect,
   getBillDeliveryStatus
+);
+
+router.get(
+  "/",
+  protect,
+  getAllBills
+);
+
+router.get(
+  "/:id",
+  protect,
+  getBillById
 );
 
 // Send Bill PDF

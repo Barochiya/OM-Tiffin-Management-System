@@ -110,6 +110,17 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
         </Link>
 
         <Link
+  to="/view-bills"
+  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+    location.pathname === "/view-bills"
+      ? "bg-white text-blue-700 font-semibold shadow"
+      : "hover:bg-blue-600"
+  }`}
+>
+  📄 View Bills
+</Link>
+
+        <Link
           to="/payments"
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/payments"

@@ -12,6 +12,8 @@ import DailyEntry from "./pages/DailyEntry";
 import PriceSettings from "./pages/PriceSettings";
 import Billing from "./pages/Billing";
 import Payments from "./pages/Payments";
+import ViewBills from "./pages/ViewBills";
+import SingleBill from "./pages/SingleBill";
 import PaymentReceipt from "./pages/PaymentReceipt";
 import Announcement from "./pages/Announcement";
 import BillDeliveryStatus from "./pages/BillDeliveryStatus";
@@ -90,11 +92,25 @@ export default function App() {
           path="/payment-receipt/:id"
           element={<PaymentReceipt />}
         />
+
         <Route path="/announcement" element={<Announcement />} />
         <Route
-  path="/bill-delivery-status"
-  element={<BillDeliveryStatus />}
-/>
+          path="/bill-delivery-status"
+          element={<BillDeliveryStatus />}
+        />
+
+        
+        <Route
+          path="/view-bills"
+          element={<ViewBills />}
+        />
+
+        <Route
+          path="/view-bills/:id"
+          element={<SingleBill />}
+        />
+
+        
 
       </Route>
 

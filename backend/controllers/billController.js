@@ -633,6 +633,66 @@ completedCustomers.push({
 };
 
 // =======================================
+// Get All Bills
+// =======================================
+
+const getAllBills = async (req, res) => {
+  try {
+    const bills = await Bill.find()
+      .populate(
+        "customer",
+        "customerName phone"
+      )
+      .sort({
+        createdAt: -1,
+      });
+
+      console.log("Bills:", bills);
+
+    return res.json({
+      success: true,
+      data: bills,
+    });
+    
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// =======================================
+// Get Single Bill
+// =======================================
+
+const getBillById = async (req, res) => {
+  try {
+    const bill = await Bill.findById(req.params.id).populate(
+      "customer",
+      "customerName phone address"
+    );
+
+    if (!bill) {
+      return res.status(404).json({
+        success: false,
+        message: "Bill not found.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: bill,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// =======================================
 // Get Bill Delivery Status
 // =======================================
 
@@ -694,6 +754,8 @@ module.exports = {
   generateBill,
   generateAllBills,
   getLatestBill,
+  getAllBills,
+  getBillById,
   sendBillWhatsApp,
   getBillDeliveryStatus,
 };

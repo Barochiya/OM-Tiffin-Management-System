@@ -48,6 +48,10 @@ router.get("/webhook", (req, res) => {
 router.post("/webhook", async (req, res) => {
   console.log("📩 WhatsApp Webhook Received");
 
+  console.log(
+  JSON.stringify(req.body, null, 2)
+);
+
   try {
     const entry = req.body?.entry?.[0];
 

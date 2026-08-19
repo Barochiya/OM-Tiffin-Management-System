@@ -56,7 +56,7 @@ const Navbar = ({ setSidebarOpen }) => {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full max-w-full min-w-0 overflow-hidden bg-white shadow-md px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">
+    <header className="bg-white shadow-md px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-3">
 
       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
 

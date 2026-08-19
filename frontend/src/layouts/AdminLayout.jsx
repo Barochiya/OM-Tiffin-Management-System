@@ -17,18 +17,24 @@ export default function AdminLayout() {
       />
 
       {/* Main Area */}
-      <div className="flex-1 min-w-0 w-0 lg:ml-64">
+      <div className="flex-1 min-w-0 w-0 lg:ml-64 flex flex-col h-screen">
 
-        <Navbar
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+  <div className="sticky top-0 z-50 shrink-0">
 
-        <main className="w-full min-w-0 max-w-full overflow-x-hidden p-3 sm:p-4 md:p-6">
-          <Outlet />
-        </main>
+    <Navbar
+      sidebarOpen={sidebarOpen}
+      setSidebarOpen={setSidebarOpen}
+    />
 
-      </div>
+  </div>
+
+  <main className="flex-1 overflow-y-auto w-full min-w-0 max-w-full p-3 sm:p-4 md:p-6">
+
+    <Outlet />
+
+  </main>
+
+</div>
 
     </div>
   );

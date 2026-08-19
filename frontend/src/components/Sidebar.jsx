@@ -3,6 +3,12 @@ import { Link, useLocation } from "react-router-dom";
 const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
   const location = useLocation();
 
+const closeSidebar = () => {
+  if (window.innerWidth < 1024) {
+    setSidebarOpen(false);
+  }
+};
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -45,6 +51,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
           to="/dashboard"
+          onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/dashboard"
               ? "bg-white text-blue-700 font-semibold shadow"
@@ -56,6 +63,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
           to="/customers"
+          onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/customers"
               ? "bg-white text-blue-700 font-semibold shadow"
@@ -67,6 +75,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
           to="/add-customer"
+          onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/add-customer"
               ? "bg-white text-blue-700 font-semibold shadow"
@@ -78,6 +87,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
           to="/daily-entry"
+          onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/daily-entry"
               ? "bg-white text-blue-700 font-semibold shadow"
@@ -89,6 +99,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
           to="/price-settings"
+          onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/price-settings"
               ? "bg-white text-blue-700 font-semibold shadow"
@@ -100,6 +111,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
           to="/billing"
+          onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/billing"
               ? "bg-white text-blue-700 font-semibold shadow"
@@ -111,6 +123,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
   to="/view-bills"
+  onClick={closeSidebar}
   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
     location.pathname === "/view-bills"
       ? "bg-white text-blue-700 font-semibold shadow"
@@ -122,6 +135,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
           to="/payments"
+          onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/payments"
               ? "bg-white text-blue-700 font-semibold shadow"
@@ -133,6 +147,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
           <Link
   to="/announcement"
+  onClick={closeSidebar}
   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
     location.pathname === "/announcement"
       ? "bg-white text-blue-700 font-semibold shadow"
@@ -144,6 +159,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
 
         <Link
   to="/bill-delivery-status"
+  onClick={closeSidebar}
   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
     location.pathname === "/bill-delivery-status"
       ? "bg-white text-blue-700 font-semibold shadow"

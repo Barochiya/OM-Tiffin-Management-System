@@ -41,7 +41,7 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
       </div>
 
       {/* Menu */}
-      <nav className="flex-1 mt-6 px-3 space-y-2">
+      <nav className="flex-1 mt-6 px-3 space-y-2 overflow-y-auto pb-6">
 
         <Link
           to="/dashboard"
@@ -130,6 +130,17 @@ const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
         >
           💳 Payments
         </Link>
+
+          <Link
+  to="/announcement"
+  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+    location.pathname === "/announcement"
+      ? "bg-white text-blue-700 font-semibold shadow"
+      : "hover:bg-blue-600"
+  }`}
+>
+  📢 Announcement Center
+</Link>
 
         <Link
   to="/bill-delivery-status"

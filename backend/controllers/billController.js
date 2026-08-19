@@ -821,6 +821,88 @@ const getBillDeliveryStatus = async (req, res) => {
   }
 };
 
+
+
+// =======================================
+// Retry Failed WhatsApp Bill
+// =======================================
+
+const retryFailedBill = async (req, res) => {
+  try {
+    const { billId } = req.params;
+
+    const bill = await Bill.findById(billId).populate(
+      "customer"
+    );
+
+    if (!bill) {
+      return res.status(404).json({
+        success: false,
+        message: "Bill not found",
+      });
+    }
+
+    const customer = bill.customer;
+
+    if (!customer?.phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer phone not found",
+      });
+    }
+
+    const pdfBuffer = await generateBillPdf(
+      bill,
+      customer
+    );
+
+    const response =
+      await sendBillTemplateWithPdf({
+        phone: customer.phone,
+        pdfBuffer,
+        filename: `OM-Tiffin-${bill.invoiceNo}.pdf`,
+        customerName:
+          customer.customerName,
+        invoiceNo: bill.invoiceNo,
+        totalAmount: bill.totalAmount,
+      });
+
+    bill.whatsappDelivery = {
+      messageId:
+        response?.messages?.[0]?.id,
+
+      status: "sent",
+
+      delivered: false,
+
+      sentAt: new Date(),
+
+      deliveredAt: null,
+
+      readAt: null,
+
+      failedAt: null,
+
+      reason: "Message resent",
+
+      meta: response,
+    };
+
+    await bill.save();
+
+    return res.json({
+      success: true,
+      message:
+        "Bill resent successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   generateBill,
   generateAllBills,
@@ -829,4 +911,5 @@ module.exports = {
   getBillById,
   sendBillWhatsApp,
   getBillDeliveryStatus,
+  retryFailedBill,
 };

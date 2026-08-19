@@ -91,6 +91,22 @@ export const getBillDeliveryStatus = async () => {
   return response.data;
 };
 
+export const retryBill = async (billId) => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.post(
+    `/bills/retry/${billId}`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};
+
 // Get All Bills
 
 export const getAllBills = async () => {

@@ -15,6 +15,7 @@ const {
   getBillById,
   sendBillWhatsApp,
   getBillDeliveryStatus,
+  retryFailedBill,
 } = require("../controllers/billController");
 
 const protect = require("../middleware/authMiddleware");
@@ -79,6 +80,12 @@ router.post(
   protect,
   upload.single("pdf"),
   sendBillWhatsApp
+);
+
+router.post(
+  "/retry/:billId",
+  protect,
+  retryFailedBill
 );
 
 module.exports = router;

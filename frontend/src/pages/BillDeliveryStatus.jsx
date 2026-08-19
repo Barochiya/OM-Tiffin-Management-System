@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
+import {
+  getBillDeliveryStatus,
+  retryBill,
+} from "../services/billService";
 
-import { getBillDeliveryStatus } from "../services/billService";
 
 export default function BillDeliveryStatus() {
   const [data, setData] = useState([]);
@@ -44,6 +47,21 @@ const [loading, setLoading] =
       setLoading(false);
     }
   };
+
+  const handleRetry = async (billId) => {
+  try {
+    await retryBill(billId);
+
+    alert("Bill sent successfully.");
+
+    loadData();
+  } catch (error) {
+    alert(
+      error.response?.data?.message ||
+        "Retry failed."
+    );
+  }
+};
 
   const deliveredCount = data.filter(
   (item) =>
@@ -370,6 +388,15 @@ const filteredData = data.filter(
         </span>
       </div>
     )}
+
+    {item.status === "failed" && (
+  <button
+    onClick={() => handleRetry(item.billId)}
+    className="mt-2 rounded-lg bg-red-500 px-3 py-1 text-sm text-white"
+  >
+    🔄 Retry
+  </button>
+)}
 
   </div>
 </td>

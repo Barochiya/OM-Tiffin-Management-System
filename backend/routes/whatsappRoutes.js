@@ -146,6 +146,13 @@ console.log(
   }
 
   if (status.status === "read") {
+
+    console.log(
+  "👁️ READ EVENT RECEIVED"
+);
+
+console.log(status);
+
     update["whatsappDelivery.status"] =
       "read";
 

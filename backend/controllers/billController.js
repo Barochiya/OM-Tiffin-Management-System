@@ -767,35 +767,47 @@ const getBillDeliveryStatus = async (req, res) => {
       });
 
     const deliveryStatus = bills.map(
-      (bill) => ({
-        billId: bill._id,
+  (bill) => ({
+    billId: bill._id,
 
-        customer:
-          bill.customer?.customerName ||
-          "Unknown",
+    customer:
+      bill.customer?.customerName ||
+      "Unknown",
 
-        invoice:
-          bill.invoiceNo || "-",
+    invoice:
+      bill.invoiceNo || "-",
 
-        month: bill.month,
+    month: bill.month,
 
-        year: bill.year,
+    year: bill.year,
 
-        cycle: bill.cycle,
+    cycle: bill.cycle,
 
-        delivered:
-          bill.whatsappDelivery
-            ?.delivered || false,
+    status:
+      bill.whatsappDelivery
+        ?.status || "pending",
 
-        sentAt:
-          bill.whatsappDelivery
-            ?.sentAt || null,
+    sentAt:
+      bill.whatsappDelivery
+        ?.sentAt || null,
 
-        reason:
-          bill.whatsappDelivery
-            ?.reason || "Not sent yet",
-      })
-    );
+    deliveredAt:
+      bill.whatsappDelivery
+        ?.deliveredAt || null,
+
+    readAt:
+      bill.whatsappDelivery
+        ?.readAt || null,
+
+    failedAt:
+      bill.whatsappDelivery
+        ?.failedAt || null,
+
+    reason:
+      bill.whatsappDelivery
+        ?.reason || "Not sent yet",
+  })
+);
 
     return res.json({
       success: true,

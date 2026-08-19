@@ -113,7 +113,11 @@ const handleWhatsApp = (billId) => {
                 </th>
 
                 <th className="p-4 text-left">
-                  Status
+                  Payment
+                </th>
+
+                <th className="p-4 text-left">
+                  WhatsApp
                 </th>
 
                 <th className="p-4 text-center">
@@ -157,6 +161,64 @@ const handleWhatsApp = (billId) => {
           {bill.status}
         </span>
       </td>
+
+     <td className="p-5">
+  <span
+    className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-semibold ${
+      bill.whatsappDelivery?.status === "read"
+        ? "bg-blue-100 text-blue-700"
+        : bill.whatsappDelivery?.status === "delivered"
+        ? "bg-green-100 text-green-700"
+        : bill.whatsappDelivery?.status === "sent"
+        ? "bg-gray-100 text-gray-700"
+        : bill.whatsappDelivery?.status === "failed"
+        ? "bg-red-100 text-red-700"
+        : "bg-yellow-100 text-yellow-700"
+    }`}
+  >
+    {bill.whatsappDelivery?.status === "read" && (
+      <>
+        <span className="mr-1">👁</span>
+        Read
+      </>
+    )}
+
+    {bill.whatsappDelivery?.status === "delivered" && (
+      <>
+        <span className="mr-1">✓✓</span>
+        Delivered
+      </>
+    )}
+
+    {bill.whatsappDelivery?.status === "sent" && (
+      <>
+        <span className="mr-1">✓✓</span>
+        Sent
+      </>
+    )}
+
+    {bill.whatsappDelivery?.status === "failed" && (
+      <>
+        <span className="mr-1">❌</span>
+        Failed
+      </>
+    )}
+
+    {![
+      "read",
+      "delivered",
+      "sent",
+      "failed",
+    ].includes(
+      bill.whatsappDelivery?.status
+    ) && (
+      <>
+        <span className="mr-1">⏳</span>
+        Pending
+      </>
+    )}
+  </span>
+</td>
 
       <td className="p-4">
   <div className="flex flex-wrap items-center justify-center gap-2">

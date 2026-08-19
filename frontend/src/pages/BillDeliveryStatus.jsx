@@ -23,7 +23,7 @@ const [loading, setLoading] =
 
   const interval = setInterval(() => {
     loadData();
-  }, 10000);
+  }, 1000);
 
   return () => {
     clearInterval(interval);

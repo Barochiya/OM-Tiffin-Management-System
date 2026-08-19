@@ -80,6 +80,49 @@ const generateBill = async (req, res) => {
       createdAt: -1,
     });
 
+    // ===============================
+// Customer
+// ===============================
+const customerData = await Tiffin.findById(customer);
+
+if (!customerData) {
+  return res.status(404).json({
+    success: false,
+    message: "Customer not found.",
+  });
+}
+
+const customerExtraCharge =
+  Number(
+    customerData?.pricing?.extraCharge || 0
+  );
+
+const customerExtraReason =
+  customerData?.pricing?.extraReason || "";
+
+// ===============================
+// Customer Price Override
+// ===============================
+const customerPricing =
+  customerData.pricing?.pricingType === "custom"
+    ? {
+        breakfast:
+          customerData.pricing.breakfastPrice,
+
+        lunch:
+          customerData.pricing.lunchPrice,
+
+        dinner:
+          customerData.pricing.dinnerPrice,
+      }
+    : {
+        breakfast: price.breakfast,
+
+        lunch: price.lunch,
+
+        dinner: price.dinner,
+      };
+
     if (!price) {
       return res.status(404).json({
         success: false,
@@ -116,13 +159,22 @@ const generateBill = async (req, res) => {
       const dinnerQty = Number(entry.dinnerQty || 0);
 
       const breakfastAmount =
-        breakfastQty * Number(price.breakfast || 0);
+  breakfastQty *
+  Number(
+    customerPricing.breakfast || 0
+  );
 
-      const lunchAmount =
-        lunchQty * Number(price.lunch || 0);
+const lunchAmount =
+  lunchQty *
+  Number(
+    customerPricing.lunch || 0
+  );
 
-      const dinnerAmount =
-        dinnerQty * Number(price.dinner || 0);
+const dinnerAmount =
+  dinnerQty *
+  Number(
+    customerPricing.dinner || 0
+  );
 
       const extraItems = Array.isArray(entry.extraItems)
         ? entry.extraItems.map((item) => ({
@@ -153,12 +205,32 @@ const generateBill = async (req, res) => {
         lunchAmount,
         dinnerAmount,
 
-        extraItems,
-        extraAmount,
+        extraItems: [
+  ...extraItems,
 
-        dailyTotal,
+  ...(customerExtraCharge > 0
+    ? [
+        {
+          description:
+            customerExtraReason ||
+            "Extra Charge",
 
-        remark: entry.remark || "",
+          amount:
+            customerExtraCharge,
+        },
+      ]
+    : []),
+],
+
+extraAmount:
+  extraAmount +
+  customerExtraCharge,
+
+dailyTotal:
+  dailyTotal +
+  customerExtraCharge,
+
+remark: entry.remark || "",
       };
     });
 
@@ -171,55 +243,55 @@ const generateBill = async (req, res) => {
     let totalExtraAmount = 0;
 
     filteredEntries.forEach((entry) => {
-      const breakfast = Number(entry.breakfastQty || 0);
-      const lunch = Number(entry.lunchQty || 0);
-      const dinner = Number(entry.dinnerQty || 0);
+  const breakfast = Number(entry.breakfastQty || 0);
+  const lunch = Number(entry.lunchQty || 0);
+  const dinner = Number(entry.dinnerQty || 0);
 
-      breakfastQty += breakfast;
-      lunchQty += lunch;
-      dinnerQty += dinner;
+  breakfastQty += breakfast;
+  lunchQty += lunch;
+  dinnerQty += dinner;
 
-      const extraItems = Array.isArray(entry.extraItems)
-        ? entry.extraItems
-        : [];
+  const extraItems = Array.isArray(entry.extraItems)
+    ? entry.extraItems
+    : [];
 
-      const extra = extraItems.reduce(
-        (sum, item) => sum + Number(item?.amount || 0),
-        0
-      );
+  const extra = extraItems.reduce(
+    (sum, item) => sum + Number(item?.amount || 0),
+    0
+  );
 
-      totalExtraAmount += extra;
-    });
+  totalExtraAmount +=
+    extra + customerExtraCharge;
+});
 
     // ===============================
     // Overall Amount
     // ===============================
     const breakfastAmount =
-      breakfastQty * Number(price.breakfast || 0);
+  breakfastQty *
+  Number(
+    customerPricing.breakfast || 0
+  );
 
-    const lunchAmount =
-      lunchQty * Number(price.lunch || 0);
+const lunchAmount =
+  lunchQty *
+  Number(
+    customerPricing.lunch || 0
+  );
 
-    const dinnerAmount =
-      dinnerQty * Number(price.dinner || 0);
+const dinnerAmount =
+  dinnerQty *
+  Number(
+    customerPricing.dinner || 0
+  );
 
     const totalAmount =
-      breakfastAmount +
-      lunchAmount +
-      dinnerAmount +
-      totalExtraAmount;
+  breakfastAmount +
+  lunchAmount +
+  dinnerAmount +
+  totalExtraAmount;
 
-    // ===============================
-    // Customer
-    // ===============================
-    const customerData = await Tiffin.findById(customer);
-
-    if (!customerData) {
-      return res.status(404).json({
-        success: false,
-        message: "Customer not found.",
-      });
-    }
+    
 
     // ===============================
     // Don't Generate Empty Bill

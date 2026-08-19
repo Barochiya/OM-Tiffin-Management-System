@@ -50,73 +50,64 @@ export default function AddCustomer() {
   });
 
   const handleChange = (e) => {
+  const { name, value } = e.target;
 
-    const { name, value } = e.target;
-
-let cleanPhone = formData.phone.replace(/\D/g, "");
-
-if (
-  cleanPhone.startsWith("91") &&
-  cleanPhone.length > 10
-) {
-  cleanPhone = cleanPhone.slice(2);
-}
-
-if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-  setPhoneError("Invalid WhatsApp number");
-  return;
-}
+  // Phone field
+  if (name === "phone") {
+    let cleanPhone = value.replace(/\D/g, "");
 
     if (
-      [
-        "pricingType",
-        "breakfastPrice",
-        "lunchPrice",
-        "dinnerPrice",
-        "extraCharge",
-        "extraReason",
-        "discountType",
-        "discount",
-      ].includes(name)
+      cleanPhone.length > 0 &&
+      !/^[6-9]\d{0,9}$/.test(cleanPhone)
     ) {
-
-      setFormData({
-
-        ...formData,
-
-        pricing: {
-
-          ...formData.pricing,
-
-          [name]:
-
-            name === "extraReason" ||
-
-            name === "pricingType" ||
-
-            name === "discountType"
-
-              ? value
-
-              : Number(value),
-
-        },
-
-      });
-
+      setPhoneError("Invalid WhatsApp number");
     } else {
-
-      setFormData({
-
-        ...formData,
-
-        [name]: value,
-
-      });
-
+      setPhoneError("");
     }
 
-  };
+    setFormData({
+      ...formData,
+      phone: cleanPhone,
+    });
+
+    return;
+  }
+
+  // Pricing fields
+  if (
+    [
+      "pricingType",
+      "breakfastPrice",
+      "lunchPrice",
+      "dinnerPrice",
+      "extraCharge",
+      "extraReason",
+      "discountType",
+      "discount",
+    ].includes(name)
+  ) {
+    setFormData({
+      ...formData,
+      pricing: {
+        ...formData.pricing,
+        [name]:
+          name === "extraReason" ||
+          name === "pricingType" ||
+          name === "discountType"
+            ? value
+            : Number(value),
+      },
+    });
+
+    return;
+  }
+
+  // Other fields
+  setFormData({
+    ...formData,
+    [name]: value,
+  });
+};
 
   const handleSubmit = async (e) => {
 

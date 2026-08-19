@@ -17,8 +17,14 @@ export default function ViewBills() {
   const navigate = useNavigate();
 
   useEffect(() => {
+  loadBills();
+
+  const interval = setInterval(() => {
     loadBills();
-  }, []);
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const loadBills = async () => {
     try {

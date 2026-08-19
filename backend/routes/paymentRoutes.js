@@ -1,35 +1,51 @@
 const express = require("express");
 const router = express.Router();
 
-const paymentController = require("../controllers/paymentController");
+const protect = require("../middleware/authMiddleware");
+
+const paymentController = require(
+  "../controllers/paymentController"
+);
 
 // Add Payment
-router.post("/", paymentController.addPayment);
+router.post(
+  "/",
+  protect,
+  paymentController.addPayment
+);
 
 // Get All Payments
-router.get("/", paymentController.getPayments);
+router.get(
+  "/",
+  protect,
+  paymentController.getPayments
+);
 
 // Bills By Customer
 router.get(
   "/customer/:customerId",
+  protect,
   paymentController.getBillsByCustomer
 );
 
 // Pending Bills
 router.get(
   "/pending/:customerId",
+  protect,
   paymentController.getPendingBills
 );
 
-// ✅ Payment History By Bill
+// Payment History By Bill
 router.get(
   "/bill/:billId",
+  protect,
   paymentController.getPaymentHistoryByBill
 );
 
-// Send Payment Receipt PDF via WhatsApp
+// Send Payment Receipt
 router.post(
   "/send-whatsapp",
+  protect,
   express.raw({
     type: "application/pdf",
     limit: "10mb",
@@ -37,9 +53,10 @@ router.post(
   paymentController.sendPaymentReceiptWhatsApp
 );
 
-// Single Payment
+// Get Single Payment
 router.get(
   "/:id",
+  protect,
   paymentController.getPaymentById
 );
 

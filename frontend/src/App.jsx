@@ -18,18 +18,18 @@ import PaymentReceipt from "./pages/PaymentReceipt";
 import Announcement from "./pages/Announcement";
 import BillDeliveryStatus from "./pages/BillDeliveryStatus";
 import BusinessInfo from "./pages/BusinessInfo";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 export default function App() {
   return (
     <Routes>
-
       {/* Default */}
       <Route
         path="/"
         element={<Navigate to="/login" replace />}
       />
 
-      {/* Login */}
+      {/* Public Routes */}
       <Route
         path="/login"
         element={<Login />}
@@ -40,78 +40,133 @@ export default function App() {
         element={<BusinessInfo />}
       />
 
-      {/* Admin Layout */}
+      {/* Protected Routes */}
       <Route element={<AdminLayout />}>
-
         <Route
           path="/dashboard"
-          element={<Dashboard />}
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/customers"
-          element={<Customers />}
+          element={
+            <ProtectedRoute>
+              <Customers />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/add-customer"
-          element={<AddCustomer />}
+          element={
+            <ProtectedRoute>
+              <AddCustomer />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/edit-customer/:id"
-          element={<EditCustomer />}
+          element={
+            <ProtectedRoute>
+              <EditCustomer />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/customer/:id"
-          element={<ViewCustomer />}
+          element={
+            <ProtectedRoute>
+              <ViewCustomer />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/daily-entry"
-          element={<DailyEntry />}
+          element={
+            <ProtectedRoute>
+              <DailyEntry />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/price-settings"
-          element={<PriceSettings />}
+          element={
+            <ProtectedRoute>
+              <PriceSettings />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/billing"
-          element={<Billing />}
+          element={
+            <ProtectedRoute>
+              <Billing />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/payments"
-          element={<Payments />}
+          element={
+            <ProtectedRoute>
+              <Payments />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/payment-receipt/:id"
-          element={<PaymentReceipt />}
+          element={
+            <ProtectedRoute>
+              <PaymentReceipt />
+            </ProtectedRoute>
+          }
         />
 
-        <Route path="/announcement" element={<Announcement />} />
+        <Route
+          path="/announcement"
+          element={
+            <ProtectedRoute>
+              <Announcement />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/bill-delivery-status"
-          element={<BillDeliveryStatus />}
+          element={
+            <ProtectedRoute>
+              <BillDeliveryStatus />
+            </ProtectedRoute>
+          }
         />
 
-        
         <Route
           path="/view-bills"
-          element={<ViewBills />}
+          element={
+            <ProtectedRoute>
+              <ViewBills />
+            </ProtectedRoute>
+          }
         />
 
         <Route
           path="/view-bills/:id"
-          element={<SingleBill />}
+          element={
+            <ProtectedRoute>
+              <SingleBill />
+            </ProtectedRoute>
+          }
         />
-
-        
-
       </Route>
 
       {/* 404 */}
@@ -123,7 +178,6 @@ export default function App() {
           </h1>
         }
       />
-
     </Routes>
   );
 }

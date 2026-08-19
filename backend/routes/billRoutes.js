@@ -24,7 +24,11 @@ const protect = require("../middleware/authMiddleware");
 // Generate Bills
 // =======================================
 
-router.post("/generate", generateBill);
+router.post(
+  "/generate",
+  protect,
+  generateBill
+);
 
 router.post(
   "/generate-all",
@@ -38,6 +42,7 @@ router.post(
 
 router.get(
   "/customer/:customerId",
+  protect,
   getLatestBill
 );
 

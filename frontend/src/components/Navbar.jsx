@@ -5,50 +5,50 @@ import { useNavigate } from "react-router-dom";
 import { getBillDeliveryStatus } from "../services/billService";
 
 const Navbar = ({ setSidebarOpen }) => {
+  
+
   const navigate = useNavigate();
 
   const [notificationCount, setNotificationCount] =
     useState(0);
 
   useEffect(() => {
+  loadNotifications();
+
+  const interval = setInterval(() => {
     loadNotifications();
+  }, 30000);
 
-    const interval = setInterval(
-      loadNotifications,
-      30000
-    );
-
-    return () => clearInterval(interval);
-  }, []);
+  return () => {
+    clearInterval(interval);
+  };
+}, []);
 
   const loadNotifications = async () => {
-    try {
-      const response =
-        await getBillDeliveryStatus();
+  try {
+    const response =
+      await getBillDeliveryStatus();
 
-      const data =
-        response.data || [];
+    const data =
+      response.data || [];
 
-      const failed =
-        data.filter(
-          (item) =>
-            !item.delivered &&
-            item.reason !== "Not sent yet"
-        ).length;
+    const notificationCount =
+      data.filter(
+        (item) =>
+          item.status === "pending" ||
+          item.status === "failed"
+      ).length;
 
-      const notSent =
-        data.filter(
-          (item) =>
-            item.reason === "Not sent yet"
-        ).length;
-
-      setNotificationCount(
-        failed + notSent
-      );
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    setNotificationCount(
+      notificationCount
+    );
+  } catch (error) {
+    console.error(
+      "Notification Error:",
+      error
+    );
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem("token");

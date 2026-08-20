@@ -18,6 +18,7 @@ const dailyEntryRoutes = require("./routes/dailyEntryRoutes");
 const billRoutes = require("./routes/billRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
+const announcementStatusRoutes = require("./routes/announcementStatusRoutes");
 // Razorpay Payment Gateway
 const paymentGatewayRoutes = require("./routes/paymentGatewayRoutes");
 const whatsappRoutes = require("./routes/whatsappRoutes");
@@ -66,6 +67,10 @@ app.use(express.urlencoded({ extended: true }));
 // WhatsApp Webhook
 app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use(
+  "/api/announcement-status",
+  announcementStatusRoutes
+);
 
 // ===============================
 // Request Logger

@@ -16,6 +16,7 @@ import ViewBills from "./pages/ViewBills";
 import SingleBill from "./pages/SingleBill";
 import PaymentReceipt from "./pages/PaymentReceipt";
 import Announcement from "./pages/Announcement";
+import AnnouncementDeliveryStatus from "./pages/AnnouncementDeliveryStatus";
 import BillDeliveryStatus from "./pages/BillDeliveryStatus";
 import BusinessInfo from "./pages/BusinessInfo";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -146,6 +147,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <BillDeliveryStatus />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/announcement-delivery-status"
+          element={
+            <ProtectedRoute>
+              <AnnouncementDeliveryStatus />
             </ProtectedRoute>
           }
         />

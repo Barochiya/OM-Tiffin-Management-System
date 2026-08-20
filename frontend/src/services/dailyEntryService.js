@@ -5,10 +5,14 @@ export const getCustomersForEntry = async () => {
   const token = localStorage.getItem("token");
 
   const response = await api.get("/tiffins", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  params: {
+    page: 1,
+    limit: 1000,
+  },
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
 
   return response.data;
 };

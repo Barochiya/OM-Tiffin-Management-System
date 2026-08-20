@@ -7,6 +7,9 @@ const {
   sendWhatsAppTemplate,
 } = require("../utils/whatsappSender");
 const Bill = require("../models/Bill");
+const AnnouncementDelivery = require(
+  "../models/AnnouncementDelivery"
+);
 // =====================================================
 // WhatsApp Webhook Verification
 // =====================================================
@@ -93,24 +96,111 @@ const bill = await Bill.findOne({
     status.id,
 });
 
+const announcementDelivery =
+  await AnnouncementDelivery.findOne({
+    whatsappMessageId: status.id,
+  });
+
+console.log(
+  "Announcement Delivery =",
+  announcementDelivery
+);
+
 console.log(
   "Bill =",
   bill
 );
 
-  if (!bill) {
-    console.log(
-      "❌ Bill not found for message:",
-      status.id
-    );
+  if (!bill && !announcementDelivery) {
+  console.log(
+    "❌ No Bill or AnnouncementDelivery found for message:",
+    status.id
+  );
 
-    continue;
-  }
+  continue;
+}
 
   console.log(
   "📦 Database Message ID:",
   bill?.whatsappDelivery?.messageId
 );
+
+// =====================================================
+// Announcement Delivery Status Tracking
+// =====================================================
+
+if (announcementDelivery) {
+  const announcementUpdate = {};
+
+  if (status.status === "sent") {
+    announcementUpdate.status = "sent";
+
+    announcementUpdate.sentAt =
+      new Date(
+        Number(status.timestamp) * 1000
+      );
+
+    announcementUpdate.failureReason = "";
+  }
+
+  if (status.status === "delivered") {
+    announcementUpdate.status =
+      "delivered";
+
+    announcementUpdate.deliveredAt =
+      new Date(
+        Number(status.timestamp) * 1000
+      );
+  }
+
+  if (status.status === "read") {
+    announcementUpdate.status = "read";
+
+    announcementUpdate.readAt =
+      new Date(
+        Number(status.timestamp) * 1000
+      );
+  }
+
+  if (status.status === "failed") {
+    announcementUpdate.status =
+      "failed";
+
+    announcementUpdate.failureReason =
+      status.errors?.[0]?.title ||
+      status.errors?.[0]?.message ||
+      "Message failed";
+  }
+
+  if (
+    Object.keys(
+      announcementUpdate
+    ).length > 0
+  ) {
+    await AnnouncementDelivery.findByIdAndUpdate(
+      announcementDelivery._id,
+      {
+        $set: announcementUpdate,
+      }
+    );
+
+    console.log(
+      "✅ AnnouncementDelivery updated:",
+      {
+        id:
+          announcementDelivery._id,
+        messageId:
+          status.id,
+        status:
+          status.status,
+      }
+    );
+  }
+}
+
+if (!bill) {
+  continue;
+}
 
   const update = {};
 

@@ -20,6 +20,7 @@ import {
   deleteCustomer,
   markPaymentPaid,
 } from "../services/customerService";
+import { sendBulkPaymentReminders } from "../services/paymentReminderService";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -142,44 +143,52 @@ How can we help you today?`;
     );
   };
 
-  const sendBulkReminder = () => {
-    const pendingCustomers = customers.filter(
-      (customer) =>
-        customer.paymentStatus !== "Paid" && customer.phone
+  const sendBulkReminder = async () => {
+  const pendingCustomers = customers.filter(
+    (customer) =>
+      Number(customer.pendingAmount || 0) > 0 &&
+      customer.phone
+  );
+
+  if (pendingCustomers.length === 0) {
+    alert("No pending payment customers found.");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    `Send payment reminder to ${pendingCustomers.length} pending customer(s)?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const response =
+      await sendBulkPaymentReminders();
+
+    const result = response?.data || {};
+
+    alert(
+      `Payment reminders completed.\n\n` +
+        `Pending Customers: ${
+          result.pendingCustomers ?? 0
+        }\n` +
+        `Sent: ${result.sent ?? 0}\n` +
+        `Failed: ${result.failed ?? 0}\n` +
+        `Skipped: ${result.skipped ?? 0}`
+    );
+  } catch (error) {
+    console.error(
+      "Bulk payment reminder error:",
+      error
     );
 
-    if (pendingCustomers.length === 0) {
-      alert("No pending payment customers found.");
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Open WhatsApp reminder for ${pendingCustomers.length} pending customer(s)?`
+    alert(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to send payment reminders."
     );
-
-    if (!confirmed) return;
-
-    pendingCustomers.forEach((customer, index) => {
-      setTimeout(() => {
-        const phone = customer.phone.replace(/\D/g, "");
-
-        const message = `🍱 *OM TIFFIN SERVICE*
-
-Hello ${customer.customerName},
-
-💰 This is a friendly reminder that your payment is pending.
-
-Please complete your payment at your earliest convenience.
-
-Thank you 🙏`;
-
-        window.open(
-          `https://wa.me/91${phone}?text=${encodeURIComponent(message)}`,
-          "_blank"
-        );
-      }, index * 1200);
-    });
-  };
+  }
+};
 
   const filteredCustomers = useMemo(() => {
     const query = search.trim().toLowerCase();

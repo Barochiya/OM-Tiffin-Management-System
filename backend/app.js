@@ -19,6 +19,7 @@ const billRoutes = require("./routes/billRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
 const announcementStatusRoutes = require("./routes/announcementStatusRoutes");
+const paymentReminderRoutes = require("./routes/paymentReminderRoutes");
 // Razorpay Payment Gateway
 const paymentGatewayRoutes = require("./routes/paymentGatewayRoutes");
 const whatsappRoutes = require("./routes/whatsappRoutes");
@@ -70,6 +71,11 @@ app.use("/api/announcements", announcementRoutes);
 app.use(
   "/api/announcement-status",
   announcementStatusRoutes
+);
+
+app.use(
+  "/api/payment-reminders",
+  paymentReminderRoutes
 );
 
 // ===============================

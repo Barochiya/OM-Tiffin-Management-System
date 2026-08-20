@@ -39,6 +39,13 @@ export default function DailyEntry() {
   // Tracks which customer rows have been edited
   const [dirtyRows, setDirtyRows] = useState({});
 
+  // Individual customer save states
+const [savingCustomerId, setSavingCustomerId] = useState(null);
+const [savedCustomerId, setSavedCustomerId] = useState(null);
+
+// Customer search
+const [search, setSearch] = useState("");
+
   // =========================================
   // LOAD DATA
   // =========================================
@@ -238,6 +245,72 @@ export default function DailyEntry() {
     setSavedAll(false);
   };
 
+// =========================================
+// SAVE SINGLE CUSTOMER ENTRY
+// =========================================
+
+const handleSaveCustomer = async (customerId) => {
+  if (!customerId) return;
+
+  const data = entries[customerId] || {};
+
+  try {
+    setSavingCustomerId(customerId);
+    setSavedCustomerId(null);
+
+    await saveDailyEntry({
+      customer: customerId,
+      date,
+
+      breakfastQty:
+        Number(data.breakfastQty || 0),
+
+      lunchQty:
+        Number(data.lunchQty || 0),
+
+      dinnerQty:
+        Number(data.dinnerQty || 0),
+
+      extraItems:
+        Array.isArray(data.extraItems)
+          ? data.extraItems
+          : [],
+
+      remark:
+        data.remark || "",
+    });
+
+    // Mark only this customer as saved
+    setDirtyRows((prev) => ({
+      ...prev,
+      [customerId]: false,
+    }));
+
+    setSavedCustomerId(customerId);
+
+    setTimeout(() => {
+      setSavedCustomerId((current) =>
+        current === customerId
+          ? null
+          : current
+      );
+    }, 2500);
+
+  } catch (error) {
+    console.error(
+      "Save Customer Daily Entry Error:",
+      error
+    );
+
+    alert(
+      error?.response?.data?.message ||
+        "Failed to save customer entry. Please try again."
+    );
+  } finally {
+    setSavingCustomerId(null);
+  }
+};
+
   // =========================================
   // SAVE ALL ENTRIES
   // =========================================
@@ -343,6 +416,33 @@ export default function DailyEntry() {
 
   const hasUnsavedChanges =
     Object.values(dirtyRows).some(Boolean);
+
+    // =========================================
+// SEARCHED CUSTOMERS
+// =========================================
+
+const filteredCustomers = customers.filter(
+  (customer) => {
+    const query = search
+      .trim()
+      .toLowerCase();
+
+    if (!query) return true;
+
+    const name = String(
+      customer.customerName || ""
+    ).toLowerCase();
+
+    const phone = String(
+      customer.phone || ""
+    ).toLowerCase();
+
+    return (
+      name.includes(query) ||
+      phone.includes(query)
+    );
+  }
+);
 
   // =========================================
   // PAGE UI
@@ -548,41 +648,80 @@ export default function DailyEntry() {
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
             {/* Table Title */}
-            <div className="px-5 lg:px-6 py-5 border-b border-slate-200">
+<div className="px-5 lg:px-6 py-5 border-b border-slate-200">
 
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800">
-                    Customer Meal Entries
-                  </h2>
+    <div>
+      <h2 className="text-xl font-bold text-slate-800">
+        Customer Meal Entries
+      </h2>
 
-                  <p className="text-sm text-slate-500 mt-1">
-                    Update meals, extra items and remarks for each customer.
-                  </p>
-                </div>
+      <p className="text-sm text-slate-500 mt-1">
+        Update meals, extra items and remarks for each customer.
+      </p>
+    </div>
 
-                <div className="text-sm font-medium text-slate-500">
-                  {totalCustomers} Customer
-                  {totalCustomers !== 1 ? "s" : ""}
-                </div>
+    <div className="flex flex-col sm:flex-row gap-3">
 
-              </div>
-            </div>
+      {/* Search */}
+      <div className="relative">
+
+        <input
+          type="text"
+          value={search}
+          onChange={(e) =>
+            setSearch(e.target.value)
+          }
+          placeholder="Search customer..."
+          className="
+            w-full
+            sm:w-[280px]
+            border
+            border-slate-300
+            rounded-xl
+            px-4
+            py-2.5
+            text-sm
+            text-slate-800
+            outline-none
+            focus:ring-2
+            focus:ring-blue-500
+            focus:border-blue-500
+          "
+        />
+
+      </div>
+
+      {/* Customer Count */}
+      <div className="flex items-center justify-center text-sm font-medium text-slate-500 whitespace-nowrap">
+
+        {filteredCustomers.length} of{" "}
+        {totalCustomers} Customer
+        {totalCustomers !== 1 ? "s" : ""}
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
             {/* Responsive Table Area */}
             <div className="w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden overscroll-x-contain">
 
-              <table className="w-full min-w-[760px] table-fixed">
+              <table className="w-full min-w-[900px] table-fixed">
 
                 <colgroup>
-                  <col className="w-[22%]" />
-                  <col className="w-[10%]" />
-                  <col className="w-[10%]" />
-                  <col className="w-[10%]" />
-                  <col className="w-[27%]" />
-                  <col className="w-[21%]" />
-                </colgroup>
+  <col className="w-[20%]" />
+  <col className="w-[9%]" />
+  <col className="w-[9%]" />
+  <col className="w-[9%]" />
+  <col className="w-[25%]" />
+  <col className="w-[17%]" />
+  <col className="w-[11%]" />
+</colgroup>
 
                 <thead className="bg-gradient-to-r from-blue-700 to-blue-600 text-white">
 
@@ -615,17 +754,21 @@ export default function DailyEntry() {
                       Remark
                     </th>
 
+                    <th className="px-3 py-4 text-center text-sm font-semibold">
+                      Save
+                    </th>
+
                   </tr>
 
                 </thead>
 
                 <tbody>
 
-                  {customers.length === 0 ? (
+                  {filteredCustomers.length === 0 ? (
 
                     <tr>
                       <td
-                        colSpan="6"
+                         colSpan="7"
                         className="px-6 py-12 text-center"
                       >
 
@@ -634,12 +777,16 @@ export default function DailyEntry() {
                           <FaUsers className="mx-auto text-4xl mb-3" />
 
                           <h3 className="text-lg font-semibold text-slate-600">
-                            No Customers Found
-                          </h3>
+  {search.trim()
+    ? "No Matching Customer"
+    : "No Customers Found"}
+</h3>
 
-                          <p className="text-sm mt-1">
-                            No active customers are available for meal entry.
-                          </p>
+<p className="text-sm mt-1">
+  {search.trim()
+    ? "Try another customer name or mobile number."
+    : "No active customers are available for meal entry."}
+</p>
 
                         </div>
 
@@ -648,7 +795,7 @@ export default function DailyEntry() {
 
                   ) : (
 
-                    customers.map((customer) => {
+                    filteredCustomers.map((customer) => {
 
                       const customerEntry =
                         entries[customer._id] || {};
@@ -959,6 +1106,67 @@ export default function DailyEntry() {
                             />
 
                           </td>
+
+                          {/* SAVE */}
+<td className="px-3 py-5 align-top text-center">
+
+  <button
+    type="button"
+    onClick={() =>
+      handleSaveCustomer(customer._id)
+    }
+    disabled={
+      savingCustomerId === customer._id ||
+      savingAll ||
+      !isDirty
+    }
+    className={`
+      inline-flex
+      items-center
+      justify-center
+      gap-2
+      min-w-[90px]
+      px-3
+      py-2.5
+      rounded-xl
+      text-sm
+      font-bold
+      text-white
+      shadow-sm
+      transition
+
+      ${
+        savingCustomerId === customer._id
+          ? "bg-slate-400 cursor-wait"
+          : savedCustomerId === customer._id
+          ? "bg-green-600"
+          : !isDirty
+          ? "bg-slate-300 cursor-not-allowed"
+          : "bg-blue-600 hover:bg-blue-700"
+      }
+    `}
+  >
+
+    {savingCustomerId === customer._id ? (
+      <>
+        <FaSpinner className="animate-spin" />
+        Saving
+      </>
+    ) : savedCustomerId === customer._id ? (
+      <>
+        <FaCheck />
+        Saved
+      </>
+    ) : (
+      <>
+        <FaSave />
+        Save
+      </>
+    )}
+
+  </button>
+
+</td>
 
                         </tr>
                       );

@@ -147,71 +147,75 @@ const loadDailyEntries = async () => {
     }
 
     // =======================================
-    // CREATE DATE-WISE ENTRIES
-    // INCLUDING MISSING DATES
-    // =======================================
+// CREATE DATE-WISE ENTRIES
+// INCLUDING MISSING DATES
+// =======================================
 
-    const entryMap = new Map();
+const entryMap = new Map();
 
-    savedEntries.forEach((entry) => {
-      const entryDate = new Date(entry.date);
+// Backend stored dates को calendar date के हिसाब से map करें
+savedEntries.forEach((entry) => {
+  const entryDate = new Date(entry.date);
 
-      const key = `${entryDate.getFullYear()}-${String(
-        entryDate.getMonth() + 1
-      ).padStart(2, "0")}-${String(
-        entryDate.getDate()
-      ).padStart(2, "0")}`;
+  const key = `${entryDate.getUTCFullYear()}-${String(
+    entryDate.getUTCMonth() + 1
+  ).padStart(2, "0")}-${String(
+    entryDate.getUTCDate()
+  ).padStart(2, "0")}`;
 
-      entryMap.set(key, entry);
+  entryMap.set(key, entry);
+});
+
+const generatedEntries = [];
+
+for (
+  let day = cycleStartDay;
+  day <= cycleEndDay;
+  day++
+) {
+  const key = `${Number(selectedYear)}-${String(
+    Number(selectedMonth)
+  ).padStart(2, "0")}-${String(day).padStart(
+    2,
+    "0"
+  )}`;
+
+  const existingEntry = entryMap.get(key);
+
+  if (existingEntry) {
+    generatedEntries.push(existingEntry);
+  } else {
+    // Calendar date को directly UTC midnight पर बनाएं.
+    // Local Date + toISOString() use नहीं करना है.
+    const dateString = `${Number(selectedYear)}-${String(
+      Number(selectedMonth)
+    ).padStart(2, "0")}-${String(day).padStart(
+      2,
+      "0"
+    )}`;
+
+    generatedEntries.push({
+      _id: `new-${key}`,
+
+      customer: id,
+
+      date: `${dateString}T00:00:00.000Z`,
+
+      breakfastQty: 0,
+      lunchQty: 0,
+      dinnerQty: 0,
+
+      extraItems: [],
+
+      remark: "",
+
+      isNewEntry: true,
     });
+  }
+}
 
-    const generatedEntries = [];
-
-    for (
-      let day = cycleStartDay;
-      day <= cycleEndDay;
-      day++
-    ) {
-      const dateObject = new Date(
-        Number(selectedYear),
-        Number(selectedMonth) - 1,
-        day
-      );
-
-      const key = `${Number(selectedYear)}-${String(
-        Number(selectedMonth)
-      ).padStart(2, "0")}-${String(day).padStart(
-        2,
-        "0"
-      )}`;
-
-      const existingEntry = entryMap.get(key);
-
-      if (existingEntry) {
-        generatedEntries.push(existingEntry);
-      } else {
-        generatedEntries.push({
-          _id: `new-${key}`,
-
-          customer: id,
-
-          date: dateObject.toISOString(),
-
-          breakfastQty: 0,
-          lunchQty: 0,
-          dinnerQty: 0,
-
-          extraItems: [],
-
-          remark: "",
-
-          isNewEntry: true,
-        });
-      }
-    }
-
-    setDailyEntries(generatedEntries);
-    setEditingEntryId(null);
+setDailyEntries(generatedEntries);
+setEditingEntryId(null);
   } catch (error) {
     console.error(
       "Load customer daily entries error:",

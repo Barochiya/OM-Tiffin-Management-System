@@ -2,8 +2,9 @@
 const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const WhatsAppMessage = require("../models/WhatsAppMessage");
-const {
+ const {
   getWhatsAppConfig,
+  sendWhatsAppMessage,
 } = require("../utils/whatsappSender");
 // =====================================================
 // Get WhatsApp Inbox
@@ -303,6 +304,180 @@ router.get(
     }
   }
 );
+
+// =====================================================
+// Reply to WhatsApp Message
+// =====================================================
+
+router.post(
+  "/:id/reply",
+  protect,
+  async (req, res) => {
+    try {
+      const {
+        message: replyMessage,
+      } = req.body || {};
+
+      // ---------------------------------------------
+      // Validate message
+      // ---------------------------------------------
+
+      if (
+        !replyMessage ||
+        !String(replyMessage).trim()
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Reply message is required.",
+        });
+      }
+
+      // ---------------------------------------------
+      // Find original incoming message
+      // ---------------------------------------------
+
+      const originalMessage =
+        await WhatsAppMessage.findById(
+          req.params.id
+        );
+
+      if (!originalMessage) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "WhatsApp message not found.",
+        });
+      }
+
+      if (
+        !originalMessage.phoneNumber
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Customer phone number not found.",
+        });
+      }
+
+      // ---------------------------------------------
+      // Send WhatsApp message
+      // ---------------------------------------------
+
+      const whatsappResponse =
+        await sendWhatsAppMessage({
+          to: originalMessage.phoneNumber,
+          message:
+            String(replyMessage).trim(),
+        });
+
+      // ---------------------------------------------
+      // Get WhatsApp Message ID
+      // ---------------------------------------------
+
+      const outgoingWhatsAppId =
+        whatsappResponse?.messages?.[0]?.id ||
+        `outgoing_${Date.now()}_${Math.random()
+          .toString(36)
+          .slice(2)}`;
+
+      // ---------------------------------------------
+      // Save outgoing message
+      // ---------------------------------------------
+
+      const savedReply =
+        await WhatsAppMessage.create({
+          customer:
+            originalMessage.customer ||
+            null,
+
+          phoneNumber:
+            originalMessage.phoneNumber,
+
+          whatsappMessageId:
+            outgoingWhatsAppId,
+
+          type: "text",
+
+          message:
+            String(replyMessage).trim(),
+
+          mediaId: null,
+
+          mediaMimeType: null,
+
+          mediaFilename: null,
+
+          mediaCaption: "",
+
+          whatsappTimestamp:
+            new Date(),
+
+          direction: "outgoing",
+
+          inboxStatus: "read",
+
+          paymentStatus:
+            "not_payment_related",
+
+          linkedBill:
+            originalMessage.linkedBill ||
+            null,
+
+          linkedPayment:
+            originalMessage.linkedPayment ||
+            null,
+        });
+
+      // ---------------------------------------------
+      // Mark original message as read
+      // ---------------------------------------------
+
+      await WhatsAppMessage.findByIdAndUpdate(
+        originalMessage._id,
+        {
+          $set: {
+            inboxStatus: "read",
+          },
+        }
+      );
+
+      // ---------------------------------------------
+      // Response
+      // ---------------------------------------------
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "WhatsApp reply sent successfully.",
+
+        data: {
+          whatsappResponse,
+          reply: savedReply,
+        },
+      });
+
+    } catch (error) {
+      console.error(
+        "WhatsApp Reply Error:",
+        error
+      );
+
+      return res.status(
+        error.status || 500
+      ).json({
+        success: false,
+
+        message:
+          error.message ||
+          "Failed to send WhatsApp reply.",
+
+        error:
+          error.meta ||
+          undefined,
+      });
+    }
+  }
+);
 module.exports = router;
-
-

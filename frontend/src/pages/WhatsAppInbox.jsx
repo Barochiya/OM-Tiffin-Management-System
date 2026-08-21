@@ -5,6 +5,7 @@ import {
   deleteWhatsAppMessage,
   markWhatsAppMessageRead,
   getWhatsAppMedia,
+  replyToWhatsAppMessage,
 } from "../services/whatsappInboxService";
 
 const WhatsAppMediaPreview = ({ message }) => {
@@ -138,6 +139,9 @@ export default function WhatsAppInbox() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [replyText, setReplyText] = useState({});
+const [replySending, setReplySending] = useState({});
+
   const loadMessages = async (showLoader = false) => {
   try {
     if (showLoader) {
@@ -216,6 +220,62 @@ const handleMarkAsRead = async (id) => {
       "Mark WhatsApp Message Read Error:",
       error
     );
+  }
+};
+
+const handleReply = async (id) => {
+  const message = replyText[id]?.trim();
+
+  if (!message) {
+    alert("Please enter a message.");
+    return;
+  }
+
+  try {
+    setReplySending((prev) => ({
+      ...prev,
+      [id]: true,
+    }));
+
+    const response =
+      await replyToWhatsAppMessage(
+        id,
+        message
+      );
+
+    if (!response?.success) {
+      throw new Error(
+        response?.message ||
+          "Failed to send reply."
+      );
+    }
+
+    setReplyText((prev) => ({
+      ...prev,
+      [id]: "",
+    }));
+
+    await loadMessages();
+
+    alert(
+      "WhatsApp reply sent successfully."
+    );
+  } catch (error) {
+    console.error(
+      "WhatsApp Reply Error:",
+      error
+    );
+
+    alert(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to send WhatsApp reply."
+    );
+  } finally {
+    setReplySending((prev) => ({
+      ...prev,
+      [id]: false,
+    }));
   }
 };
 
@@ -341,7 +401,76 @@ const handleMarkAsRead = async (id) => {
                         >
                         ✓ Read
                         </button>
+
+                        <button
+  type="button"
+  onClick={() => {
+    const text =
+      replyText[item._id]?.trim();
+
+    if (!text) {
+      alert("Please enter a message.");
+      return;
+    }
+
+    handleReply(item._id);
+  }}
+  disabled={replySending[item._id]}
+  className="px-3 py-2 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 text-sm font-semibold disabled:opacity-50"
+>
+  {replySending[item._id]
+    ? "Sending..."
+    : "💬 Reply"}
+</button>
+
                 </div>
+
+                <div className="mt-4 flex flex-col sm:flex-row gap-2">
+  <input
+    type="text"
+    value={replyText[item._id] || ""}
+    onChange={(event) =>
+      setReplyText((prev) => ({
+        ...prev,
+        [item._id]:
+          event.target.value,
+      }))
+    }
+    onKeyDown={(event) => {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey
+      ) {
+        event.preventDefault();
+
+        const text =
+          replyText[item._id]?.trim();
+
+        if (text) {
+          handleReply(item._id);
+        }
+      }
+    }}
+    placeholder="Type a reply..."
+    className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+  />
+
+  <button
+    type="button"
+    onClick={() =>
+      handleReply(item._id)
+    }
+    disabled={
+      replySending[item._id] ||
+      !replyText[item._id]?.trim()
+    }
+    className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    {replySending[item._id]
+      ? "Sending..."
+      : "Send"}
+  </button>
+</div>
 
                 {/* Message */}
                 {item.message && (

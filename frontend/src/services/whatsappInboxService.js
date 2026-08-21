@@ -62,3 +62,21 @@ export const getWhatsAppMedia = async (id) => {
 
   return response.data;
 };
+
+// =======================================
+// Reply to WhatsApp Message
+// =======================================
+
+export const replyToWhatsAppMessage = async (
+  id,
+  message
+) => {
+  const response = await api.post(
+    `/whatsapp-inbox/${id}/reply`,
+    {
+      message,
+    }
+  );
+
+  return response.data;
+};

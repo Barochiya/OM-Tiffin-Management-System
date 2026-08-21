@@ -927,13 +927,17 @@ const handleSaveDailyEntry = async (entryId) => {
     const isSaving =
       savingEntryId === entry._id;
 
-    const formattedDate = new Date(
-      entry.date
-    ).toLocaleDateString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    const entryDate = new Date(entry.date);
+
+const formattedDate = entryDate.toLocaleDateString(
+  "en-IN",
+  {
+    timeZone: "UTC",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }
+);
 
     // =======================================
 // DAY-WISE TOTAL

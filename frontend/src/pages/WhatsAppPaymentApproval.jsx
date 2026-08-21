@@ -141,7 +141,10 @@ export default function WhatsAppPaymentApproval() {
 // Payment Review Card
 // =====================================================
 
-function PaymentReviewCard({ review }) {
+function PaymentReviewCard({
+  review,
+  onApproved,
+}) {
   const [imageUrl, setImageUrl] = useState("");
   const [imageLoading, setImageLoading] =
     useState(false);
@@ -234,7 +237,7 @@ const handleApprove = async () => {
       "Payment approved and added successfully."
     );
 
-    await loadReviews();
+    await onApproved();
 
   } catch (error) {
     console.error(

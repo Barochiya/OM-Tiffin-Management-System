@@ -49,3 +49,31 @@ export const getEntriesByDate = async (date) => {
 
   return response.data;
 };
+
+// =======================================
+// Get Customer Entries By Billing Cycle
+// =======================================
+export const getCustomerEntries = async (
+  customerId,
+  month,
+  year,
+  cycle
+) => {
+  const token = localStorage.getItem("token");
+
+  const response = await api.get(
+    `/daily-entry/customer/${customerId}`,
+    {
+      params: {
+        month,
+        year,
+        cycle,
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};

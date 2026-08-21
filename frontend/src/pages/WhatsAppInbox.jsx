@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 
 import {
   getWhatsAppInbox,
+  deleteWhatsAppMessage,
+  markWhatsAppMessageRead,
 } from "../services/whatsappInboxService";
 
 export default function WhatsAppInbox() {
@@ -36,6 +38,54 @@ export default function WhatsAppInbox() {
       setLoading(false);
     }
   };
+
+  const handleDeleteMessage = async (id) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this WhatsApp message?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await deleteWhatsAppMessage(id);
+
+    setMessages((prev) =>
+      prev.filter((item) => item._id !== id)
+    );
+  } catch (error) {
+    console.error(
+      "Delete WhatsApp Message Error:",
+      error
+    );
+
+    alert(
+      error.response?.data?.message ||
+        "Failed to delete WhatsApp message."
+    );
+  }
+};
+
+const handleMarkAsRead = async (id) => {
+  try {
+    await markWhatsAppMessageRead(id);
+
+    setMessages((prev) =>
+      prev.map((item) =>
+        item._id === id
+          ? {
+              ...item,
+              inboxStatus: "read",
+            }
+          : item
+      )
+    );
+  } catch (error) {
+    console.error(
+      "Mark WhatsApp Message Read Error:",
+      error
+    );
+  }
+};
 
   useEffect(() => {
   loadMessages();
@@ -139,6 +189,24 @@ export default function WhatsAppInbox() {
                         : "Message"}
                     </span>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                        handleDeleteMessage(item._id)
+                    }
+                    className="px-3 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-sm font-semibold"
+                    >
+                    🗑️ Delete
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() =>
+                            handleMarkAsRead(item._id)
+                        }
+                        className="px-3 py-2 rounded-lg bg-green-100 text-green-700 hover:bg-green-200 text-sm font-semibold"
+                        >
+                        ✓ Read
+                        </button>
                 </div>
 
                 {/* Message */}

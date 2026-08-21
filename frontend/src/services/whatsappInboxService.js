@@ -24,3 +24,26 @@ export const getUnreadWhatsAppMessages =
 
     return response.data;
   };
+  // =======================================
+// Mark WhatsApp Message as Read
+// =======================================
+
+export const markWhatsAppMessageRead = async (id) => {
+  const response = await api.put(
+    `/whatsapp-inbox/${id}/read`
+  );
+
+  return response.data;
+};
+
+// =======================================
+// Delete WhatsApp Message
+// =======================================
+
+export const deleteWhatsAppMessage = async (id) => {
+  const response = await api.delete(
+    `/whatsapp-inbox/${id}`
+  );
+
+  return response.data;
+};

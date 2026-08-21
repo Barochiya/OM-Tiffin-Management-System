@@ -10,6 +10,10 @@ import {
 } from "react-router-dom";
 
 import { getBillDeliveryStatus } from "../services/billService";
+import {
+  getUnreadWhatsAppMessages,
+  markWhatsAppMessageRead,
+} from "../services/whatsappInboxService";
 
 const Navbar = ({ setSidebarOpen }) => {
   const navigate = useNavigate();
@@ -17,6 +21,14 @@ const Navbar = ({ setSidebarOpen }) => {
 
   const [notificationCount, setNotificationCount] =
     useState(0);
+
+    const [whatsappNotificationCount, setWhatsappNotificationCount] =
+    useState(0);
+
+    const [whatsappNotifications, setWhatsappNotifications] =
+      useState([]);
+    const [showNotifications, setShowNotifications] =
+      useState(false);
 
   // =========================================
   // PAGE TITLE
@@ -175,7 +187,7 @@ const Navbar = ({ setSidebarOpen }) => {
 
     const interval = setInterval(() => {
       loadNotifications();
-    }, 30000);
+    }, 10000);
 
     return () => {
       clearInterval(interval);
@@ -198,6 +210,30 @@ const Navbar = ({ setSidebarOpen }) => {
         ).length;
 
       setNotificationCount(count);
+      try {
+  const whatsappResponse =
+    await getUnreadWhatsAppMessages();
+
+  const whatsappMessages =
+  Array.isArray(
+    whatsappResponse?.data
+  )
+    ? whatsappResponse.data
+    : [];
+
+setWhatsappNotifications(
+  whatsappMessages
+);
+
+setWhatsappNotificationCount(
+  whatsappMessages.length
+);
+} catch (error) {
+  console.error(
+    "WhatsApp Notification Error:",
+    error
+  );
+}
     } catch (error) {
       console.error(
         "Notification Error:",
@@ -253,24 +289,171 @@ const Navbar = ({ setSidebarOpen }) => {
 
         {/* NOTIFICATIONS */}
 
+<div className="relative">
+  <button
+    type="button"
+    title="Notifications"
+    onClick={() =>
+      setShowNotifications(
+        (prev) => !prev
+      )
+    }
+    className="relative rounded-full p-2 hover:bg-gray-100"
+  >
+    <FaBell className="text-xl text-slate-600" />
+
+    {notificationCount +
+      whatsappNotificationCount >
+      0 && (
+      <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] text-white">
+        {notificationCount +
+          whatsappNotificationCount}
+      </span>
+    )}
+  </button>
+
+  {/* Notification Dropdown */}
+
+  {showNotifications && (
+    <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+
+      {/* Header */}
+
+      <div className="border-b border-slate-200 px-4 py-3">
+        <h3 className="font-bold text-slate-800">
+          Notifications
+        </h3>
+
+        <p className="text-xs text-slate-500">
+          WhatsApp messages and alerts
+        </p>
+      </div>
+
+      {/* WhatsApp Notifications */}
+
+      {whatsappNotifications.length > 0 ? (
+        <div className="max-h-80 overflow-y-auto">
+
+          {whatsappNotifications.map(
+            (item) => (
+              <button
+                key={item._id}
+                type="button"
+                onClick={async () => {
+  try {
+    await markWhatsAppMessageRead(
+      item._id
+    );
+  } catch (error) {
+    console.error(
+      "Notification Read Error:",
+      error
+    );
+  }
+
+  setShowNotifications(false);
+
+  setWhatsappNotifications((prev) =>
+    prev.filter(
+      (message) =>
+        message._id !== item._id
+    )
+  );
+
+  setWhatsappNotificationCount(
+    (prev) => Math.max(prev - 1, 0)
+  );
+
+  navigate(
+    "/whatsapp-inbox"
+  );
+}}
+                className="flex w-full items-start gap-3 border-b border-slate-100 px-4 py-3 text-left hover:bg-slate-50"
+              >
+
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                  💬
+                </div>
+
+                <div className="min-w-0 flex-1">
+
+                  <div className="flex items-center justify-between gap-2">
+
+                    <p className="truncate text-sm font-semibold text-slate-800">
+                      {item.customer
+                        ?.customerName ||
+                        "Unknown Customer"}
+                    </p>
+
+                    <span className="text-[10px] text-green-600">
+                      WhatsApp
+                    </span>
+
+                  </div>
+
+                  <p className="mt-1 truncate text-sm text-slate-600">
+                    {item.message ||
+                      "Media received"}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-400">
+                    {item.createdAt
+                      ? new Date(
+                          item.createdAt
+                        ).toLocaleString(
+                          "en-IN"
+                        )
+                      : ""}
+                  </p>
+
+                </div>
+
+              </button>
+            )
+          )}
+
+        </div>
+      ) : (
+        <div className="px-4 py-8 text-center">
+
+          <div className="text-3xl">
+            🔔
+          </div>
+
+          <p className="mt-2 text-sm font-semibold text-slate-600">
+            No new notifications
+          </p>
+
+          <p className="mt-1 text-xs text-slate-400">
+            You are all caught up.
+          </p>
+
+        </div>
+      )}
+
+      {/* Footer */}
+
+      {whatsappNotifications.length > 0 && (
         <button
           type="button"
-          title="Bill Notifications"
-          onClick={() =>
-            navigate(
-              "/bill-delivery-status"
-            )
-          }
-          className="relative rounded-full p-2 hover:bg-gray-100"
-        >
-          <FaBell className="text-xl text-slate-600" />
+          onClick={() => {
+            setShowNotifications(
+              false
+            );
 
-          {notificationCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-              {notificationCount}
-            </span>
-          )}
+            navigate(
+              "/whatsapp-inbox"
+            );
+          }}
+          className="w-full border-t border-slate-200 px-4 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+        >
+          View WhatsApp Inbox →
         </button>
+      )}
+
+    </div>
+  )}
+</div>
 
         {/* ADMIN */}
 

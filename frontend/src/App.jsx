@@ -17,6 +17,7 @@ import SingleBill from "./pages/SingleBill";
 import PaymentReceipt from "./pages/PaymentReceipt";
 import Announcement from "./pages/Announcement";
 import WhatsAppInbox from "./pages/WhatsAppInbox";
+import WhatsAppPaymentApproval from "./pages/WhatsAppPaymentApproval";
 import AnnouncementDeliveryStatus from "./pages/AnnouncementDeliveryStatus";
 import BillDeliveryStatus from "./pages/BillDeliveryStatus";
 import BusinessInfo from "./pages/BusinessInfo";
@@ -148,6 +149,15 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <WhatsAppInbox />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/whatsapp-payment-approval"
+            element={
+              <ProtectedRoute>
+                <WhatsAppPaymentApproval />
               </ProtectedRoute>
             }
           />

@@ -2,10 +2,87 @@
 const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const WhatsAppMessage = require("../models/WhatsAppMessage");
+const Bill = require("../models/Bill");
+
  const {
   getWhatsAppConfig,
   sendWhatsAppMessage,
 } = require("../utils/whatsappSender");
+
+// =====================================================
+// Get Pending WhatsApp Payment Reviews
+// =====================================================
+
+router.get(
+  "/payment-reviews",
+  protect,
+  async (req, res) => {
+    try {
+      const messages =
+        await WhatsAppMessage.find({
+          direction: "incoming",
+          paymentStatus: "pending_review",
+        })
+          .populate(
+            "customer",
+            "customerName phone address advanceBalance"
+          )
+          .populate(
+            "linkedBill",
+            "invoiceNo month year cycle totalAmount paidAmount pendingAmount status"
+          )
+          .sort({
+            createdAt: -1,
+          });
+
+      const data = await Promise.all(
+        messages.map(async (message) => {
+          let pendingBills = [];
+
+          if (message.customer?._id) {
+            pendingBills =
+              await Bill.find({
+                customer: message.customer._id,
+                pendingAmount: {
+                  $gt: 0,
+                },
+              })
+                .select(
+                  "invoiceNo month year cycle totalAmount paidAmount pendingAmount status"
+                )
+                .sort({
+                  year: -1,
+                  month: -1,
+                  cycle: -1,
+                });
+          }
+
+          return {
+            ...message.toObject(),
+            pendingBills,
+          };
+        })
+      );
+
+      return res.json({
+        success: true,
+        count: data.length,
+        data,
+      });
+    } catch (error) {
+      console.error(
+        "WhatsApp Payment Review Error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load payment reviews.",
+      });
+    }
+  }
+);
 // =====================================================
 // Get WhatsApp Inbox
 // =====================================================

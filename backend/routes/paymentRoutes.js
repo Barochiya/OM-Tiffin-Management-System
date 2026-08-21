@@ -53,11 +53,23 @@ router.post(
   paymentController.sendPaymentReceiptWhatsApp
 );
 
+// =======================================
+// Approve WhatsApp Payment
+// =======================================
+
+router.post(
+  "/approve-whatsapp-payment",
+  protect,
+  paymentController.approveWhatsAppPayment
+);
+
 // Get Single Payment
 router.get(
   "/:id",
   protect,
   paymentController.getPaymentById
 );
+
+
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const Payment = require("../models/Payment");
 const Bill = require("../models/Bill");
 const Tiffin = require("../models/Tiffin");
+const WhatsAppMessage = require("../models/WhatsAppMessage");
 
 const {
   sendWhatsAppMessage,
@@ -152,6 +153,286 @@ exports.addPayment = async (req, res) => {
 
     res.status(500).json({
       message: error.message,
+    });
+  }
+};
+
+// =======================================
+// Approve WhatsApp Payment
+// =======================================
+
+exports.approveWhatsAppPayment = async (
+  req,
+  res
+) => {
+  try {
+    const {
+  whatsappMessageId,
+  customerId,
+  billId,
+  amount,
+  paymentMethod = "UPI",
+  remark = "WhatsApp payment screenshot approved",
+} = req.body || {};
+
+const customer = customerId;
+const bill = billId;
+
+    // =======================================
+    // Validation
+    // =======================================
+
+    if (!whatsappMessageId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "WhatsApp message ID is required.",
+      });
+    }
+
+    if (!customer) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Customer is required.",
+      });
+    }
+
+    if (!bill) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Bill is required.",
+      });
+    }
+
+    const paymentAmount = Number(amount);
+
+    if (
+      !Number.isFinite(paymentAmount) ||
+      paymentAmount <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Valid payment amount is required.",
+      });
+    }
+
+   // =======================================
+// Find WhatsApp Payment Review
+// =======================================
+
+const whatsappMessage =
+  await WhatsAppMessage.findById(
+    whatsappMessageId
+  );
+
+if (!whatsappMessage) {
+  return res.status(404).json({
+    success: false,
+    message:
+      "WhatsApp payment message not found.",
+  });
+}
+
+if (
+  whatsappMessage.paymentStatus ===
+  "payment_received"
+) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "This WhatsApp payment has already been approved.",
+  });
+}
+
+    // =======================================
+    // Find Customer
+    // =======================================
+
+    const customerData =
+      await Tiffin.findById(customer);
+
+    if (!customerData) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Customer not found.",
+      });
+    }
+
+    // =======================================
+    // Find Bill
+    // =======================================
+
+    const billData =
+      await Bill.findById(bill);
+
+    if (!billData) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Bill not found.",
+      });
+    }
+
+    // =======================================
+    // Prevent Overpayment
+    // =======================================
+
+    if (
+      paymentAmount >
+      Number(billData.pendingAmount || 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Payment amount cannot be greater than the pending bill amount.",
+      });
+    }
+
+    // =======================================
+    // Create Payment
+    // =======================================
+
+    const payment =
+      await Payment.create({
+        customer,
+        bill,
+        amount: paymentAmount,
+        paymentMethod,
+        note: remark,
+      });
+
+    // =======================================
+    // Update Bill
+    // =======================================
+
+    billData.paidAmount =
+      Number(billData.paidAmount || 0) +
+      paymentAmount;
+
+    billData.pendingAmount =
+      Math.max(
+        0,
+        Number(billData.totalAmount || 0) -
+          billData.paidAmount
+      );
+
+    if (
+      billData.pendingAmount <= 0
+    ) {
+      billData.status = "Paid";
+      billData.pendingAmount = 0;
+    } else if (
+      billData.paidAmount > 0
+    ) {
+      billData.status = "Partial";
+    } else {
+      billData.status = "Pending";
+    }
+
+    await billData.save();
+
+    // =======================================
+    // Update WhatsApp Message
+    // =======================================
+
+    
+      whatsappMessage.paymentStatus =
+        "payment_received";
+
+      whatsappMessage.linkedPayment =
+        payment._id;
+
+      whatsappMessage.linkedBill =
+        billData._id;
+
+      whatsappMessage.inboxStatus =
+        "read";
+
+      whatsappMessage.note =
+        "Payment approved by admin.";
+
+      await whatsappMessage.save();
+    
+
+    // =======================================
+    // Send Confirmation WhatsApp Message
+    // =======================================
+
+    try {
+      if (customerData.phone) {
+        const receiptNo =
+          payment._id
+            .toString()
+            .slice(-6)
+            .toUpperCase();
+
+        const confirmationMessage =
+          `🧾 *OM TIFFIN SERVICE*\n\n` +
+          `✅ *Payment Approved Successfully*\n\n` +
+          `👤 Customer : ${
+            customerData.customerName ||
+            "Customer"
+          }\n\n` +
+          `📄 Receipt No : ${receiptNo}\n\n` +
+          `💰 Amount : ₹${paymentAmount}\n\n` +
+          `💳 Payment Method : ${
+            paymentMethod || "UPI"
+          }\n\n` +
+          `📄 Invoice No : ${
+            billData.invoiceNo || "N/A"
+          }\n\n` +
+          `📅 Date : ${new Date(
+            payment.paymentDate
+          ).toLocaleDateString("en-GB")}\n\n` +
+          `🙏 Thank you for choosing OM TIFFIN SERVICE.`;
+
+        await sendWhatsAppMessage({
+          to: customerData.phone,
+          message:
+            confirmationMessage,
+        });
+      }
+    } catch (whatsappError) {
+      // Payment approval should remain successful
+      // even if confirmation WhatsApp fails.
+      console.error(
+        "WhatsApp confirmation failed:",
+        whatsappError.message
+      );
+    }
+
+    // =======================================
+    // Response
+    // =======================================
+
+    return res.status(200).json({
+      success: true,
+
+      message:
+        "WhatsApp payment approved successfully.",
+
+      data: {
+        payment,
+        bill: billData,
+        whatsappMessage:
+          whatsappMessage || null,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Approve WhatsApp Payment Error:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "Failed to approve WhatsApp payment.",
     });
   }
 };

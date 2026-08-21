@@ -115,3 +115,26 @@ export const sendPaymentReceiptWhatsApp = async (
   return response.data;
 };
 
+// =======================================
+// Approve WhatsApp Payment
+// =======================================
+
+export const approveWhatsAppPayment = async (
+  paymentData
+) => {
+  const token =
+    localStorage.getItem("token");
+
+  const response = await api.post(
+    "/payments/approve-whatsapp-payment",
+    paymentData,
+    {
+      headers: {
+        Authorization:
+          `Bearer ${token}`,
+      },
+    }
+  );
+
+  return response.data;
+};

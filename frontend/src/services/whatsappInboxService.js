@@ -80,3 +80,16 @@ export const replyToWhatsAppMessage = async (
 
   return response.data;
 };
+
+// =======================================
+// Get Pending WhatsApp Payment Reviews
+// =======================================
+
+export const getWhatsAppPaymentReviews =
+  async () => {
+    const response = await api.get(
+      "/whatsapp-inbox/payment-reviews"
+    );
+
+    return response.data;
+  };

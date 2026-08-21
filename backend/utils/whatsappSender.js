@@ -216,6 +216,11 @@ const sendWhatsAppTemplate = async ({
     template,
   };
 
+  console.log(
+  "📦 WhatsApp Template Payload:",
+  JSON.stringify(payload, null, 2)
+);
+
   console.log("📤 Sending WhatsApp template:", {
     to: normalizedTo,
     templateName,

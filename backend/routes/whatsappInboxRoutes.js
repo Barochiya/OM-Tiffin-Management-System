@@ -2,6 +2,9 @@
 const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const WhatsAppMessage = require("../models/WhatsAppMessage");
+const {
+  getWhatsAppConfig,
+} = require("../utils/whatsappSender");
 // =====================================================
 // Get WhatsApp Inbox
 // =====================================================
@@ -101,6 +104,7 @@ router.put(
             new: true,
           }
         );
+
       if (!message) {
         return res.status(404).json({
           success: false,
@@ -108,6 +112,7 @@ router.put(
             "WhatsApp message not found.",
         });
       }
+
       return res.json({
         success: true,
         message:
@@ -119,6 +124,7 @@ router.put(
         "WhatsApp Mark Read Error:",
         error
       );
+
       return res.status(500).json({
         success: false,
         message:
@@ -160,6 +166,139 @@ router.delete(
         success: false,
         message:
           "Failed to delete WhatsApp message.",
+      });
+    }
+  }
+);
+
+// =====================================================
+// Get WhatsApp Media
+// =====================================================
+
+router.get(
+  "/media/:id",
+  protect,
+  async (req, res) => {
+    try {
+      const message =
+        await WhatsAppMessage.findById(
+          req.params.id
+        );
+
+      if (!message) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "WhatsApp message not found.",
+        });
+      }
+
+      if (!message.mediaId) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "No media found for this message.",
+        });
+      }
+
+      const {
+        accessToken,
+        baseUrl,
+      } = getWhatsAppConfig();
+
+      // Get media information from Meta
+      const mediaInfoResponse =
+        await fetch(
+          `${baseUrl}/${message.mediaId}`,
+          {
+            headers: {
+              Authorization:
+                `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+      const mediaInfo =
+        await mediaInfoResponse.json();
+
+      if (!mediaInfoResponse.ok) {
+        console.error(
+          "WhatsApp Media Info Error:",
+          mediaInfo
+        );
+
+        return res.status(500).json({
+          success: false,
+          message:
+            "Failed to get WhatsApp media information.",
+        });
+      }
+
+      const mediaUrl =
+        mediaInfo?.url;
+
+      const mimeType =
+        mediaInfo?.mime_type ||
+        message.mediaMimeType ||
+        "application/octet-stream";
+
+      if (!mediaUrl) {
+        return res.status(500).json({
+          success: false,
+          message:
+            "WhatsApp media URL not found.",
+        });
+      }
+
+      // Download media from Meta
+      const mediaResponse =
+        await fetch(mediaUrl, {
+          headers: {
+            Authorization:
+              `Bearer ${accessToken}`,
+          },
+        });
+
+      if (!mediaResponse.ok) {
+        console.error(
+          "WhatsApp Media Download Error:",
+          mediaResponse.status
+        );
+
+        return res.status(500).json({
+          success: false,
+          message:
+            "Failed to download WhatsApp media.",
+        });
+      }
+
+      const buffer =
+        Buffer.from(
+          await mediaResponse.arrayBuffer()
+        );
+
+      res.setHeader(
+        "Content-Type",
+        mimeType
+      );
+
+      res.setHeader(
+        "Content-Length",
+        buffer.length
+      );
+
+      return res.send(buffer);
+
+    } catch (error) {
+      console.error(
+        "WhatsApp Media Error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load WhatsApp media.",
       });
     }
   }

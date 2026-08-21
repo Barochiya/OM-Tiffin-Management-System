@@ -47,3 +47,18 @@ export const deleteWhatsAppMessage = async (id) => {
 
   return response.data;
 };
+
+// =======================================
+// Get WhatsApp Media
+// =======================================
+
+export const getWhatsAppMedia = async (id) => {
+  const response = await api.get(
+    `/whatsapp-inbox/media/${id}`,
+    {
+      responseType: "blob",
+    }
+  );
+
+  return response.data;
+};

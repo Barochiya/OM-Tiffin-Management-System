@@ -223,14 +223,21 @@ const customer =
     // Payment Review Detection
     // ---------------------------------------------
 
-    const paymentKeywords = [
+     const paymentKeywords = [
       "payment",
       "paid",
       "pay",
+      "payment Done",
       "payment done",
       "payment screenshot",
       "screenshot",
       "upi",
+      "પેમેન્ટ",
+      "પેમેન્ટ કર્યું",
+      "પેમેન્ટ કર્યુ",
+      "પેમેન્ટ સ્ક્રીનશોટ",
+      "ભર્યું",
+      "ભર્યુ",
     ];
 
     const searchableText =

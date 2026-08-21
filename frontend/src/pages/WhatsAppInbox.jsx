@@ -4,40 +4,172 @@ import {
   getWhatsAppInbox,
   deleteWhatsAppMessage,
   markWhatsAppMessageRead,
+  getWhatsAppMedia,
 } from "../services/whatsappInboxService";
+
+const WhatsAppMediaPreview = ({ message }) => {
+  const [url, setUrl] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showFullImage, setShowFullImage] = useState(false);
+
+
+
+  useEffect(() => {
+    let objectUrl = null;
+
+    const loadMedia = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const blob =
+          await getWhatsAppMedia(message._id);
+
+        objectUrl =
+          URL.createObjectURL(blob);
+
+        setUrl(objectUrl);
+      } catch (err) {
+        console.error(
+          "WhatsApp Media Preview Error:",
+          err
+        );
+
+        setError(
+          "Unable to load image."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMedia();
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+    };
+  }, [message._id]);
+
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-700">
+        📸 Loading image...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
+        {error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <p className="mb-3 font-semibold text-slate-700">
+        📸 WhatsApp Image
+      </p>
+
+      <div
+  onClick={() =>
+    setShowFullImage(true)
+  }
+  className="inline-block cursor-pointer"
+>
+  <img
+    src={url}
+    alt={
+      message.mediaCaption ||
+      "WhatsApp image"
+    }
+    className="max-h-[500px] w-auto max-w-full rounded-lg border shadow-sm transition hover:opacity-90"
+  />
+</div>
+
+  {showFullImage && (
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4"
+      onClick={() =>
+        setShowFullImage(false)
+      }
+    >
+      <button
+        type="button"
+        onClick={() =>
+          setShowFullImage(false)
+        }
+        className="absolute right-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white text-2xl font-bold text-slate-800 shadow-lg hover:bg-slate-200"
+        aria-label="Close image"
+      >
+        ✕
+      </button>
+
+      <img
+        src={url}
+        alt={
+          message.mediaCaption ||
+          "WhatsApp image"
+        }
+        className="max-h-[90vh] max-w-[95vw] rounded-lg object-contain shadow-2xl"
+        onClick={(event) =>
+          event.stopPropagation()
+        }
+      />
+    </div>
+  )}
+
+
+      {message.mediaCaption && (
+        <p className="mt-3 text-sm text-slate-600">
+          {message.mediaCaption}
+        </p>
+      )}
+    </div>
+  );
+};
 
 export default function WhatsAppInbox() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadMessages = async () => {
-    try {
+  const loadMessages = async (showLoader = false) => {
+  try {
+    if (showLoader) {
       setLoading(true);
-      setError("");
+    }
 
-      const response =
-        await getWhatsAppInbox();
+    setError("");
 
-      setMessages(
-        Array.isArray(response?.data)
-          ? response.data
-          : []
-      );
-    } catch (err) {
-      console.error(
-        "WhatsApp Inbox Error:",
-        err
-      );
+    const response =
+      await getWhatsAppInbox();
 
-      setError(
-        err.response?.data?.message ||
-          "Failed to load WhatsApp inbox."
-      );
-    } finally {
+    setMessages(
+      Array.isArray(response?.data)
+        ? response.data
+        : []
+    );
+  } catch (err) {
+    console.error(
+      "WhatsApp Inbox Error:",
+      err
+    );
+
+    setError(
+      err.response?.data?.message ||
+        "Failed to load WhatsApp inbox."
+    );
+  } finally {
+    if (showLoader) {
       setLoading(false);
     }
-  };
+  }
+};
 
   const handleDeleteMessage = async (id) => {
   const confirmed = window.confirm(
@@ -88,10 +220,12 @@ const handleMarkAsRead = async (id) => {
 };
 
   useEffect(() => {
-  loadMessages();
+  // First load → show loading
+  loadMessages(true);
 
+  // Background refresh → do NOT show loading
   const interval = setInterval(() => {
-    loadMessages();
+    loadMessages(false);
   }, 10000);
 
   return () => {
@@ -117,7 +251,7 @@ const handleMarkAsRead = async (id) => {
 
           <button
             type="button"
-            onClick={loadMessages}
+            onClick={() => loadMessages(true)}
             className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
           >
             🔄 Refresh
@@ -218,30 +352,39 @@ const handleMarkAsRead = async (id) => {
                   </div>
                 )}
 
-                {/* Media */}
-                {item.mediaId && (
-                  <div className="mt-4 p-4 rounded-lg border border-yellow-200 bg-yellow-50">
-                    <div className="font-semibold text-yellow-800">
-                      📎 Media received
-                    </div>
+               {/* Media */}
 
-                    <div className="text-sm text-yellow-700 mt-1">
-                      Type: {item.type}
-                    </div>
+{item.mediaId &&
+  item.type === "image" && (
+    <WhatsAppMediaPreview
+      message={item}
+    />
+  )}
 
-                    {item.mediaFilename && (
-                      <div className="text-sm text-yellow-700">
-                        File: {item.mediaFilename}
-                      </div>
-                    )}
+{item.mediaId &&
+  item.type !== "image" && (
+    <div className="mt-4 p-4 rounded-lg border border-yellow-200 bg-yellow-50">
+      <div className="font-semibold text-yellow-800">
+        📎 Media received
+      </div>
 
-                    {item.mediaCaption && (
-                      <div className="text-sm text-slate-700 mt-2">
-                        {item.mediaCaption}
-                      </div>
-                    )}
-                  </div>
-                )}
+      <div className="text-sm text-yellow-700 mt-1">
+        Type: {item.type}
+      </div>
+
+      {item.mediaFilename && (
+        <div className="text-sm text-yellow-700">
+          File: {item.mediaFilename}
+        </div>
+      )}
+
+      {item.mediaCaption && (
+        <div className="text-sm text-slate-700 mt-2">
+          {item.mediaCaption}
+        </div>
+      )}
+    </div>
+  )}
 
                 {/* Date */}
                 <div className="mt-4 text-xs text-slate-400">

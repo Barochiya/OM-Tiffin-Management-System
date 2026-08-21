@@ -38,8 +38,16 @@ export default function WhatsAppInbox() {
   };
 
   useEffect(() => {
+  loadMessages();
+
+  const interval = setInterval(() => {
     loadMessages();
-  }, []);
+  }, 10000);
+
+  return () => {
+    clearInterval(interval);
+  };
+}, []);
 
   return (
     <div className="p-4 lg:p-8 bg-slate-100 min-h-screen">

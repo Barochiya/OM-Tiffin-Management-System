@@ -9,6 +9,8 @@ const {
 
 const Bill = require("../models/Bill");
 const AnnouncementDelivery = require("../models/AnnouncementDelivery");
+const WhatsAppMessage = require("../models/WhatsAppMessage");
+const Tiffin = require("../models/Tiffin");
 
 // =====================================================
 // WhatsApp Webhook Verification
@@ -78,6 +80,233 @@ router.post("/webhook", async (req, res) => {
       // ===============================================
 
       for (const change of changes) {
+
+        // =================================================
+// Incoming WhatsApp Messages
+// =================================================
+
+const incomingMessages = Array.isArray(
+  change?.value?.messages
+)
+  ? change.value.messages
+  : [];
+
+// =================================================
+// Save Incoming WhatsApp Messages
+// =================================================
+
+for (const incoming of incomingMessages) {
+  try {
+    console.log(
+      "📩 Incoming WhatsApp Message:",
+      JSON.stringify(incoming, null, 2)
+    );
+
+    const phoneNumber =
+      incoming?.from || null;
+
+    const whatsappMessageId =
+      incoming?.id || null;
+
+    if (!phoneNumber || !whatsappMessageId) {
+      console.log(
+        "⚠️ Incoming message missing phone or message ID"
+      );
+
+      continue;
+    }
+
+    // ---------------------------------------------
+    // Find Customer
+    // ---------------------------------------------
+
+    const normalizedPhone =
+      String(phoneNumber).replace(/\D/g, "");
+
+    const customer =
+      await Tiffin.findOne({
+        phone: normalizedPhone,
+      });
+
+    // ---------------------------------------------
+    // Message Data
+    // ---------------------------------------------
+
+    let messageType = "unknown";
+    let messageText = "";
+    let mediaId = null;
+    let mediaMimeType = null;
+    let mediaFilename = null;
+    let mediaCaption = "";
+
+    if (incoming.type === "text") {
+      messageType = "text";
+
+      messageText =
+        incoming?.text?.body || "";
+    }
+
+    if (incoming.type === "image") {
+      messageType = "image";
+
+      mediaId =
+        incoming?.image?.id || null;
+
+      mediaMimeType =
+        incoming?.image?.mime_type || null;
+
+      mediaCaption =
+        incoming?.image?.caption || "";
+
+      messageText = mediaCaption;
+    }
+
+    if (incoming.type === "document") {
+      messageType = "document";
+
+      mediaId =
+        incoming?.document?.id || null;
+
+      mediaMimeType =
+        incoming?.document?.mime_type || null;
+
+      mediaFilename =
+        incoming?.document?.filename || null;
+
+      mediaCaption =
+        incoming?.document?.caption || "";
+
+      messageText = mediaCaption;
+    }
+
+    if (incoming.type === "audio") {
+      messageType = "audio";
+
+      mediaId =
+        incoming?.audio?.id || null;
+
+      mediaMimeType =
+        incoming?.audio?.mime_type || null;
+    }
+
+    if (incoming.type === "video") {
+      messageType = "video";
+
+      mediaId =
+        incoming?.video?.id || null;
+
+      mediaMimeType =
+        incoming?.video?.mime_type || null;
+
+      mediaCaption =
+        incoming?.video?.caption || "";
+
+      messageText = mediaCaption;
+    }
+
+    if (incoming.type === "sticker") {
+      messageType = "sticker";
+
+      mediaId =
+        incoming?.sticker?.id || null;
+
+      mediaMimeType =
+        incoming?.sticker?.mime_type || null;
+    }
+
+    // ---------------------------------------------
+    // Payment Review Detection
+    // ---------------------------------------------
+
+    const paymentKeywords = [
+      "payment",
+      "paid",
+      "pay",
+      "payment done",
+      "payment screenshot",
+      "screenshot",
+      "upi",
+    ];
+
+    const searchableText =
+      `${messageText} ${mediaCaption}`.toLowerCase();
+
+    const isPaymentRelated =
+      paymentKeywords.some(
+        (keyword) =>
+          searchableText.includes(
+            keyword.toLowerCase()
+          )
+      ) ||
+      messageType === "image";
+
+    // ---------------------------------------------
+    // Save Message
+    // ---------------------------------------------
+
+    const savedMessage =
+      await WhatsAppMessage.create({
+        customer:
+          customer?._id || null,
+
+        phoneNumber:
+          normalizedPhone,
+
+        whatsappMessageId,
+
+        type: messageType,
+
+        message:
+          messageText || "",
+
+        mediaId,
+
+        mediaMimeType,
+
+        mediaFilename,
+
+        mediaCaption,
+
+        whatsappTimestamp:
+          incoming.timestamp
+            ? new Date(
+                Number(
+                  incoming.timestamp
+                ) * 1000
+              )
+            : new Date(),
+
+        direction: "incoming",
+
+        inboxStatus: "unread",
+
+        paymentStatus:
+          isPaymentRelated
+            ? "pending_review"
+            : "not_payment_related",
+      });
+
+    console.log(
+      "✅ Incoming WhatsApp message saved:",
+      {
+        id: savedMessage._id,
+        customer:
+          customer?.customerName ||
+          "Unknown Customer",
+        phone:
+          normalizedPhone,
+        type: messageType,
+        paymentRelated:
+          isPaymentRelated,
+      }
+    );
+  } catch (incomingError) {
+    console.error(
+      "❌ Incoming WhatsApp message processing failed:",
+      incomingError.message
+    );
+  }
+}
         const statuses = Array.isArray(
           change?.value?.statuses
         )

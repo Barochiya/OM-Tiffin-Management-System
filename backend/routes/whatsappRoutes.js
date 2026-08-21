@@ -120,13 +120,18 @@ for (const incoming of incomingMessages) {
     // Find Customer
     // ---------------------------------------------
 
-    const normalizedPhone =
-      String(phoneNumber).replace(/\D/g, "");
+    const phoneDigits =
+  String(phoneNumber).replace(/\D/g, "");
 
-    const customer =
-      await Tiffin.findOne({
-        phone: normalizedPhone,
-      });
+const normalizedPhone =
+  phoneDigits.length >= 10
+    ? phoneDigits.slice(-10)
+    : phoneDigits;
+
+const customer =
+  await Tiffin.findOne({
+    phone: normalizedPhone,
+  });
 
     // ---------------------------------------------
     // Message Data

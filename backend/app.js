@@ -23,7 +23,7 @@ const paymentReminderRoutes = require("./routes/paymentReminderRoutes");
 // Razorpay Payment Gateway
 const paymentGatewayRoutes = require("./routes/paymentGatewayRoutes");
 const whatsappRoutes = require("./routes/whatsappRoutes");
-
+const whatsappInboxRoutes = require("./routes/whatsappInboxRoutes");
 // ===============================
 // Middleware
 // ===============================
@@ -67,6 +67,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // WhatsApp Webhook
 app.use("/api/whatsapp", whatsappRoutes);
+app.use(
+  "/api/whatsapp-inbox",
+  whatsappInboxRoutes
+);
 app.use("/api/announcements", announcementRoutes);
 app.use(
   "/api/announcement-status",

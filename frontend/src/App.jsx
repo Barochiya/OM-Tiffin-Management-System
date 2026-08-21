@@ -16,6 +16,7 @@ import ViewBills from "./pages/ViewBills";
 import SingleBill from "./pages/SingleBill";
 import PaymentReceipt from "./pages/PaymentReceipt";
 import Announcement from "./pages/Announcement";
+import WhatsAppInbox from "./pages/WhatsAppInbox";
 import AnnouncementDeliveryStatus from "./pages/AnnouncementDeliveryStatus";
 import BillDeliveryStatus from "./pages/BillDeliveryStatus";
 import BusinessInfo from "./pages/BusinessInfo";
@@ -141,6 +142,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+            path="/whatsapp-inbox"
+            element={
+              <ProtectedRoute>
+                <WhatsAppInbox />
+              </ProtectedRoute>
+            }
+          />
 
         <Route
           path="/bill-delivery-status"

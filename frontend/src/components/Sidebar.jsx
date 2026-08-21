@@ -179,7 +179,17 @@ const closeSidebar = () => {
     >
       📢 Announcement Status
     </Link>
-
+        <Link
+          to="/whatsapp-inbox"
+          onClick={closeSidebar}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+            location.pathname === "/whatsapp-inbox"
+              ? "bg-white text-blue-700 font-semibold shadow"
+              : "hover:bg-blue-600"
+          }`}
+        >
+          📥 WhatsApp Inbox
+        </Link>
       </nav>
 
       {/* Footer */}

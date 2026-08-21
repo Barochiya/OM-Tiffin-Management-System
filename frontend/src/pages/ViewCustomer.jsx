@@ -74,7 +74,143 @@ const loadDailyEntries = async () => {
       selectedCycle
     );
 
-    setDailyEntries(response?.data || []);
+    const savedEntries = response?.data || [];
+
+    // =======================================
+    // CURRENT DATE LIMIT
+    // =======================================
+
+    const today = new Date();
+
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth() + 1;
+    const currentDay = today.getDate();
+
+    // =======================================
+    // CYCLE START / END
+    // =======================================
+
+    let cycleStartDay;
+    let cycleEndDay;
+
+    if (String(selectedCycle) === "1") {
+      // Cycle 1 = 1 to 15
+      cycleStartDay = 1;
+      cycleEndDay = 15;
+    } else {
+      // Cycle 2 = 16 to month end
+      cycleStartDay = 16;
+
+      cycleEndDay = new Date(
+        selectedYear,
+        selectedMonth,
+        0
+      ).getDate();
+    }
+
+    // =======================================
+    // IF SELECTED MONTH IS CURRENT MONTH
+    // DON'T SHOW FUTURE DATES
+    // =======================================
+
+    if (
+      Number(selectedYear) === currentYear &&
+      Number(selectedMonth) === currentMonth
+    ) {
+      cycleEndDay = Math.min(
+        cycleEndDay,
+        currentDay
+      );
+    }
+
+    // =======================================
+    // IF SELECTED MONTH IS FUTURE
+    // SHOW NOTHING
+    // =======================================
+
+    const selectedMonthDate = new Date(
+      Number(selectedYear),
+      Number(selectedMonth) - 1,
+      1
+    );
+
+    const currentMonthDate = new Date(
+      currentYear,
+      currentMonth - 1,
+      1
+    );
+
+    if (selectedMonthDate > currentMonthDate) {
+      setDailyEntries([]);
+      setEditingEntryId(null);
+      return;
+    }
+
+    // =======================================
+    // CREATE DATE-WISE ENTRIES
+    // INCLUDING MISSING DATES
+    // =======================================
+
+    const entryMap = new Map();
+
+    savedEntries.forEach((entry) => {
+      const entryDate = new Date(entry.date);
+
+      const key = `${entryDate.getFullYear()}-${String(
+        entryDate.getMonth() + 1
+      ).padStart(2, "0")}-${String(
+        entryDate.getDate()
+      ).padStart(2, "0")}`;
+
+      entryMap.set(key, entry);
+    });
+
+    const generatedEntries = [];
+
+    for (
+      let day = cycleStartDay;
+      day <= cycleEndDay;
+      day++
+    ) {
+      const dateObject = new Date(
+        Number(selectedYear),
+        Number(selectedMonth) - 1,
+        day
+      );
+
+      const key = `${Number(selectedYear)}-${String(
+        Number(selectedMonth)
+      ).padStart(2, "0")}-${String(day).padStart(
+        2,
+        "0"
+      )}`;
+
+      const existingEntry = entryMap.get(key);
+
+      if (existingEntry) {
+        generatedEntries.push(existingEntry);
+      } else {
+        generatedEntries.push({
+          _id: `new-${key}`,
+
+          customer: id,
+
+          date: dateObject.toISOString(),
+
+          breakfastQty: 0,
+          lunchQty: 0,
+          dinnerQty: 0,
+
+          extraItems: [],
+
+          remark: "",
+
+          isNewEntry: true,
+        });
+      }
+    }
+
+    setDailyEntries(generatedEntries);
     setEditingEntryId(null);
   } catch (error) {
     console.error(

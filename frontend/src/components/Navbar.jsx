@@ -170,10 +170,9 @@ const Navbar = ({ setSidebarOpen }) => {
     }
 
     return {
-      title: "OM Tiffin Management System",
-      subtitle:
-        "Admin Panel",
-    };
+  title: "OM Tiffin Management System",
+  subtitle: "",
+};
   };
 
   const pageInfo = getPageInfo();

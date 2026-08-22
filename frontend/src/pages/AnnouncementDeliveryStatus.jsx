@@ -216,86 +216,365 @@ export default function AnnouncementDeliveryStatus() {
         ) : (
           <>
             {/* =================================
-                SUMMARY CARDS
-            ================================= */}
-
-            <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
-
-              {/* TOTAL */}
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">
-                  Total
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold text-slate-800">
-                  {totalCount}
-                </h2>
-              </div>
-
-              {/* SENT */}
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">
-                  Sent
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold text-slate-700">
-                  {sentCount}
-                </h2>
-              </div>
-
-              {/* DELIVERED */}
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">
-                  Delivered
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold text-green-600">
-                  {deliveredCount}
-                </h2>
-              </div>
-
-              {/* READ */}
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">
-                  Read
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold text-blue-600">
-                  {readCount}
-                </h2>
-              </div>
-
-              {/* FAILED */}
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">
-                  Failed
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold text-red-600">
-                  {failedCount}
-                </h2>
-              </div>
-
-              {/* PENDING */}
-
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <p className="text-sm font-medium text-slate-500">
-                  Pending
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold text-orange-600">
-                  {pendingCount}
-                </h2>
-              </div>
-
-            </div>
-
-            {/* =================================
+               RESPONSIVE DELIVERY LIST
+           ================================= */}
+           {/* DESKTOP TABLE */}
+           <div className="hidden overflow-hidden rounded-2xl bg-white shadow-sm md:block">
+             <table className="w-full table-fixed">
+               <colgroup>
+                 <col className="w-[14%]" />
+                 <col className="w-[11%]" />
+                 <col className="w-[19%]" />
+                 <col className="w-[15%]" />
+                 <col className="w-[11%]" />
+                 <col className="w-[10%]" />
+                 <col className="w-[20%]" />
+               </colgroup>
+               <thead className="bg-slate-100">
+                 <tr>
+                   <th className="p-4 text-left text-sm font-bold text-slate-700">
+                     Customer
+                   </th>
+                   <th className="p-4 text-left text-sm font-bold text-slate-700">
+                     Phone
+                   </th>
+                   <th className="p-4 text-left text-sm font-bold text-slate-700">
+                     Announcement
+                   </th>
+                   <th className="p-4 text-left text-sm font-bold text-slate-700">
+                     Template
+                   </th>
+                   <th className="p-4 text-center text-sm font-bold text-slate-700">
+                     Status
+                   </th>
+                   <th className="p-4 text-left text-sm font-bold text-slate-700">
+                     Failure Reason
+                   </th>
+                   <th className="p-4 text-left text-sm font-bold text-slate-700">
+                     Timeline
+                   </th>
+                 </tr>
+               </thead>
+               <tbody>
+                 {filteredData.length === 0 ? (
+                   <tr>
+                     <td
+                       colSpan="7"
+                       className="p-12 text-center"
+                     >
+                       <div className="text-4xl">
+                         &#128196;
+                       </div>
+                       <p className="mt-3 font-semibold text-slate-700">
+                         No announcement delivery
+                         records found.
+                       </p>
+                       <p className="mt-1 text-sm text-slate-400">
+                         Try changing the search or
+                         status filter.
+                       </p>
+                     </td>
+                   </tr>
+                 ) : (
+                   filteredData.map((item) => (
+                     <tr
+                       key={item._id}
+                       className="border-t border-slate-200 transition hover:bg-slate-50"
+                     >
+                       {/* CUSTOMER */}
+                       <td className="p-4 align-top">
+                         <div className="break-words font-semibold text-slate-800">
+                           {item.customerName || "Customer"}
+                         </div>
+                       </td>
+                       {/* PHONE */}
+                       <td className="p-4 align-top text-sm text-slate-600">
+                         <div className="whitespace-nowrap">
+                           {item.phoneNumber || "-"}
+                         </div>
+                       </td>
+                       {/* ANNOUNCEMENT */}
+                       <td className="p-4 align-top">
+                         <div className="break-words font-semibold text-slate-800">
+                           {item.title || "-"}
+                         </div>
+                         <div className="mt-1 truncate text-xs text-slate-500">
+                           {item.message || "-"}
+                         </div>
+                       </td>
+                       {/* TEMPLATE */}
+                       <td className="p-4 align-top">
+                         <span
+                           className="block break-words text-sm leading-6 text-slate-600"
+                           title={item.templateName || ""}
+                         >
+                           {item.templateName || "-"}
+                         </span>
+                       </td>
+                       {/* STATUS */}
+                       <td className="p-4 text-center align-top">
+                         {getStatusBadge(item.status)}
+                       </td>
+                       {/* FAILURE */}
+                       <td className="p-4 align-top text-sm">
+                         {item.failureReason ? (
+                           <span className="break-words text-red-600">
+                             {item.failureReason}
+                           </span>
+                         ) : (
+                           <span className="text-slate-400">
+                             -
+                           </span>
+                         )}
+                       </td>
+                       {/* TIMELINE */}
+                      <td className="p-4 align-top">
+                        <div className="flex flex-col gap-3 text-sm">
+                          {item.sentAt && (
+                            <div className="flex min-w-0 items-start gap-2 text-slate-600">
+                              <span className="shrink-0 text-center">
+                                &#128228;
+                              </span>
+                              <div className="min-w-0">
+                                <div className="font-semibold whitespace-nowrap">
+                                  Sent
+                                </div>
+                                <div className="whitespace-nowrap text-xs font-medium text-slate-500">
+                                  {new Date(item.sentAt).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {item.deliveredAt && (
+                            <div className="flex min-w-0 items-start gap-2 text-green-600">
+                              <span className="shrink-0 text-center font-bold">
+                                &#10003;&#10003;
+                              </span>
+                              <div className="min-w-0">
+                                <div className="font-semibold whitespace-nowrap">
+                                  Delivered
+                                </div>
+                                <div className="whitespace-nowrap text-xs font-medium text-green-600">
+                                  {new Date(item.deliveredAt).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {item.readAt && (
+                            <div className="flex min-w-0 items-start gap-2 text-blue-600">
+                              <span className="shrink-0 text-center">
+                                &#128065;
+                              </span>
+                              <div className="min-w-0">
+                                <div className="font-semibold whitespace-nowrap">
+                                  Read
+                                </div>
+                                <div className="whitespace-nowrap text-xs font-medium text-blue-600">
+                                  {new Date(item.readAt).toLocaleString()}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {item.status === "pending" && (
+                             <div className="flex items-start gap-2 text-orange-600">
+                               <span className="shrink-0 text-center">
+                                 &#9203;
+                               </span>
+                               <span className="break-words font-medium">
+                                 Waiting for WhatsApp
+                               </span>
+                             </div>
+                           )}
+                           {item.status === "failed" && (
+                             <div className="flex items-start gap-2 text-red-600">
+                               <span className="shrink-0 text-center">
+                                 &#10060;
+                               </span>
+                               <span className="break-words font-medium">
+                                 Sending failed
+                               </span>
+                             </div>
+                           )}
+                         </div>
+                       </td>
+                     </tr>
+                   ))
+                 )}
+               </tbody>
+             </table>
+           </div>
+           {/* MOBILE CARDS */}
+           <div className="space-y-4 md:hidden">
+             {filteredData.length === 0 ? (
+               <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+                 <div className="text-4xl">
+                   &#128196;
+                 </div>
+                 <p className="mt-3 font-semibold text-slate-700">
+                   No announcement delivery
+                   records found.
+                 </p>
+                 <p className="mt-1 text-sm text-slate-400">
+                   Try changing the search or
+                   status filter.
+                 </p>
+               </div>
+             ) : (
+               filteredData.map((item) => (
+                 <div
+                   key={item._id}
+                   className="overflow-hidden rounded-2xl bg-white p-4 shadow-sm"
+                 >
+                   {/* CARD HEADER */}
+                   <div className="flex items-start justify-between gap-3">
+                     <div className="min-w-0">
+                       <p className="text-xs font-bold uppercase tracking-wide text-slate-400">
+                         Customer
+                       </p>
+                       <p className="mt-1 break-words text-base font-bold text-slate-800">
+                         {item.customerName || "Customer"}
+                       </p>
+                     </div>
+                     <div className="shrink-0">
+                       {getStatusBadge(item.status)}
+                     </div>
+                   </div>
+                   {/* PHONE */}
+                   <div className="mt-4 rounded-xl bg-slate-50 p-3">
+                     <p className="text-xs font-semibold text-slate-400">
+                       Phone
+                     </p>
+                     <p className="mt-1 break-all text-sm font-semibold text-slate-700">
+                       {item.phoneNumber || "-"}
+                     </p>
+                   </div>
+                   {/* ANNOUNCEMENT */}
+                   <div className="mt-3 rounded-xl bg-slate-50 p-3">
+                     <p className="text-xs font-semibold text-slate-400">
+                       Announcement
+                     </p>
+                     <p className="mt-1 break-words font-semibold text-slate-800">
+                       {item.title || "-"}
+                     </p>
+                     {item.message && (
+                       <p className="mt-2 break-words text-sm text-slate-500">
+                         {item.message}
+                       </p>
+                     )}
+                   </div>
+                   {/* TEMPLATE */}
+                   <div className="mt-3 rounded-xl bg-slate-50 p-3">
+                     <p className="text-xs font-semibold text-slate-400">
+                       Template
+                     </p>
+                     <p className="mt-1 break-all text-sm text-slate-700">
+                       {item.templateName || "-"}
+                     </p>
+                   </div>
+                   {/* FAILURE */}
+                   {item.failureReason && (
+                     <div className="mt-3 rounded-xl bg-red-50 p-3">
+                       <p className="text-xs font-semibold text-red-600">
+                         Failure Reason
+                       </p>
+                       <p className="mt-1 break-words text-sm text-red-700">
+                         {item.failureReason}
+                       </p>
+                     </div>
+                   )}
+                   {/* TIMELINE */}
+                   <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                     <p className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-500">
+                       Timeline
+                     </p>
+                     <div className="space-y-3">
+                       {item.sentAt && (
+                         <div className="flex items-start gap-3">
+                           <span className="shrink-0 text-base">
+                             {"\u{1F4E9}"}
+                           </span>
+                           <div className="min-w-0">
+                             <p className="text-sm font-semibold text-slate-700">
+                               Sent
+                             </p>
+                             <p className="break-words text-xs text-slate-500">
+                               {new Date(
+                                 item.sentAt
+                               ).toLocaleString()}
+                             </p>
+                           </div>
+                         </div>
+                       )}
+                       {item.deliveredAt && (
+                         <div className="flex items-start gap-3">
+                           <span className="shrink-0 font-bold text-base text-green-600">
+                             {"\u2713\u2713"}
+                           </span>
+                           <div className="min-w-0">
+                             <p className="text-sm font-semibold text-green-700">
+                               Delivered
+                             </p>
+                             <p className="break-words text-xs text-slate-500">
+                               {new Date(
+                                 item.deliveredAt
+                               ).toLocaleString()}
+                             </p>
+                           </div>
+                         </div>
+                       )}
+                       {item.readAt && (
+                         <div className="flex items-start gap-3">
+                           <span className="shrink-0 text-base">
+                             {"\u{1F441}\u{FE0F}"}
+                           </span>
+                           <div className="min-w-0">
+                             <p className="text-sm font-semibold text-blue-700">
+                               Read
+                             </p>
+                             <p className="break-words text-xs text-slate-500">
+                               {new Date(
+                                 item.readAt
+                               ).toLocaleString()}
+                             </p>
+                           </div>
+                         </div>
+                       )}
+                       {item.status === "pending" && (
+                         <div className="flex items-start gap-3">
+                           <span className="shrink-0 text-base">
+                             {"\u23F3"}
+                           </span>
+                           <div className="min-w-0">
+                             <p className="text-sm font-semibold text-orange-700">
+                               Pending
+                             </p>
+                             <p className="break-words text-xs text-slate-500">
+                               Waiting for WhatsApp
+                             </p>
+                           </div>
+                         </div>
+                       )}
+                       {item.status === "failed" && (
+                         <div className="flex items-start gap-3">
+                           <span className="shrink-0 text-base">
+                             {"\u274C"}
+                           </span>
+                           <div className="min-w-0">
+                             <p className="text-sm font-semibold text-red-700">
+                               Failed
+                             </p>
+                             <p className="break-words text-xs text-slate-500">
+                               Sending failed
+                             </p>
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                   </div>
+                 </div>
+               ))
+             )}
+           </div>           {/* =================================
                 SEARCH
             ================================= */}
 

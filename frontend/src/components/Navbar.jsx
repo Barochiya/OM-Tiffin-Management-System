@@ -260,16 +260,29 @@ setWhatsappNotificationCount(
       {/* LEFT */}
       <div className="flex min-w-0 items-center gap-2 sm:gap-4">
 
-        <button
-          type="button"
-          onClick={() =>
-            setSidebarOpen(true)
-          }
-          className="text-2xl text-slate-700 lg:hidden"
-          aria-label="Open sidebar"
-        >
-          <FaBars />
-        </button>
+        {location.pathname.startsWith("/view-bills/") ? (
+  <button
+    type="button"
+    onClick={() => navigate(-1)}
+    className="flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:px-4"
+    aria-label="Go back"
+    title="Go Back"
+  >
+    <span className="text-lg leading-none">←</span>
+    <span>Back</span>
+  </button>
+) : (
+  <button
+    type="button"
+    onClick={() =>
+      setSidebarOpen(true)
+    }
+    className="text-2xl text-slate-700 lg:hidden"
+    aria-label="Open sidebar"
+  >
+    <FaBars />
+  </button>
+)}
 
         <div className="min-w-0">
           <h1 className="truncate text-xl font-bold text-slate-800 sm:text-2xl">
@@ -314,7 +327,7 @@ setWhatsappNotificationCount(
   {/* Notification Dropdown */}
 
   {showNotifications && (
-    <div className="absolute right-0 top-12 z-50 w-80 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+    <div className="fixed left-3 right-3 top-20 z-[100] w-auto max-w-none overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl md:absolute md:left-auto md:right-0 md:top-12 md:w-80">
 
       {/* Header */}
 
@@ -371,31 +384,31 @@ setWhatsappNotificationCount(
               >
 
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
-                  💬
+                  &#128172;
                 </div>
 
                 <div className="min-w-0 flex-1">
 
                   <div className="flex items-center justify-between gap-2">
 
-                    <p className="truncate text-sm font-semibold text-slate-800">
+                    <p className="truncate text-base font-semibold text-slate-800">
                       {item.customer
                         ?.customerName ||
                         "Unknown Customer"}
                     </p>
 
-                    <span className="text-[10px] text-green-600">
+                    <span className="text-xs font-medium text-green-600">
                       WhatsApp
                     </span>
 
                   </div>
 
-                  <p className="mt-1 truncate text-sm text-slate-600">
+                  <p className="mt-1 truncate text-base text-slate-600">
                     {item.message ||
                       "Media received"}
                   </p>
 
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-sm text-slate-400">
                     {item.createdAt
                       ? new Date(
                           item.createdAt
@@ -416,14 +429,14 @@ setWhatsappNotificationCount(
         <div className="px-4 py-8 text-center">
 
           <div className="text-3xl">
-            🔔
+            &#128172;
           </div>
 
           <p className="mt-2 text-sm font-semibold text-slate-600">
             No new notifications
           </p>
 
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-sm text-slate-400">
             You are all caught up.
           </p>
 
@@ -444,9 +457,9 @@ setWhatsappNotificationCount(
               "/whatsapp-inbox"
             );
           }}
-          className="w-full border-t border-slate-200 px-4 py-3 text-sm font-semibold text-blue-600 hover:bg-blue-50"
+          className="w-full border-t border-slate-200 px-4 py-3 text-base font-semibold text-blue-600 hover:bg-blue-50"
         >
-          View WhatsApp Inbox →
+          View WhatsApp Inbox &rarr;
         </button>
       )}
 

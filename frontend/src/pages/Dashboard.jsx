@@ -333,12 +333,10 @@ const todayMeals =
 
     <Link
       to="/announcement"
-      className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl p-5 text-center transition-all duration-300 hover:scale-105"
+      className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl p-5 text-center transition-all duration-300 hover:scale-105 min-w-0"
     >
       <FaBullhorn className="mx-auto text-3xl mb-3" />
-      <h3 className="font-semibold">
-        Announcement
-      </h3>
+      <h3 className="font-semibold break-words leading-6">Announcement</h3>
     </Link>
 
   </div>

@@ -101,11 +101,11 @@ export default function SingleBill() {
 `;
 
   return (
-    <div className="min-h-screen bg-slate-100 p-6">
+    <div className="min-h-screen bg-slate-100 p-3 sm:p-6 overflow-x-hidden">
         <style>{printStyles}</style>    
-      <div className="print-area max-w-5xl mx-auto bg-white rounded-3xl shadow-xl p-8">
+      <div className="print-area max-w-5xl w-full mx-auto bg-white rounded-3xl shadow-xl p-4 sm:p-8 min-w-0">
 
-        <div className="text-center border-b pb-6 mb-8">
+        <div className="text-center border-b pb-5 sm:pb-6 mb-6 sm:mb-8">
           <h1 className="text-4xl font-bold">
             OM TIFFIN SERVICE
           </h1>
@@ -117,7 +117,7 @@ export default function SingleBill() {
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
 
-          <div className="bg-slate-50 p-6 rounded-2xl">
+          <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl min-w-0">
             <h2 className="text-xl font-bold mb-4">
               Customer Details
             </h2>
@@ -138,7 +138,7 @@ export default function SingleBill() {
             </p>
           </div>
 
-          <div className="bg-slate-50 p-6 rounded-2xl">
+          <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl min-w-0">
             <h2 className="text-xl font-bold mb-4">
               Invoice Details
             </h2>
@@ -163,13 +163,13 @@ export default function SingleBill() {
 
         <div className="mb-8">
 
-          <h2 className="text-2xl font-bold mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">
             Meal Summary
           </h2>
 
-          <div className="grid md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
 
-            <div className="bg-blue-50 p-4 rounded-xl">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-xl min-w-0">
               <p className="font-semibold">
                 Breakfast Qty
               </p>
@@ -179,7 +179,7 @@ export default function SingleBill() {
               </p>
             </div>
 
-            <div className="bg-green-50 p-4 rounded-xl">
+            <div className="bg-green-50 p-3 sm:p-4 rounded-xl min-w-0">
               <p className="font-semibold">
                 Lunch Qty
               </p>
@@ -189,7 +189,7 @@ export default function SingleBill() {
               </p>
             </div>
 
-            <div className="bg-purple-50 p-4 rounded-xl">
+            <div className="bg-purple-50 p-3 sm:p-4 rounded-xl min-w-0">
               <p className="font-semibold">
                 Dinner Qty
               </p>
@@ -199,13 +199,13 @@ export default function SingleBill() {
               </p>
             </div>
 
-            <div className="bg-orange-50 p-4 rounded-xl">
+            <div className="bg-orange-50 p-3 sm:p-4 rounded-xl min-w-0">
               <p className="font-semibold">
                 Extra Amount
               </p>
 
               <p className="text-2xl font-bold">
-                ₹{extraAmount}
+                Rs. {extraAmount}
               </p>
             </div>
 
@@ -215,23 +215,23 @@ export default function SingleBill() {
 
         <div className="mb-8">
 
-          <h2 className="text-2xl font-bold mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">
             Daily Details
           </h2>
 
-          <div className="overflow-x-auto">
+          <div className="block w-full max-w-full overflow-x-auto rounded-xl border border-gray-200">
 
-            <table className="w-full border">
+            <table className="min-w-[680px] w-full border-collapse">
 
               <thead className="bg-slate-100">
 
                 <tr>
-                  <th className="p-3">Date</th>
-                  <th className="p-3">Breakfast</th>
-                  <th className="p-3">Lunch</th>
-                  <th className="p-3">Dinner</th>
-                  <th className="p-3">Extra</th>
-                  <th className="p-3">Total</th>
+                  <th className="p-3 whitespace-nowrap text-sm sm:text-base">Date</th>
+                  <th className="p-3 whitespace-nowrap text-sm sm:text-base">Breakfast</th>
+                  <th className="p-3 whitespace-nowrap text-sm sm:text-base">Lunch</th>
+                  <th className="p-3 whitespace-nowrap text-sm sm:text-base">Dinner</th>
+                  <th className="p-3 whitespace-nowrap text-sm sm:text-base">Extra</th>
+                  <th className="p-3 whitespace-nowrap text-sm sm:text-base">Total</th>
                 </tr>
 
               </thead>
@@ -243,30 +243,30 @@ export default function SingleBill() {
                     key={day._id}
                     className="border-t text-center"
                   >
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap text-sm sm:text-base">
                       {new Date(
                         day.date
                       ).toLocaleDateString("en-IN")}
                     </td>
 
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap text-sm sm:text-base">
                       {day.breakfastQty}
                     </td>
 
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap text-sm sm:text-base">
                       {day.lunchQty}
                     </td>
 
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap text-sm sm:text-base">
                       {day.dinnerQty}
                     </td>
 
-                    <td className="p-3">
-                      ₹{day.extraAmount}
+                    <td className="p-3 whitespace-nowrap text-sm sm:text-base">
+                      Rs. {day.extraAmount}
                     </td>
 
-                    <td className="p-3">
-                      ₹{day.dailyTotal}
+                    <td className="p-3 whitespace-nowrap text-sm sm:text-base">
+                      Rs. {day.dailyTotal}
                     </td>
 
                   </tr>
@@ -279,27 +279,26 @@ export default function SingleBill() {
           </div>
 
         </div>
+      <div className="bg-slate-50 p-4 sm:p-6 rounded-2xl min-w-0">
 
-        <div className="bg-slate-50 p-6 rounded-2xl">
-
-          <h2 className="text-2xl font-bold mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">
             Payment Summary
           </h2>
 
           <div className="space-y-3">
 
             <p>
-              <strong>Total Amount:</strong> ₹
+              <strong>Total Amount:</strong> Rs.
               {bill.totalAmount}
             </p>
 
             <p>
-              <strong>Paid Amount:</strong> ₹
+              <strong>Paid Amount:</strong> Rs.
               {bill.paidAmount}
             </p>
 
             <p>
-              <strong>Pending Amount:</strong> ₹
+              <strong>Pending Amount:</strong> Rs.
               {bill.pendingAmount}
             </p>
 

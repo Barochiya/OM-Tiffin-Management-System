@@ -22,7 +22,7 @@ const closeSidebar = () => {
       )}
 
       <aside
-        className={`fixed left-0 top-0 z-50 w-64 h-screen bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-2xl flex flex-col print:!hidden transform transition-transform duration-300 ${
+        className={`fixed left-0 top-0 z-50 w-[240px] max-w-[78vw] h-screen bg-gradient-to-b lg:w-64 from-blue-700 to-blue-900 text-white shadow-2xl flex flex-col print:!hidden transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   FaCalendarAlt,
@@ -600,7 +600,7 @@ const filteredCustomers = customers.filter(
               onChange={(e) => setDate(e.target.value)}
               disabled={savingAll}
               className="
-                w-full sm:w-auto
+                block w-full min-w-0 max-w-full sm:w-auto box-border
                 border border-slate-300
                 rounded-xl
                 px-4 py-3

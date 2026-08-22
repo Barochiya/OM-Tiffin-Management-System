@@ -473,7 +473,7 @@ if (savedPayment?._id) {
 
         >
 
-          {b.month}/{b.year} - â‚¹{b.pendingAmount}
+          {b.month}/{b.year} - Rs. {b.pendingAmount}
 
         </option>
 
@@ -573,7 +573,7 @@ if (savedPayment?._id) {
 
     disabled={loading}
 
-    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-8 py-3 rounded-xl font-semibold transition"
+    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-8 py-3 rounded-xl font-semibold transition inline-flex items-center justify-center gap-2"
 
   >
 
@@ -684,7 +684,7 @@ if (savedPayment?._id) {
               </td>
 
               <td className="px-4 py-4 align-middle font-bold text-green-600 whitespace-nowrap">
-                â‚¹{payment.amount}
+                Rs. {payment.amount}
               </td>
 
               <td className="px-4 py-4 align-middle">
@@ -768,7 +768,7 @@ if (savedPayment?._id) {
                         Amount
                       </p>
                       <p className="font-bold text-green-600 text-lg mt-1">
-                        â‚¹{payment.amount}
+                        Rs. {payment.amount}
                       </p>
                     </div>
                     <div className="rounded-xl bg-blue-50 p-3">

@@ -358,52 +358,50 @@ if (
       await whatsappMessage.save();
     
 
-    // =======================================
-    // Send Confirmation WhatsApp Message
-    // =======================================
+   // =======================================
+// Send Confirmation WhatsApp Message
+// =======================================
 
-    try {
-      if (customerData.phone) {
-        const receiptNo =
-          payment._id
-            .toString()
-            .slice(-6)
-            .toUpperCase();
+try {
+  if (customerData.phone) {
+    const receiptNo =
+      payment._id
+        .toString()
+        .slice(-6)
+        .toUpperCase();
 
-        const confirmationMessage =
-          `🧾 *OM TIFFIN SERVICE*\n\n` +
-          `✅ *Payment Approved Successfully*\n\n` +
-          `👤 Customer : ${
-            customerData.customerName ||
-            "Customer"
-          }\n\n` +
-          `📄 Receipt No : ${receiptNo}\n\n` +
-          `💰 Amount : ₹${paymentAmount}\n\n` +
-          `💳 Payment Method : ${
-            paymentMethod || "UPI"
-          }\n\n` +
-          `📄 Invoice No : ${
-            billData.invoiceNo || "N/A"
-          }\n\n` +
-          `📅 Date : ${new Date(
-            payment.paymentDate
-          ).toLocaleDateString("en-GB")}\n\n` +
-          `🙏 Thank you for choosing OM TIFFIN SERVICE.`;
+    const confirmationMessage =
+      `🧾 *OM TIFFIN SERVICE*\n\n` +
+      `✅ *Payment Approved Successfully*\n\n` +
+      `👤 Customer : ${
+        customerData.customerName ||
+        "Customer"
+      }\n\n` +
+      `📄 Receipt No : ${receiptNo}\n\n` +
+      `💰 Amount : ₹${paymentAmount}\n\n` +
+      `💳 Payment Method : ${
+        paymentMethod || "UPI"
+      }\n\n` +
+      `📄 Invoice No : ${
+        billData.invoiceNo || "N/A"
+      }\n\n` +
+      `📅 Date : ${new Date(
+        payment.paymentDate
+      ).toLocaleDateString("en-GB")}\n\n` +
+      `🙏 Thank you for choosing OM TIFFIN SERVICE.`;
 
-        await sendWhatsAppMessage({
-          to: customerData.phone,
-          message:
-            confirmationMessage,
-        });
-      }
-    } catch (whatsappError) {
-      // Payment approval should remain successful
-      // even if confirmation WhatsApp fails.
-      console.error(
-        "WhatsApp confirmation failed:",
-        whatsappError.message
-      );
-    }
+    await sendWhatsAppMessage({
+      to: customerData.phone,
+      message:
+        confirmationMessage,
+    });
+  }
+} catch (whatsappError) {
+  console.error(
+    "WhatsApp confirmation failed:",
+    whatsappError.message
+  );
+}
 
     // =======================================
     // Response

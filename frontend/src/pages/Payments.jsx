@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -358,8 +358,7 @@ if (savedPayment?._id) {
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <h2 className="text-2xl font-bold mb-6">
 
-  âž• Add Payment
-
+  <FaMoneyBillWave className="text-orange-500 inline-block mr-2" /> Add Payment
 </h2>
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -474,7 +473,7 @@ if (savedPayment?._id) {
 
         >
 
-          {b.month}/{b.year} - ₹{b.pendingAmount}
+          {b.month}/{b.year} - â‚¹{b.pendingAmount}
 
         </option>
 
@@ -685,7 +684,7 @@ if (savedPayment?._id) {
               </td>
 
               <td className="px-4 py-4 align-middle font-bold text-green-600 whitespace-nowrap">
-                ₹{payment.amount}
+                â‚¹{payment.amount}
               </td>
 
               <td className="px-4 py-4 align-middle">
@@ -769,7 +768,7 @@ if (savedPayment?._id) {
                         Amount
                       </p>
                       <p className="font-bold text-green-600 text-lg mt-1">
-                        ₹{payment.amount}
+                        â‚¹{payment.amount}
                       </p>
                     </div>
                     <div className="rounded-xl bg-blue-50 p-3">
@@ -827,9 +826,3 @@ if (savedPayment?._id) {
   );
 
 }
-
-
-
-
-
-

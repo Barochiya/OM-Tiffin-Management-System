@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -7,6 +7,7 @@ import {
   FaReceipt,
   FaWallet,
   FaSearch,
+FaSave,
 } from "react-icons/fa";
 
 import {
@@ -203,8 +204,7 @@ if (savedPayment?._id) {
 
             <h1 className="text-3xl font-bold text-slate-800">
 
-              💳 Payment Management
-
+              <FaWallet className="text-blue-500 inline-block mr-2" />Payment Management
             </h1>
 
             <p className="text-gray-500 mt-2">
@@ -358,7 +358,7 @@ if (savedPayment?._id) {
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <h2 className="text-2xl font-bold mb-6">
 
-  ➕ Add Payment
+  âž• Add Payment
 
 </h2>
 
@@ -579,12 +579,15 @@ if (savedPayment?._id) {
   >
 
     {loading
-
-      ? "Saving..."
-
-      : "💾 Save Payment"}
-
-  </button>
+  ? "Saving..."
+  : (
+      <>
+        <FaSave />
+        Save Payment
+      </>
+    )
+}
+</button>
 
 </div>
 
@@ -596,7 +599,7 @@ if (savedPayment?._id) {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
 
             <h2 className="text-2xl font-bold">
-              💰 Payment History
+              <><FaMoneyBillWave className="text-amber-500 inline-block mr-2" />Payment History</>
             </h2>
 
             <span className="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-semibold">
@@ -605,7 +608,7 @@ if (savedPayment?._id) {
 
           </div>
 
-          <div className="w-full overflow-x-auto rounded-xl border border-slate-200">
+          <div className="hidden md:block w-full overflow-x-auto rounded-xl border border-slate-200">
 
   <table className="w-full min-w-[850px] table-fixed">
 
@@ -703,7 +706,7 @@ if (savedPayment?._id) {
                   to={`/payment-receipt/${payment._id}`}
                   className="inline-flex items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg whitespace-nowrap transition"
                 >
-                  👁 Receipt
+                  <><FaReceipt /> Receipt</>
                 </Link>
 
               </td>
@@ -719,6 +722,102 @@ if (savedPayment?._id) {
   </table>
 
 </div>
+        {/* =====================================================
+            MOBILE PAYMENT HISTORY CARDS
+        ===================================================== */}
+        <div className="block md:hidden space-y-4">
+          {payments.length === 0 ? (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-8 text-center">
+              <FaReceipt className="mx-auto text-3xl text-slate-300 mb-3" />
+              <p className="text-slate-500 font-medium">
+                No Payments Found
+              </p>
+            </div>
+          ) : (
+            payments
+              .filter((payment) =>
+                payment.customer?.customerName
+                  ?.toLowerCase()
+                  .includes(search.toLowerCase())
+              )
+              .map((payment) => (
+                <div
+                  key={`mobile-${payment._id}`}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  {/* CUSTOMER */}
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
+                      Customer
+                    </p>
+                    <p className="text-lg font-bold text-slate-800 mt-1 break-words">
+                      {payment.customer?.customerName || "-"}
+                    </p>
+                  </div>
+                  {/* DETAILS */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-slate-50 p-3">
+                      <p className="text-xs text-slate-400">
+                        Invoice
+                      </p>
+                      <p className="font-semibold text-slate-700 mt-1 break-words">
+                        {payment.bill?.invoiceNo || "-"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-green-50 p-3">
+                      <p className="text-xs text-slate-400">
+                        Amount
+                      </p>
+                      <p className="font-bold text-green-600 text-lg mt-1">
+                        ₹{payment.amount}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-blue-50 p-3">
+                      <p className="text-xs text-slate-400">
+                        Method
+                      </p>
+                      <p className="font-semibold text-blue-700 mt-1">
+                        {payment.paymentMethod}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 p-3">
+                      <p className="text-xs text-slate-400">
+                        Date
+                      </p>
+                      <p className="font-semibold text-slate-700 mt-1">
+                        {new Date(
+                          payment.paymentDate
+                        ).toLocaleDateString("en-GB")}
+                      </p>
+                    </div>
+                  </div>
+                  {/* RECEIPT */}
+                  <Link
+                    to={`/payment-receipt/${payment._id}`}
+                    className="
+                      mt-4
+                      w-full
+                      inline-flex
+                      items-center
+                      justify-center
+                      gap-2
+                      bg-blue-600
+                      hover:bg-blue-700
+                      text-white
+                      px-4
+                      py-3
+                      rounded-xl
+                      font-bold
+                      transition
+                    "
+                  >
+                    <FaReceipt />
+                    View Receipt
+                  </Link>
+                </div>
+              ))
+          )}
+        </div>
         </div>
 
       </div>
@@ -728,3 +827,9 @@ if (savedPayment?._id) {
   );
 
 }
+
+
+
+
+
+

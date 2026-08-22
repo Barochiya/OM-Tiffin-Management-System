@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 
 import {
   FaCalendarAlt,
@@ -461,7 +461,7 @@ const filteredCustomers = customers.filter(
 
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 flex items-center gap-3">
-                <span>🍱</span>
+                <FaUtensils className="text-orange-500" />
                 Daily Meal Entry
               </h1>
 
@@ -670,10 +670,10 @@ const filteredCustomers = customers.filter(
         <input
           type="text"
           value={search}
-          onChange={(e) =>
-            setSearch(e.target.value)
-          }
-          placeholder="Search customer..."
+      onChange={(e) =>
+        setSearch(e.target.value)
+      }
+      placeholder="Search customer..."
           className="
             w-full
             sm:w-[280px]
@@ -708,8 +708,399 @@ const filteredCustomers = customers.filter(
 
 </div>
 
-            {/* Responsive Table Area */}
-            <div className="w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden overscroll-x-contain">
+            {/* =====================================
+               MOBILE CUSTOMER MEAL CARDS
+           ===================================== */}
+           <div className="block md:hidden p-3 space-y-4">
+             {filteredCustomers.length === 0 ? (
+               <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+                 <FaUsers className="mx-auto text-4xl text-slate-300 mb-3" />
+                 <h3 className="text-lg font-semibold text-slate-600">
+                   {search.trim()
+                     ? "No Matching Customer"
+                     : "No Customers Found"}
+                 </h3>
+                 <p className="text-sm text-slate-400 mt-1">
+                   {search.trim()
+                     ? "Try another customer name or mobile number."
+                     : "No active customers are available for meal entry."}
+                 </p>
+               </div>
+             ) : (
+               filteredCustomers.map((customer) => {
+                 const customerEntry =
+                   entries[customer._id] || {};
+                 const isDirty =
+                   !!dirtyRows[customer._id];
+                 const isSaving =
+                   savingCustomerId === customer._id;
+                 const isSaved =
+                   savedCustomerId === customer._id;
+                 return (
+                   <div
+                     key={`mobile-${customer._id}`}
+                     className="
+                       w-full
+                       max-w-full
+                       overflow-hidden
+                       bg-white
+                       border
+                       border-slate-200
+                       rounded-2xl
+                       shadow-sm
+                     "
+                   >
+                     {/* CUSTOMER HEADER */}
+                     <div className="px-4 py-4 border-b border-slate-200 bg-slate-50">
+                       <div className="font-bold text-lg text-slate-800 break-words">
+                         {customer.customerName}
+                       </div>
+                       {customer.phone && (
+                         <div className="text-sm text-slate-400 mt-1">
+                           {customer.phone}
+                         </div>
+                       )}
+                       {isDirty && (
+                         <div className="text-xs text-blue-600 font-semibold mt-2">
+                           Unsaved changes
+                         </div>
+                       )}
+                     </div>
+                     {/* MEAL QUANTITIES */}
+                     <div className="p-4">
+                       <div className="grid grid-cols-3 gap-2">
+                         {/* BREAKFAST */}
+                         <div className="min-w-0">
+                           <label className="block text-xs sm:text-sm font-bold text-orange-600 mb-2">
+                             Breakfast
+                           </label>
+                           <input
+                             type="number"
+                             min="0"
+                             value={
+                               customerEntry.breakfastQty || 0
+                             }
+                             onChange={(e) =>
+                               handleChange(
+                                 customer._id,
+                                 "breakfastQty",
+                                 e.target.value
+                               )
+                             }
+                             className="
+                               w-full
+                               min-w-0
+                               border
+                               border-slate-300
+                               rounded-xl
+                               px-2
+                               py-3
+                               text-center
+                               font-bold
+                               text-slate-700
+                               outline-none
+                               focus:ring-2
+                               focus:ring-orange-400
+                               focus:border-orange-400
+                             "
+                           />
+                         </div>
+                         {/* LUNCH */}
+                         <div className="min-w-0">
+                           <label className="block text-xs sm:text-sm font-bold text-green-600 mb-2">
+                             Lunch
+                           </label>
+                           <input
+                             type="number"
+                             min="0"
+                             value={
+                               customerEntry.lunchQty || 0
+                             }
+                             onChange={(e) =>
+                               handleChange(
+                                 customer._id,
+                                 "lunchQty",
+                                 e.target.value
+                               )
+                             }
+                             className="
+                               w-full
+                               min-w-0
+                               border
+                               border-slate-300
+                               rounded-xl
+                               px-2
+                               py-3
+                               text-center
+                               font-bold
+                               text-slate-700
+                               outline-none
+                               focus:ring-2
+                               focus:ring-green-400
+                               focus:border-green-400
+                             "
+                           />
+                         </div>
+                         {/* DINNER */}
+                         <div className="min-w-0">
+                           <label className="block text-xs sm:text-sm font-bold text-indigo-600 mb-2">
+                             Dinner
+                           </label>
+                           <input
+                             type="number"
+                             min="0"
+                             value={
+                               customerEntry.dinnerQty || 0
+                             }
+                             onChange={(e) =>
+                               handleChange(
+                                 customer._id,
+                                 "dinnerQty",
+                                 e.target.value
+                               )
+                             }
+                             className="
+                               w-full
+                               min-w-0
+                               border
+                               border-slate-300
+                               rounded-xl
+                               px-2
+                               py-3
+                               text-center
+                               font-bold
+                               text-slate-700
+                               outline-none
+                               focus:ring-2
+                               focus:ring-indigo-400
+                               focus:border-indigo-400
+                             "
+                           />
+                         </div>
+                       </div>
+                       {/* EXTRA ITEMS */}
+                       <div className="mt-5">
+                         <label className="block text-sm font-bold text-slate-700 mb-2">
+                           Extra Items
+                         </label>
+                         <div className="space-y-2">
+                           {(customerEntry.extraItems || []).map(
+                             (item, index) => (
+                               <div
+                                 key={index}
+                                 className="
+                                   grid
+                                   grid-cols-[minmax(0,1fr)_72px_40px]
+                                   gap-2
+                                   items-center
+                                 "
+                               >
+                                 <input
+                                   type="text"
+                                   
+
+
+
+                                   value={
+                                     item.description || ""
+                                   }
+                                   onChange={(e) =>
+                                     handleExtraItemChange(
+                                       customer._id,
+                                       index,
+                                       "description",
+                                       e.target.value
+                                     )
+                                   }
+                                   className="
+                                     min-w-0
+                                     w-full
+                                     border
+                                     border-slate-300
+                                     rounded-lg
+                                     px-3
+                                     py-2.5
+                                     text-sm
+                                     outline-none
+                                     focus:ring-2
+                                     focus:ring-blue-400
+                                   "
+                                 />
+                                 <input
+                                   type="number"
+                                   min="0"
+                                   
+
+
+
+                                   value={
+                                     item.amount || 0
+                                   }
+                                   onChange={(e) =>
+                                     handleExtraItemChange(
+                                       customer._id,
+                                       index,
+                                       "amount",
+                                       e.target.value
+                                     )
+                                   }
+                                   className="
+                                     w-full
+                                     border
+                                     border-slate-300
+                                     rounded-lg
+                                     px-2
+                                     py-2.5
+                                     text-sm
+                                     text-center
+                                     outline-none
+                                     focus:ring-2
+                                     focus:ring-blue-400
+                                   "
+                                 />
+                                 <button
+                                   type="button"
+                                   onClick={() =>
+                                     removeExtraItem(
+                                       customer._id,
+                                       index
+                                     )
+                                   }
+                                   className="
+                                     w-10
+                                     h-10
+                                     inline-flex
+                                     items-center
+                                     justify-center
+                                     rounded-lg
+                                     text-red-500
+                                     hover:bg-red-50
+                                     hover:text-red-700
+                                   "
+                                   title="Remove extra item"
+                                 >
+                                   <FaTrash className="text-sm" />
+                                 </button>
+                               </div>
+                             )
+                           )}
+                         </div>
+                         <button
+                           type="button"
+                           onClick={() =>
+                             addExtraItem(customer._id)
+                           }
+                           className="
+                             mt-3
+                             inline-flex
+                             items-center
+                             gap-2
+                             text-sm
+                             font-semibold
+                             text-blue-600
+                           "
+                         >
+                           <FaPlus className="text-xs" />
+                           Add Extra Item
+                         </button>
+                       </div>
+                       {/* REMARK */}
+                       <div className="mt-5">
+                         <label className="block text-sm font-bold text-slate-700 mb-2">
+                           Remark
+                         </label>
+                         <input
+                           type="text"
+                           
+
+
+
+                           value={
+                             customerEntry.remark || ""
+                           }
+                           onChange={(e) =>
+                             handleChange(
+                               customer._id,
+                               "remark",
+                               e.target.value
+                             )
+                           }
+                           className="
+                             w-full
+                             border
+                             border-slate-300
+                             rounded-xl
+                             px-3
+                             py-3
+                             text-sm
+                             outline-none
+                             focus:ring-2
+                             focus:ring-blue-400
+                             focus:border-blue-400
+                           "
+                         />
+                       </div>
+                       {/* SAVE */}
+                       <button
+                         type="button"
+                         onClick={() =>
+                           handleSaveCustomer(customer._id)
+                         }
+                         disabled={
+                           isSaving ||
+                           savingAll ||
+                           !isDirty
+                         }
+                         className={`
+                           mt-5
+                           w-full
+                           inline-flex
+                           items-center
+                           justify-center
+                           gap-2
+                           py-3
+                           rounded-xl
+                           text-sm
+                           font-bold
+                           text-white
+                           shadow-sm
+                           transition
+                           ${
+                             isSaving
+                               ? "bg-slate-400 cursor-wait"
+                               : isSaved
+                               ? "bg-green-600"
+                               : !isDirty
+                               ? "bg-slate-300 cursor-not-allowed"
+                               : "bg-blue-600 hover:bg-blue-700"
+                           }
+                         `}
+                       >
+                         {isSaving ? (
+                           <>
+                             <FaSpinner className="animate-spin" />
+                             Saving
+                           </>
+                         ) : isSaved ? (
+                           <>
+                             <FaCheck />
+                             Saved
+                           </>
+                         ) : (
+                           <>
+                             <FaSave />
+                             Save
+                           </>
+                         )}
+                       </button>
+                     </div>
+                   </div>
+                 );
+               })
+             )}
+           </div>
+           {/* Responsive Table Area */}
+            <div className="hidden md:block w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden overscroll-x-contain">
 
               <table className="w-full min-w-[900px] table-fixed">
 
@@ -732,17 +1123,17 @@ const filteredCustomers = customers.filter(
                     </th>
 
                     <th className="px-2 py-4 text-center text-sm font-semibold whitespace-normal">
-                      <span className="block">☕</span>
+                      <FaCoffee className="mx-auto text-lg" />
                       <span>Breakfast</span>
                     </th>
 
                     <th className="px-2 py-4 text-center text-sm font-semibold whitespace-normal">
-                      <span className="block">🍛</span>
+                      <FaUtensils className="mx-auto text-lg" />
                       <span>Lunch</span>
                     </th>
 
                     <th className="px-2 py-4 text-center text-sm font-semibold whitespace-normal">
-                      <span className="block">🌙</span>
+                      <FaMoon className="mx-auto text-lg" />
                       <span>Dinner</span>
                     </th>
 
@@ -965,7 +1356,10 @@ const filteredCustomers = customers.filter(
 
                                     <input
                                       type="text"
-                                      placeholder="Description"
+                                      
+
+
+
                                       value={
                                         item.description || ""
                                       }
@@ -994,7 +1388,10 @@ const filteredCustomers = customers.filter(
                                     <input
                                       type="number"
                                       min="0"
-                                      placeholder="₹"
+                                      
+
+
+
                                       value={
                                         item.amount || 0
                                       }
@@ -1079,7 +1476,10 @@ const filteredCustomers = customers.filter(
 
                             <input
                               type="text"
-                              placeholder="Remark"
+                              
+
+
+
                               value={
                                 customerEntry.remark || ""
                               }
@@ -1264,3 +1664,20 @@ const filteredCustomers = customers.filter(
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

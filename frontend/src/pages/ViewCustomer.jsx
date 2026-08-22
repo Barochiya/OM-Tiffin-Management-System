@@ -648,7 +648,7 @@ const handleSaveDailyEntry = async (entryId) => {
             CUSTOMER DAILY MEAL ENTRIES
         ======================================= */}
 
-        <div className="mt-6 rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="hidden md:block mt-6 rounded-2xl border border-slate-200 overflow-hidden">
 
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 sm:px-8 py-6 text-white">
@@ -839,7 +839,7 @@ const handleSaveDailyEntry = async (entryId) => {
             DATE-WISE DAILY ENTRIES
         ======================================= */}
 
-        <div className="mt-6 rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="hidden md:block mt-6 rounded-2xl border border-slate-200 overflow-hidden">
 
           <div className="px-6 sm:px-8 py-5 border-b border-slate-200 bg-slate-50">
             <h3 className="text-lg font-bold text-slate-800">
@@ -1511,13 +1511,7 @@ const dailyTotal =
           )}
 
         </div>
-            <div className="mt-6 rounded-2xl border border-slate-200 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <FaRupeeSign className="text-xl text-indigo-600" />
-
-                <h3 className="text-xl font-bold text-slate-800">
-
-          {/* =======================================
+        {/* =======================================
               MOBILE DAILY ENTRY CARDS
           ======================================= */}
           <div className="block md:hidden w-full max-w-none p-3 space-y-4">
@@ -2074,11 +2068,14 @@ const dailyTotal =
             })}
 
           </div>
-                  Customer Pricing
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="mt-6 rounded-2xl border border-slate-200 p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <FaRupeeSign className="text-xl text-indigo-600" />
+              <h3 className="text-xl font-bold text-slate-800">
+                Customer Pricing
+              </h3>
+            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-orange-50 rounded-xl p-4">
                   <p className="text-sm text-gray-500">
                     Breakfast
@@ -2156,6 +2153,8 @@ const dailyTotal =
     </div>
   );
 }
+
+
 
 
 

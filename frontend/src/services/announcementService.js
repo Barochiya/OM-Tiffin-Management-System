@@ -1,7 +1,7 @@
 import api from "./api";
 // Get Announcement Delivery Status
 export const getAnnouncementDeliveryStatus = async () => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   const response = await api.get(
     "/announcement-status",
     {
@@ -12,3 +12,4 @@ export const getAnnouncementDeliveryStatus = async () => {
   );
   return response.data;
 };
+

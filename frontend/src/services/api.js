@@ -15,7 +15,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (token) {
       config.headers.Authorization =
@@ -36,7 +36,7 @@ api.interceptors.response.use(
 
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
+      sessionStorage.removeItem("token");
 
       window.location.href =
         "/login";
@@ -47,3 +47,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+

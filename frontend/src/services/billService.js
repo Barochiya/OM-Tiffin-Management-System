@@ -2,7 +2,7 @@ import api from "./api";
 
 // Generate Single Bill
 export const generateBill = async (billData) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     "/bills/generate",
@@ -21,7 +21,7 @@ export const generateBill = async (billData) => {
 export const generateBillAndSendWhatsApp = async (
   billData
 ) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     "/bills/generate",
@@ -40,7 +40,7 @@ export const generateBillAndSendWhatsApp = async (
 export const sendBillWhatsApp = async (
   formData
 ) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     "/bills/send-whatsapp",
@@ -60,7 +60,7 @@ export const sendBillWhatsApp = async (
 export const sendAllBillsWhatsApp = async (
   billData
 ) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     "/bills/generate-all",
@@ -77,7 +77,7 @@ export const sendAllBillsWhatsApp = async (
 // Get Bill Delivery Status
 
 export const getBillDeliveryStatus = async () => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.get(
     "/bills/delivery-status",
@@ -92,7 +92,7 @@ export const getBillDeliveryStatus = async () => {
 };
 
 export const retryBill = async (billId) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     `/bills/retry/${billId}`,
@@ -110,7 +110,7 @@ export const retryBill = async (billId) => {
 // Get All Bills
 
 export const getAllBills = async () => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.get("/bills", {
     headers: {
@@ -122,7 +122,7 @@ export const getAllBills = async () => {
 };
 
 export const getBillById = async (id) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.get(`/bills/${id}`, {
     headers: {

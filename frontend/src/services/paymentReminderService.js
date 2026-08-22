@@ -5,7 +5,7 @@ import api from "./api";
 // =====================================================
 
 export const sendBulkPaymentReminders = async () => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     "/payment-reminders/send-bulk",

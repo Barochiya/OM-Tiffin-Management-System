@@ -4,7 +4,7 @@ import api from "./api";
 // Add Payment
 // ===============================
 export const addPayment = async (paymentData) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     "/payments",
@@ -23,7 +23,7 @@ export const addPayment = async (paymentData) => {
 // Get All Payments
 // ===============================
 export const getPayments = async () => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.get(
     "/payments",
@@ -41,7 +41,7 @@ export const getPayments = async () => {
 // Get Bills By Customer
 // ===============================
 export const getBillsByCustomer = async (customerId) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.get(
     `/payments/customer/${customerId}`,
@@ -59,7 +59,7 @@ export const getBillsByCustomer = async (customerId) => {
 // Get Pending Bills
 // ===============================
 export const getPendingBills = async (customerId) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.get(
     `/payments/pending/${customerId}`,
@@ -77,7 +77,7 @@ export const getPendingBills = async (customerId) => {
 // Get Single Payment
 // ===============================
 export const getPaymentById = async (id) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.get(
     `/payments/${id}`,
@@ -98,7 +98,7 @@ export const sendPaymentReceiptWhatsApp = async (
   paymentId,
   pdfBlob
 ) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     "/payments/send-whatsapp",
@@ -123,7 +123,7 @@ export const approveWhatsAppPayment = async (
   paymentData
 ) => {
   const token =
-    localStorage.getItem("token");
+    sessionStorage.getItem("token");
 
   const response = await api.post(
     "/payments/approve-whatsapp-payment",

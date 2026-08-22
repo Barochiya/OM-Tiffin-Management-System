@@ -26,7 +26,7 @@ const Login = () => {
 
   useEffect(() => {
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (token) {
       navigate("/dashboard", {
@@ -46,7 +46,7 @@ const Login = () => {
         password
       );
 
-      localStorage.setItem(
+      sessionStorage.setItem(
         "token",
         data.token
       );

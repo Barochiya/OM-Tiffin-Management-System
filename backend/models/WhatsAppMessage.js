@@ -91,14 +91,15 @@ const whatsappMessageSchema = new mongoose.Schema(
     // Payment Workflow
     // ===============================
     paymentStatus: {
-      type: String,
-      enum: [
-        "not_payment_related",
-        "pending_review",
-        "payment_received",
-      ],
-      default: "not_payment_related",
-    },
+  type: String,
+  enum: [
+    "not_payment_related",
+    "pending_review",
+    "payment_received",
+    "rejected",
+  ],
+  default: "not_payment_related",
+},
     linkedBill: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Bill",

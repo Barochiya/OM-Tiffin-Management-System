@@ -10,6 +10,118 @@ const Bill = require("../models/Bill");
 } = require("../utils/whatsappSender");
 
 // =====================================================
+// Reject WhatsApp Payment
+// =====================================================
+
+router.post(
+  "/reject-payment/:id",
+  protect,
+  async (req, res) => {
+    try {
+      const {
+        reason = "Payment screenshot rejected by admin.",
+      } = req.body || {};
+
+      const message =
+        await WhatsAppMessage.findById(
+          req.params.id
+        );
+
+      if (!message) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "WhatsApp payment message not found.",
+        });
+      }
+
+      if (
+        message.paymentStatus ===
+        "payment_received"
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "This payment has already been approved.",
+        });
+      }
+
+      if (
+        message.paymentStatus ===
+        "rejected"
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "This payment has already been rejected.",
+        });
+      }
+
+      // -----------------------------------------
+      // Mark payment as rejected
+      // -----------------------------------------
+
+      message.paymentStatus = "rejected";
+
+      message.inboxStatus = "closed";
+
+      message.note =
+        String(reason).trim() ||
+        "Payment screenshot rejected by admin.";
+
+      await message.save();
+
+      // -----------------------------------------
+      // Send rejection WhatsApp message
+      // -----------------------------------------
+
+      try {
+        if (message.phoneNumber) {
+          await sendWhatsAppMessage({
+            to: message.phoneNumber,
+
+            message:
+              `🧾 *OM TIFFIN SERVICE*\n\n` +
+              `❌ *Payment Screenshot Rejected*\n\n` +
+              `Your payment screenshot could not be approved.\n\n` +
+              `📝 Reason : ${
+                String(reason).trim() ||
+                "Payment screenshot could not be verified."
+              }\n\n` +
+              `Please send a valid payment screenshot or contact OM TIFFIN SERVICE.\n\n` +
+              `🙏 Thank you.`,
+          });
+        }
+      } catch (whatsappError) {
+        console.error(
+          "WhatsApp rejection message failed:",
+          whatsappError.message
+        );
+      }
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "WhatsApp payment rejected successfully.",
+        data: message,
+      });
+    } catch (error) {
+      console.error(
+        "Reject WhatsApp Payment Error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message ||
+          "Failed to reject WhatsApp payment.",
+      });
+    }
+  }
+);
+
+// =====================================================
 // Get Pending WhatsApp Payment Reviews
 // =====================================================
 

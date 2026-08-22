@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   getWhatsAppPaymentReviews,
   getWhatsAppMedia,
+  rejectWhatsAppPayment,
 } from "../services/whatsappInboxService";
 
 import {
@@ -145,6 +147,7 @@ function PaymentReviewCard({
   review,
   onApproved,
 }) {
+  const navigate = useNavigate();
   const [imageUrl, setImageUrl] = useState("");
   const [imageLoading, setImageLoading] =
     useState(false);
@@ -174,6 +177,53 @@ function PaymentReviewCard({
     );
   } else {
     setAmount("");
+  }
+};
+
+const handleReject = async () => {
+  const reason = window.prompt(
+    "Enter rejection reason:",
+    "Payment screenshot could not be verified."
+  );
+
+  if (reason === null) {
+    return;
+  }
+
+  try {
+    setApproving(true);
+
+    const response =
+      await rejectWhatsAppPayment(
+        review._id,
+        reason
+      );
+
+    if (!response?.success) {
+      throw new Error(
+        response?.message ||
+          "Failed to reject payment."
+      );
+    }
+
+    alert(
+      "Payment screenshot rejected successfully."
+    );
+
+    await onApproved();
+  } catch (error) {
+    console.error(
+      "Reject WhatsApp Payment Error:",
+      error
+    );
+
+    alert(
+      error.response?.data?.message ||
+        error.message ||
+        "Failed to reject payment."
+    );
+  } finally {
+    setApproving(false);
   }
 };
 
@@ -234,10 +284,14 @@ const handleApprove = async () => {
     }
 
     alert(
-      "Payment approved and added successfully."
-    );
+  "Payment approved successfully. Receipt PDF is being sent on WhatsApp."
+);
 
-    await onApproved();
+await onApproved();
+
+navigate(
+  `/payment-receipt/${response.data.payment._id}?autosend=true`
+);
 
   } catch (error) {
     console.error(
@@ -530,11 +584,15 @@ const handleApprove = async () => {
       <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-6 sm:flex-row sm:justify-end">
 
         <button
-          type="button"
-          className="rounded-xl bg-red-100 px-6 py-3 font-semibold text-red-700 hover:bg-red-200"
-        >
-          ❌ Reject
-        </button>
+  type="button"
+  onClick={handleReject}
+  disabled={approving}
+  className="rounded-xl bg-red-100 px-6 py-3 font-semibold text-red-700 hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+>
+  {approving
+    ? "Processing..."
+    : "❌ Reject"}
+</button>
 
         <button
   type="button"

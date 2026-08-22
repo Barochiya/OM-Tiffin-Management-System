@@ -93,3 +93,21 @@ export const getWhatsAppPaymentReviews =
 
     return response.data;
   };
+
+  // =======================================
+// Reject WhatsApp Payment
+// =======================================
+
+export const rejectWhatsAppPayment = async (
+  id,
+  reason
+) => {
+  const response = await api.post(
+    `/whatsapp-inbox/reject-payment/${id}`,
+    {
+      reason,
+    }
+  );
+
+  return response.data;
+};

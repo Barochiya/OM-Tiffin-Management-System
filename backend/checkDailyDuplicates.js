@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const mongoose = require("mongoose");
 const DailyEntry = require("./models/DailyEntry");
@@ -47,3 +47,4 @@ const DailyEntry = require("./models/DailyEntry");
     await mongoose.disconnect();
   }
 })();
+

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -153,7 +153,7 @@ const loadDailyEntries = async () => {
 
 const entryMap = new Map();
 
-// Backend stored dates को calendar date के हिसाब से map करें
+// Backend stored dates à¤•à¥‹ calendar date à¤•à¥‡ à¤¹à¤¿à¤¸à¤¾à¤¬ à¤¸à¥‡ map à¤•à¤°à¥‡à¤‚
 savedEntries.forEach((entry) => {
   const entryDate = new Date(entry.date);
 
@@ -185,8 +185,8 @@ for (
   if (existingEntry) {
     generatedEntries.push(existingEntry);
   } else {
-    // Calendar date को directly UTC midnight पर बनाएं.
-    // Local Date + toISOString() use नहीं करना है.
+    // Calendar date à¤•à¥‹ directly UTC midnight à¤ªà¤° à¤¬à¤¨à¤¾à¤à¤‚.
+    // Local Date + toISOString() use à¤¨à¤¹à¥€à¤‚ à¤•à¤°à¤¨à¤¾ à¤¹à¥ˆ.
     const dateString = `${Number(selectedYear)}-${String(
       Number(selectedMonth)
     ).padStart(2, "0")}-${String(day).padStart(
@@ -442,7 +442,7 @@ const handleSaveDailyEntry = async (entryId) => {
 
       alert(
         error.response?.data?.message ||
-          "❌ Failed to load customer"
+          "⚠ Failed to load customer"
       );
 
       navigate("/customers");
@@ -977,6 +977,10 @@ const dailyTotal =
       <tr
         key={entry._id}
         className="
+                w-full
+                max-w-none
+                w-full
+                max-w-none
           border-b
           border-slate-200
           last:border-b-0
@@ -1512,6 +1516,564 @@ const dailyTotal =
                 <FaRupeeSign className="text-xl text-indigo-600" />
 
                 <h3 className="text-xl font-bold text-slate-800">
+
+          {/* =======================================
+              MOBILE DAILY ENTRY CARDS
+          ======================================= */}
+          <div className="block md:hidden w-full max-w-none p-3 space-y-4">
+
+            {dailyEntries.map((entry) => {
+
+              const isEditing =
+                editingEntryId === entry._id;
+
+              const isSaving =
+                savingEntryId === entry._id;
+
+              const entryDate = new Date(entry.date);
+
+              const formattedDate =
+                entryDate.toLocaleDateString("en-IN", {
+                  timeZone: "UTC",
+                  day: "2-digit",
+                  month: "short",
+                  year: "numeric",
+                });
+
+              const breakfastQty =
+                Number(entry.breakfastQty || 0);
+
+              const lunchQty =
+                Number(entry.lunchQty || 0);
+
+              const dinnerQty =
+                Number(entry.dinnerQty || 0);
+
+              const breakfastPrice =
+                Number(
+                  customer.pricing?.breakfastPrice || 0
+                );
+
+              const lunchPrice =
+                Number(
+                  customer.pricing?.lunchPrice || 0
+                );
+
+              const dinnerPrice =
+                Number(
+                  customer.pricing?.dinnerPrice || 0
+                );
+
+              const extraAmount =
+                Array.isArray(entry.extraItems)
+                  ? entry.extraItems.reduce(
+                      (sum, item) =>
+                        sum + Number(item?.amount || 0),
+                      0
+                    )
+                  : 0;
+
+              const dailyTotal =
+                breakfastQty * breakfastPrice +
+                lunchQty * lunchPrice +
+                dinnerQty * dinnerPrice +
+                extraAmount;
+
+              return (
+                <div
+                  key={entry._id}
+                  className="
+                w-full
+                max-w-none
+                    bg-white
+                    border
+                    border-slate-200
+                    rounded-2xl
+                    shadow-sm
+                    overflow-hidden
+                  "
+                >
+
+                  {/* DATE HEADER */}
+                  <div
+                    className="
+                      px-4
+                      py-4
+                      bg-slate-50
+                      border-b
+                      border-slate-200
+                    "
+                  >
+                    <div className="text-xs text-slate-500">
+                      Date
+                    </div>
+
+                    <div className="text-base font-bold text-slate-800 mt-1">
+                      {formattedDate}
+                    </div>
+                  </div>
+
+                  <div className="p-4 space-y-4">
+
+                    {/* MEALS */}
+                    <div className="grid grid-cols-3 gap-2">
+
+                      {/* BREAKFAST */}
+                      <div>
+                        <label className="block text-xs font-semibold text-orange-600 mb-1">
+                          Breakfast
+                        </label>
+
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            min="0"
+                            value={entry.breakfastQty || 0}
+                            onChange={(e) =>
+                              handleDailyEntryChange(
+                                entry._id,
+                                "breakfastQty",
+                                e.target.value
+                              )
+                            }
+                            className="
+                              w-full
+                              border
+                              border-slate-300
+                              rounded-xl
+                              px-2
+                              py-3
+                              text-center
+                              font-bold
+                              outline-none
+                              focus:ring-2
+                              focus:ring-orange-400
+                            "
+                          />
+                        ) : (
+                          <div className="
+                            bg-orange-50
+                            text-orange-700
+                            rounded-xl
+                            py-3
+                            text-center
+                            font-bold
+                          ">
+                            {breakfastQty}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* LUNCH */}
+                      <div>
+                        <label className="block text-xs font-semibold text-green-600 mb-1">
+                          Lunch
+                        </label>
+
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            min="0"
+                            value={entry.lunchQty || 0}
+                            onChange={(e) =>
+                              handleDailyEntryChange(
+                                entry._id,
+                                "lunchQty",
+                                e.target.value
+                              )
+                            }
+                            className="
+                              w-full
+                              border
+                              border-slate-300
+                              rounded-xl
+                              px-2
+                              py-3
+                              text-center
+                              font-bold
+                              outline-none
+                              focus:ring-2
+                              focus:ring-green-400
+                            "
+                          />
+                        ) : (
+                          <div className="
+                            bg-green-50
+                            text-green-700
+                            rounded-xl
+                            py-3
+                            text-center
+                            font-bold
+                          ">
+                            {lunchQty}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* DINNER */}
+                      <div>
+                        <label className="block text-xs font-semibold text-indigo-600 mb-1">
+                          Dinner
+                        </label>
+
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            min="0"
+                            value={entry.dinnerQty || 0}
+                            onChange={(e) =>
+                              handleDailyEntryChange(
+                                entry._id,
+                                "dinnerQty",
+                                e.target.value
+                              )
+                            }
+                            className="
+                              w-full
+                              border
+                              border-slate-300
+                              rounded-xl
+                              px-2
+                              py-3
+                              text-center
+                              font-bold
+                              outline-none
+                              focus:ring-2
+                              focus:ring-indigo-400
+                            "
+                          />
+                        ) : (
+                          <div className="
+                            bg-indigo-50
+                            text-indigo-700
+                            rounded-xl
+                            py-3
+                            text-center
+                            font-bold
+                          ">
+                            {dinnerQty}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+
+                    {/* EXTRA ITEMS */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Extra Items
+                      </label>
+
+                      {isEditing ? (
+                        <div className="space-y-2">
+
+                          {(entry.extraItems || []).map(
+                            (item, index) => (
+                              <div
+                                key={index}
+                                className="
+                                  grid
+                                  grid-cols-[1fr_75px_40px]
+                                  gap-2
+                                "
+                              >
+
+                                <input
+                                  type="text"
+                                  placeholder="Description"
+                                  value={
+                                    item.description || ""
+                                  }
+                                  onChange={(e) =>
+                                    handleDailyExtraItemChange(
+                                      entry._id,
+                                      index,
+                                      "description",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="
+                                    min-w-0
+                                    border
+                                    border-slate-300
+                                    rounded-lg
+                                    px-2
+                                    py-2.5
+                                    outline-none
+                                    focus:ring-2
+                                    focus:ring-blue-400
+                                  "
+                                />
+
+                                <input
+                                  type="number"
+                                  min="0"
+                                  placeholder="₹"
+                                  value={item.amount || 0}
+                                  onChange={(e) =>
+                                    handleDailyExtraItemChange(
+                                      entry._id,
+                                      index,
+                                      "amount",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="
+                                    w-full
+                                    border
+                                    border-slate-300
+                                    rounded-lg
+                                    px-2
+                                    py-2.5
+                                    text-center
+                                    outline-none
+                                    focus:ring-2
+                                    focus:ring-blue-400
+                                  "
+                                />
+
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveDailyExtraItem(
+                                      entry._id,
+                                      index
+                                    )
+                                  }
+                                  className="
+                                    flex
+                                    items-center
+                                    justify-center
+                                    rounded-lg
+                                    bg-red-50
+                                    text-red-500
+                                  "
+                                >
+                                  <FaTrash />
+                                </button>
+
+                              </div>
+                            )
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleAddDailyExtraItem(
+                                entry._id
+                              )
+                            }
+                            className="
+                              inline-flex
+                              items-center
+                              gap-2
+                              text-sm
+                              font-semibold
+                              text-blue-600
+                              py-2
+                            "
+                          >
+                            <FaPlus />
+                            Add Extra Item
+                          </button>
+
+                        </div>
+                      ) : (
+                        Array.isArray(entry.extraItems) &&
+                        entry.extraItems.length > 0 ? (
+                          <div className="space-y-2">
+
+                            {entry.extraItems.map(
+                              (item, index) => (
+                                <div
+                                  key={index}
+                                  className="
+                                    flex
+                                    items-center
+                                    justify-between
+                                    bg-slate-50
+                                    rounded-lg
+                                    px-3
+                                    py-2
+                                  "
+                                >
+                                  <span className="text-sm font-medium">
+                                    {item.description || "-"}
+                                  </span>
+
+                                  <span className="text-sm font-semibold text-slate-600">
+                                    ₹{Number(item.amount || 0)}
+                                  </span>
+                                </div>
+                              )
+                            )}
+
+                          </div>
+                        ) : (
+                          <span className="text-sm text-slate-400">
+                            —
+                          </span>
+                        )
+                      )}
+
+                    </div>
+
+                    {/* REMARK */}
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        Remark
+                      </label>
+
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          placeholder="Enter remark"
+                          value={entry.remark || ""}
+                          onChange={(e) =>
+                            handleDailyEntryChange(
+                              entry._id,
+                              "remark",
+                              e.target.value
+                            )
+                          }
+                          className="
+                            w-full
+                            border
+                            border-slate-300
+                            rounded-xl
+                            px-3
+                            py-3
+                            text-sm
+                            outline-none
+                            focus:ring-2
+                            focus:ring-blue-400
+                          "
+                        />
+                      ) : (
+                        <div className="text-sm text-slate-600">
+                          {entry.remark || "—"}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* TOTAL */}
+                    <div
+                      className="
+                        flex
+                        items-center
+                        justify-between
+                        bg-blue-50
+                        rounded-xl
+                        px-4
+                        py-3
+                      "
+                    >
+                      <span className="font-semibold text-slate-700">
+                        Total
+                      </span>
+
+                      <span className="font-bold text-blue-700 text-lg">
+                        ₹{dailyTotal.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+
+                    {/* ACTION */}
+                    {isEditing ? (
+                      <div className="grid grid-cols-2 gap-2">
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSaveDailyEntry(
+                              entry._id
+                            )
+                          }
+                          disabled={isSaving}
+                          className="
+                            w-full
+                            inline-flex
+                            items-center
+                            justify-center
+                            gap-2
+                            bg-green-600
+                            hover:bg-green-700
+                            disabled:bg-slate-400
+                            text-white
+                            py-3
+                            rounded-xl
+                            font-bold
+                            text-sm
+                          "
+                        >
+                          {isSaving ? (
+                            <>
+                              <FaSpinner className="animate-spin" />
+                              Saving
+                            </>
+                          ) : (
+                            <>
+                              <FaSave />
+                              Save
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleCancelEdit}
+                          disabled={isSaving}
+                          className="
+                            w-full
+                            inline-flex
+                            items-center
+                            justify-center
+                            gap-2
+                            bg-slate-200
+                            hover:bg-slate-300
+                            text-slate-700
+                            py-3
+                            rounded-xl
+                            font-bold
+                            text-sm
+                          "
+                        >
+                          <FaTimes />
+                          Cancel
+                        </button>
+
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleEditEntry(entry._id)
+                        }
+                        className="
+                          w-full
+                          inline-flex
+                          items-center
+                          justify-center
+                          gap-2
+                          bg-blue-600
+                          hover:bg-blue-700
+                          text-white
+                          py-3
+                          rounded-xl
+                          font-bold
+                          text-sm
+                        "
+                      >
+                        <FaEdit />
+                        Edit Entry
+                      </button>
+                    )}
+
+                  </div>
+                </div>
+              );
+            })}
+
+          </div>
                   Customer Pricing
                 </h3>
               </div>
@@ -1594,3 +2156,9 @@ const dailyTotal =
     </div>
   );
 }
+
+
+
+
+
+

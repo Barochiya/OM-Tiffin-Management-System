@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import {
   FaBarcode,
@@ -36,6 +36,7 @@ const BarcodeEntry = () => {
   const lastScannedBarcodeRef = useRef("");
   const lastScanTimeRef = useRef(0);
   const [customer, setCustomer] = useState(null);
+  const [showEntryModal, setShowEntryModal] = useState(false);
   const [meal, setMeal] = useState("Lunch");
   const [quantity, setQuantity] = useState(1);
   const [extraItems, setExtraItems] = useState([]);
@@ -268,6 +269,7 @@ const [saved, setSaved] = useState(false);
       setCustomer(foundCustomer);
       setBarcode(clean);
       await loadExistingEntry(foundCustomer?._id, date);
+      setShowEntryModal(true);
     } catch (error) {
       console.error("Barcode lookup error:", error);
       setCustomer(null);
@@ -754,6 +756,11 @@ const [saved, setSaved] = useState(false);
         )
       );
       setSaved(true);
+      setShowEntryModal(false);
+      resetCustomer();
+      setTimeout(() => {
+        barcodeInputRef.current?.focus();
+      }, 100);
       console.log(
         "Daily Entry Saved:",
         normalizedSavedEntry
@@ -1011,8 +1018,39 @@ Customer Details
               </p>
             </div>
           ) : (
-            <div>
-              {/* CUSTOMER */}
+            <div
+              className={
+                showEntryModal
+                  ? "fixed inset-0 z-[100] overflow-y-auto bg-slate-900/60 p-3 sm:p-6"
+                  : "hidden"
+              }
+            >
+              <div className="w-full max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden mb-4">
+                <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-6">
+                  <div>
+                    <h2 className="font-bold text-lg text-slate-800">
+                      Customer Daily Entry
+                    </h2>
+                    <p className="text-xs sm:text-sm text-slate-500">
+                      Complete the tiffin entry and press Next
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEntryModal(false);
+                      resetCustomer();
+                      setTimeout(() => {
+                        barcodeInputRef.current?.focus();
+                      }, 100);
+                    }}
+                    className="shrink-0 h-9 w-9 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xl flex items-center justify-center"
+                    aria-label="Close daily entry"
+                  >
+                    ×
+                  </button>
+                </div>
+                <div className="p-3 sm:p-6">              {/* CUSTOMER */}
               <div className="rounded-xl bg-green-50 border border-green-200 p-4 mb-5">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -1215,7 +1253,8 @@ Customer Details
                   placeholder="Optional remark"
                   className="w-full border border-slate-300 rounded-xl px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>          {/* ACTIONS */}
+                 </div>
+              </div>             </div>          {/* ACTIONS */}
               <div className="flex flex-col sm:flex-row gap-3 mt-6">
                 <button
                   type="button"
@@ -1246,7 +1285,7 @@ Customer Details
                       <FaSave />
                       {loading
                         ? "Saving..."
-                        : "Save Daily Entry"}
+                        : "Next"}
                     </>
                   )}
                 </button>

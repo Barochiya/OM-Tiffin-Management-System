@@ -1,1 +1,45 @@
-@import "tailwindcss";
+@import "tailwindcss";/* ============================================================
+   OM-TIFFIN-FINAL-HEADER-SIDEBAR
+   Professional fixed header + mobile sidebar
+   ============================================================ */
+@media (max-width: 1024px) {
+  /* Keep application header fixed while mobile sidebar opens */
+  header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+  }
+  /* Sidebar stays below the fixed header */
+  aside {
+    z-index: 90 !important;
+  }
+  /* Sidebar backdrop */
+  [class*="fixed"][class*="inset-0"] {
+    z-index: 80;
+  }
+  /* Prevent horizontal overflow on mobile */
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+/* Barcode Entry mobile layout */
+@media (max-width: 640px) {
+  input[placeholder="OMT-XXXXXX"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  /* Search button */
+  input[placeholder="OMT-XXXXXX"] + button {
+    width: 56px !important;
+    min-width: 56px !important;
+    height: 48px !important;
+    flex-shrink: 0 !important;
+  }
+  /* Prevent scanner cards from overflowing */
+  button {
+    max-width: 100%;
+  }
+}

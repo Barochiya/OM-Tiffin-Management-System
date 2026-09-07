@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useRef, useState } from "react";
+import CustomerBarcodeModal from "../components/CustomerBarcodeModal";
 import { Link } from "react-router-dom";
 
 import {
@@ -13,6 +14,7 @@ import {
   FaTrash,
   FaWhatsapp,
   FaSpinner,
+  FaBarcode,
 } from "react-icons/fa";
 
 import {
@@ -21,12 +23,36 @@ import {
   markPaymentPaid,
 } from "../services/customerService";
 import { sendBulkPaymentReminders } from "../services/paymentReminderService";
+import JsBarcode from "jsbarcode";
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   const [payingId, setPayingId] = useState(null);
+  const [barcodeCustomer, setBarcodeCustomer] = useState(null);
+
+  const barcodeModal = barcodeCustomer
+    ? React.createElement(CustomerBarcodeModal, {
+        customer: barcodeCustomer,
+        onClose: () => setBarcodeCustomer(null),
+      })
+    : null;
+
+  const barcodeRef = useRef(null);
+  useEffect(() => {
+    if (!barcodeCustomer || !barcodeRef.current) return;
+    const barcodeValue =
+      barcodeCustomer.barcode || `OMT-${barcodeCustomer._id}`;
+    JsBarcode(barcodeRef.current, barcodeValue, {
+      format: "CODE128",
+      displayValue: true,
+      fontSize: 16,
+      height: 70,
+      margin: 10,
+      width: 2,
+    });
+  }, [barcodeCustomer]);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -476,6 +502,14 @@ How can we help you today?`;
                           </button>
                           <button
                             type="button"
+                            onClick={() => setBarcodeCustomer(customer)}
+                            title="Generate Barcode"
+                            className="bg-purple-100 hover:bg-purple-200 text-purple-700 p-2 rounded-lg"
+                          >
+                            <FaBarcode />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => openWhatsApp(customer)}
                             title="WhatsApp Chat"
                             className="bg-green-100 hover:bg-green-200 text-green-700 p-2 rounded-lg"
@@ -588,7 +622,7 @@ How can we help you today?`;
                     </div>
                   </div>
                   {/* Actions */}
-                  <div className="grid grid-cols-5 gap-2">
+                  <div className="grid grid-cols-6 gap-2">
                     <Link
                       to={`/customer/${customer._id}`}
                       title="View Customer"
@@ -627,6 +661,14 @@ How can we help you today?`;
                       ) : (
                         <FaMoneyBillWave />
                       )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBarcodeCustomer(customer)}
+                      title="Generate Barcode"
+                      className="flex items-center justify-center bg-purple-100 hover:bg-purple-200 text-purple-700 py-3 rounded-xl"
+                    >
+                      <FaBarcode />
                     </button>
                     <button
                       type="button"
@@ -691,6 +733,10 @@ How can we help you today?`;
       )}
     </div>
   </div>
+      {barcodeModal}
 </div>
+
+
+
 );
 }

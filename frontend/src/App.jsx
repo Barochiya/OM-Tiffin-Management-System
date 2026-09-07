@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+﻿import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminLayout from "./layouts/AdminLayout";
 
@@ -9,6 +9,7 @@ import AddCustomer from "./pages/AddCustomer";
 import EditCustomer from "./pages/EditCustomer";
 import ViewCustomer from "./pages/ViewCustomer";
 import DailyEntry from "./pages/DailyEntry";
+import BarcodeEntry from "./pages/BarcodeEntry";
 import PriceSettings from "./pages/PriceSettings";
 import Billing from "./pages/Billing";
 import Payments from "./pages/Payments";
@@ -100,6 +101,15 @@ export default function App() {
         />
 
         <Route
+        path="/barcode-entry"
+        element={
+          <ProtectedRoute>
+            <BarcodeEntry />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
           path="/price-settings"
           element={
             <ProtectedRoute>
@@ -210,3 +220,6 @@ export default function App() {
     </Routes>
   );
 }
+
+
+

@@ -20,7 +20,7 @@ const tiffinSchema = new mongoose.Schema(
     },
 
     message:
-      "❌ Invalid WhatsApp number",
+      "âŒ Invalid WhatsApp number",
   },
 
   set: function (value) {
@@ -34,7 +34,13 @@ const tiffinSchema = new mongoose.Schema(
         required: true,
     },
 
-    mealType: {
+    barcode: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    uppercase: true,
+},mealType: {
         type: String,
         enum: ["Lunch", "Dinner", "Both"],
         default: "Lunch",

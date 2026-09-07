@@ -1,4 +1,18 @@
-import { Link, useLocation } from "react-router-dom";
+﻿import { Link, useLocation } from "react-router-dom";
+import {
+  FaUsers,
+  FaUserPlus,
+  FaCalendarAlt,
+  FaBarcode,
+  FaCog,
+  FaFileInvoiceDollar,
+  FaFileInvoice,
+  FaMoneyBillWave,
+  FaBullhorn,
+  FaTruck,
+  FaWhatsapp,
+  FaMoneyCheckAlt,
+} from "react-icons/fa";
 
 const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
   const location = useLocation();
@@ -58,7 +72,7 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          📊 Dashboard
+          Dashboard
         </Link>
 
         <Link
@@ -70,7 +84,8 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          👥 Customers
+          <FaUsers className="text-blue-200" />
+          Customers
         </Link>
 
         <Link
@@ -82,7 +97,8 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          ➕ Add Customer
+          <FaUserPlus className="text-green-300" />
+          Add Customer
         </Link>
 
         <Link
@@ -94,11 +110,25 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          📅 Daily Entry
+          <FaCalendarAlt className="text-yellow-300" />
+          Daily Entry
         </Link>
 
-        <Link
-          to="/price-settings"
+       <Link
+         to="/barcode-entry"
+         onClick={closeSidebar}
+         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+           location.pathname === "/barcode-entry"
+             ? "bg-white text-blue-700 font-semibold shadow"
+             : "hover:bg-blue-600"
+         }`}
+       >
+         <FaBarcode className="text-purple-300" />
+         Barcode Entry
+       </Link>
+
+       <Link
+         to="/price-settings"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
             location.pathname === "/price-settings"
@@ -106,7 +136,8 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          ⚙️ Price Settings
+          <FaCog className="text-gray-200" />
+          Price Settings
         </Link>
 
         <Link
@@ -118,7 +149,8 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          🧾 Billing
+          <FaFileInvoiceDollar className="text-orange-300" />
+          Billing
         </Link>
 
         <Link
@@ -130,7 +162,8 @@ const closeSidebar = () => {
       : "hover:bg-blue-600"
   }`}
 >
-  📄 View Bills
+  <FaFileInvoice className="text-cyan-300" />
+  View Bills
 </Link>
 
         <Link
@@ -142,7 +175,8 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          💳 Payments
+          <FaMoneyBillWave className="text-green-300" />
+          Payments
         </Link>
 
           <Link
@@ -154,7 +188,8 @@ const closeSidebar = () => {
       : "hover:bg-blue-600"
   }`}
 >
-  📢 Announcement Center
+  <FaBullhorn className="text-yellow-300" />
+  Announcement Center
 </Link>
 
         <Link
@@ -166,7 +201,8 @@ const closeSidebar = () => {
       : "hover:bg-blue-600"
   }`}
 >
-  📨 Bill Delivery Status
+  <FaTruck className="text-cyan-300" />
+  Bill Delivery Status
 </Link>
     <Link
       to="/announcement-delivery-status"
@@ -177,7 +213,8 @@ const closeSidebar = () => {
           : "hover:bg-blue-600"
       }`}
     >
-      📢 Announcement Status
+      <FaBullhorn className="text-yellow-300" />
+      Announcement Status
     </Link>
         <Link
           to="/whatsapp-inbox"
@@ -188,7 +225,8 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          📥 WhatsApp Inbox
+          <FaWhatsapp className="text-green-400" />
+          WhatsApp Inbox
         </Link>
 
         <Link
@@ -200,7 +238,8 @@ const closeSidebar = () => {
               : "hover:bg-blue-600"
           }`}
         >
-          💰 WhatsApp Payment Approval
+          <FaMoneyCheckAlt className="text-emerald-300" />
+          WhatsApp Payment Approval
         </Link>
 
       </nav>
@@ -229,3 +268,12 @@ const closeSidebar = () => {
 };
 
 export default Sidebar;
+
+
+
+
+
+
+
+
+

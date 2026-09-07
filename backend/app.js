@@ -1,11 +1,12 @@
-const dashboardRoutes = require("./routes/dashboardRoutes");
+﻿const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
+const barcodeController = require("./controllers/barcodeController");
 
-console.log("🔥 app.js loaded");
+console.log("app.js loaded");
 
 // ===============================
 // Routes
@@ -96,7 +97,7 @@ app.use((req, res, next) => {
 // ===============================
 
 app.get("/", (req, res) => {
-  res.send("🚀 Welcome to OM Tiffin Management System API");
+  res.send("Welcome to OM Tiffin Management System API");
 });
 // ===============================
 // API Routes
@@ -127,19 +128,34 @@ app.use(
 );
 
 // Dashboard
-console.log(
-  "✅ Dashboard Route Registered"
-);
+console.log("Dashboard Route Registered");
 
 app.use(
   "/api/dashboard",
   dashboardRoutes
 );
 
+/* ============================================================
+   BARCODE API - DIRECT ROUTES
+   ============================================================ */
 // ===============================
 // 404 Handler
 // ===============================
-
+/* ============================================================
+   OM TIFFIN BARCODE API
+   ============================================================ */
+app.get(
+  "/api/barcodes/lookup/:barcode",
+  barcodeController.lookupBarcode
+);
+app.get(
+  "/api/barcodes/customer/:customerId",
+  barcodeController.getCustomerBarcode
+);
+app.get(
+  "/api/barcodes/customers/active",
+  barcodeController.getAllCustomerBarcodes
+);
 app.use(notFound);
 
 // ===============================
@@ -153,3 +169,9 @@ app.use(errorHandler);
 // ===============================
 
 module.exports = app;
+
+
+
+
+
+

@@ -1265,7 +1265,7 @@ Customer Details
                     saved
                   }
                   className={
-                    `flex-1 py-3 rounded-xl font-bold ` +
+                    `w-full sm:w-auto sm:min-w-[140px] py-3 rounded-xl font-bold ` +
                     `flex items-center justify-center gap-2 ` +
                     (
                       saved

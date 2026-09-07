@@ -1239,23 +1239,9 @@ Customer Details
                 </p>
               </div>
               {/* REMARK */}
-              <div className="mt-5">
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Remark
-                </label>
-                <input
-                  type="text"
-                  value={remark}
-                  onChange={(e) => {
-                    setRemark(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder="Optional remark"
-                  className="w-full border border-slate-300 rounded-xl px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                 </div>
+              
               </div>             </div>          {/* ACTIONS */}
-              <div className="flex flex-col sm:flex-row gap-3 mt-6">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={handleSave}
@@ -1299,7 +1285,23 @@ Customer Details
                   Clear
                 </button>
               </div>
-            </div>
+            
+              <div className="mt-5">
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Remark
+                </label>
+                <input
+                  type="text"
+                  value={remark}
+                  onChange={(e) => {
+                    setRemark(e.target.value);
+                    setSaved(false);
+                  }}
+                  placeholder="Optional remark"
+                  className="w-full border border-slate-300 rounded-xl px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                 </div>
+</div>
           )}
         {showAllBarcodeModal && (
           <CustomerBarcodeModal

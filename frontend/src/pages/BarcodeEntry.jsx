@@ -58,7 +58,10 @@ const [saved, setSaved] = useState(false);
   const readerRef = useRef(null);
   const controlsRef = useRef(null);
   const cameraStreamRef = useRef(null);
-  const scanHandledRef = useRef(false);  const stopScanner = () => {
+  const scanHandledRef = useRef(false);  
+  // Automatically reopen the camera scanner
+  // after a successful Next/Save.
+  const autoReopenScannerRef = useRef(false);const stopScanner = () => {
     try {
       if (controlsRef.current) {
         controlsRef.current.stop();
@@ -570,7 +573,26 @@ const [saved, setSaved] = useState(false);
       setCameraError(message);
     }
   };
-  const activateHardwareScanner = () => {
+  // ==========================================================
+  // CONTINUOUS CAMERA SCANNING
+  // After successful Next/Save:
+  // Entry modal closes -> camera scanner opens automatically.
+  // ==========================================================
+  useEffect(() => {
+    if (
+      !autoReopenScannerRef.current ||
+      scannerActive ||
+      showEntryModal ||
+      customer
+    ) {
+      return;
+    }
+    autoReopenScannerRef.current = false;
+    const timer = setTimeout(() => {
+      startScanner();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [scannerActive, showEntryModal, customer]);  const activateHardwareScanner = () => {
     setCameraError("");
     setSaved(false);
     setHardwareScannerActive(true);
@@ -803,11 +825,15 @@ const [saved, setSaved] = useState(false);
         )
       );
       setSaved(true);
-      setShowEntryModal(false);
-      resetCustomer();
-      setTimeout(() => {
-        barcodeInputRef.current?.focus();
-      }, 100);
+      
+    // After saving this customer entry,
+    // automatically reopen camera for the next barcode.
+    autoReopenScannerRef.current = true;
+    setShowEntryModal(false);
+    resetCustomer();
+    setTimeout(() => {
+      barcodeInputRef.current?.focus();
+    }, 100);
       console.log(
         "Daily Entry Saved:",
         normalizedSavedEntry
@@ -934,30 +960,94 @@ const [saved, setSaved] = useState(false);
           </button>
           </div>
           {scannerActive && (
-            <div className="mb-4 overflow-hidden rounded-2xl border-2 border-blue-500 bg-black shadow-lg">
-              <div className="flex items-center justify-between bg-blue-600 px-4 py-3 text-white">
-                <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-white" />
-                  <span className="text-sm font-bold">
-                    Camera Scanner Active
-                  </span>
-                </div>
-                <span className="text-xs opacity-90">
-                  Point at barcode
-                </span>
-              </div>
-              <video
-                ref={videoRef}
-                className="w-full aspect-[4/3] sm:aspect-video object-cover"
-                autoPlay
-                muted
-                playsInline
-              />
-              <div className="bg-slate-950 px-4 py-3 text-center text-xs sm:text-sm font-semibold text-white">
-                Hold the barcode steady inside the camera view
-              </div>
+  <div className="fixed inset-0 z-[120] bg-slate-950/95 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6">
+    <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-700 bg-slate-950 shadow-2xl">
+      {/* SCANNER HEADER */}
+      <div className="flex items-center justify-between gap-3 bg-slate-900 px-4 py-4 sm:px-6 text-white">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 shadow-lg">
+            <FaCamera className="text-lg" />
+            <span className="absolute -right-1 -top-1 h-3 w-3 animate-pulse rounded-full bg-red-500 border-2 border-slate-900" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm sm:text-base font-bold truncate">
+              Professional Barcode Scanner
             </div>
-          )}
+            <div className="text-xs text-slate-400">
+              Align the barcode inside the scanning frame
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={stopScanner}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 text-slate-300 hover:bg-red-500 hover:text-white transition-colors"
+          aria-label="Close camera scanner"
+        >
+          <FaTimes />
+        </button>
+      </div>
+      {/* CAMERA AREA */}
+      <div className="relative overflow-hidden bg-black">
+        <video
+          ref={videoRef}
+          className="w-full aspect-[4/3] sm:aspect-video object-cover"
+          autoPlay
+          muted
+          playsInline
+        />
+        {/* SCANNING FRAME */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className="relative h-[30%] w-[82%] max-w-xl sm:h-[34%] sm:w-[72%]">
+            {/* TOP LEFT */}
+            <div className="absolute left-0 top-0 h-9 w-9 border-l-4 border-t-4 border-blue-400 rounded-tl-xl" />
+            {/* TOP RIGHT */}
+            <div className="absolute right-0 top-0 h-9 w-9 border-r-4 border-t-4 border-blue-400 rounded-tr-xl" />
+            {/* BOTTOM LEFT */}
+            <div className="absolute bottom-0 left-0 h-9 w-9 border-b-4 border-l-4 border-blue-400 rounded-bl-xl" />
+            {/* BOTTOM RIGHT */}
+            <div className="absolute bottom-0 right-0 h-9 w-9 border-b-4 border-r-4 border-blue-400 rounded-br-xl" />
+            {/* RED SCAN LINE */}
+            <div className="absolute left-2 right-2 top-1/2 h-0.5 -translate-y-1/2 bg-red-500 shadow-[0_0_14px_rgba(239,68,68,0.95)] animate-pulse" />
+            {/* ALIGN LABEL */}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/75 px-4 py-1.5 text-[10px] sm:text-xs font-bold tracking-wide text-white border border-white/10">
+              ALIGN BARCODE
+            </div>
+          </div>
+        </div>
+        {/* CAMERA STATUS */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent px-4 pb-4 pt-12">
+          <div className="flex items-center justify-center gap-2 text-sm font-bold text-white">
+            <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.9)]" />
+            Scanning...
+          </div>
+          <div className="mt-1 text-center text-xs text-slate-300">
+            Hold the barcode steady inside the frame
+          </div>
+        </div>
+      </div>
+      {/* SCANNER FOOTER */}
+      <div className="bg-slate-900 px-4 py-4 sm:px-6">
+        <div className="flex items-center justify-center gap-2 text-xs sm:text-sm text-slate-300">
+          <FaBarcode className="text-blue-400" />
+          <span>
+            Camera is ready for barcode scanning
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={stopScanner}
+          className="mt-3 w-full rounded-xl border border-slate-700 bg-slate-800 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-700 transition-colors"
+        >
+          <span className="inline-flex items-center justify-center gap-2">
+            <FaTimes />
+            Close Scanner
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+)}
           <div className="flex items-center gap-3 my-4">
             <div className="h-px bg-slate-200 flex-1" />
             <span className="text-xs font-bold text-slate-400">
@@ -1356,6 +1446,8 @@ Customer Details
   );
 };
 export default BarcodeEntry;
+
+
 
 
 

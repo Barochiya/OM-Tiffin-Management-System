@@ -225,8 +225,8 @@ const [saved, setSaved] = useState(false);
               : normalizedEntry.dinnerQty;
         setQuantity(
           Math.max(
-            1,
-            currentMealQty || 1
+            0,
+            currentMealQty || 0
           )
         );
       } else {
@@ -617,11 +617,11 @@ const [saved, setSaved] = useState(false);
                 existingEntry.dinnerQty || 0
               );
       setQuantity(
-        Math.max(
-          1,
-          currentMealQty || 1
-        )
-      );
+          Math.max(
+            0,
+            currentMealQty || 0
+          )
+        );
     } else {
       setQuantity(0);
     }
@@ -1358,6 +1358,7 @@ Customer Details
   );
 };
 export default BarcodeEntry;
+
 
 
 

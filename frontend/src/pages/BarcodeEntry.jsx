@@ -8,6 +8,8 @@ import {
   FaPhone,
   FaUtensils,
   FaCalendarAlt,
+  FaBoxOpen,
+  FaStickyNote,
   FaMinus,
   FaPlus,
   FaSave,
@@ -1354,6 +1356,8 @@ Customer Details
   );
 };
 export default BarcodeEntry;
+
+
 
 
 

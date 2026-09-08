@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import {
   FaBarcode,
@@ -41,6 +41,11 @@ const BarcodeEntry = () => {
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [meal, setMeal] = useState("Lunch");
   const [quantity, setQuantity] = useState(0);
+const mealQuantitiesRef = useRef({
+  Breakfast: 0,
+  Lunch: 0,
+  Dinner: 0,
+});
   const [extraItems, setExtraItems] = useState([]);
   const [remark, setRemark] = useState("");
   const [date, setDate] = useState(
@@ -164,98 +169,128 @@ const [saved, setSaved] = useState(false);
     setLoadingAllBarcodes(false);
   }
 };const loadExistingEntry = async (customerId, selectedDate) => {
-    if (!customerId || !selectedDate) return;
-    setLoadingExisting(true);
-    try {
-      // IMPORTANT:
-      // getEntriesByDate expects ONLY the date.
-      const response = await getEntriesByDate(selectedDate);
-      const entries =
-        response?.data ||
-        response?.entries ||
-        response ||
-        [];
-      const list = Array.isArray(entries)
-        ? entries
-        : [];
-      const existing = list.find((item) => {
-        const itemCustomerId =
-          item?.customer?._id ||
-          item?.customer ||
-          item?.customerId;
-        return (
-          String(itemCustomerId) ===
-          String(customerId)
-        );
-      });
-      if (existing) {
-        const normalizedEntry = {
-          ...existing,
-          breakfastQty: Number(
-            existing.breakfastQty || 0
-          ),
-          lunchQty: Number(
-            existing.lunchQty || 0
-          ),
-          dinnerQty: Number(
-            existing.dinnerQty || 0
-          ),
-          extraItems: Array.isArray(
-            existing.extraItems
-          )
-            ? existing.extraItems.map((item) => ({
-                description:
-                  item?.description || "",
-                amount: Number(
-                  item?.amount || 0
-                ),
-              }))
-            : [],
-          remark: existing.remark || "",
-        };
-        setExistingEntry(normalizedEntry);
-        setExtraItems(
-          normalizedEntry.extraItems
-        );
-        setRemark(
-          normalizedEntry.remark
-        );
-        // Show the quantity of the currently
-        // selected meal.
-        const currentMealQty =
-          meal === "Breakfast"
-            ? normalizedEntry.breakfastQty
-            : meal === "Lunch"
-              ? normalizedEntry.lunchQty
-              : normalizedEntry.dinnerQty;
-        setQuantity(
-          Math.max(
-            0,
-            currentMealQty || 0
-          )
-        );
-      } else {
-        setExistingEntry(null);
-        setExtraItems([]);
-        setRemark("");
-        setQuantity(0);
-      }
-    } catch (error) {
-      console.error(
-        "Load existing daily entry error:",
-        error
+  if (!customerId || !selectedDate) return null;
+  setLoadingExisting(true);
+  try {
+    // IMPORTANT:
+    // getEntriesByDate expects ONLY the date.
+    const response = await getEntriesByDate(selectedDate);
+    const entries =
+      response?.data ||
+      response?.entries ||
+      response ||
+      [];
+    const list = Array.isArray(entries)
+      ? entries
+      : [];
+    const existing = list.find((item) => {
+      const itemCustomerId =
+        item?.customer?._id ||
+        item?.customer ||
+        item?.customerId;
+      return (
+        String(itemCustomerId) ===
+        String(customerId)
       );
-      // Do not block a new entry if history
-      // cannot be loaded.
-      setExistingEntry(null);
-      setExtraItems([]);
-      setRemark("");
-      setQuantity(0);
-    } finally {
-      setLoadingExisting(false);
+    });
+    if (existing) {
+      const normalizedEntry = {
+        ...existing,
+        breakfastQty: Math.max(
+          0,
+          Number(existing.breakfastQty) || 0
+        ),
+        lunchQty: Math.max(
+          0,
+          Number(existing.lunchQty) || 0
+        ),
+        dinnerQty: Math.max(
+          0,
+          Number(existing.dinnerQty) || 0
+        ),
+        extraItems: Array.isArray(
+          existing.extraItems
+        )
+          ? existing.extraItems.map((item) => ({
+              description:
+                item?.description || "",
+              amount: Math.max(
+                0,
+                Number(item?.amount) || 0
+              ),
+            }))
+          : [],
+        remark:
+          existing.remark || "",
+      };
+      // Keep the complete existing entry.
+      setExistingEntry(normalizedEntry);
+      // Keep all three meal quantities in memory.
+      mealQuantitiesRef.current = {
+        Breakfast:
+          normalizedEntry.breakfastQty,
+        Lunch:
+          normalizedEntry.lunchQty,
+        Dinner:
+          normalizedEntry.dinnerQty,
+      };
+      setExtraItems(
+        normalizedEntry.extraItems
+      );
+      setRemark(
+        normalizedEntry.remark
+      );
+      // If Lunch is already entered,
+      // start this customer directly from Dinner.
+      const startingMeal =
+        normalizedEntry.lunchQty > 0
+          ? "Dinner"
+          : "Lunch";
+      setMeal(startingMeal);
+      setQuantity(
+        Math.max(
+          0,
+          mealQuantitiesRef.current[
+            startingMeal
+          ] || 0
+        )
+      );
+      return normalizedEntry;
     }
-  };
-  const lookupBarcode = async (value) => {
+    // No entry exists for this customer/date.
+    setExistingEntry(null);
+    setExtraItems([]);
+    setRemark("");
+    mealQuantitiesRef.current = {
+      Breakfast: 0,
+      Lunch: 0,
+      Dinner: 0,
+    };
+    setMeal("Lunch");
+    setQuantity(0);
+    return null;
+  } catch (error) {
+    console.error(
+      "Load existing daily entry error:",
+      error
+    );
+    // Do not block a new entry if history
+    // cannot be loaded.
+    setExistingEntry(null);
+    setExtraItems([]);
+    setRemark("");
+    mealQuantitiesRef.current = {
+      Breakfast: 0,
+      Lunch: 0,
+      Dinner: 0,
+    };
+    setMeal("Lunch");
+    setQuantity(0);
+    return null;
+  } finally {
+    setLoadingExisting(false);
+  }
+};const lookupBarcode = async (value) => {
     const clean = String(value || "").trim().toUpperCase();
     if (!clean) return;
     setLoading(true);
@@ -625,46 +660,106 @@ const [saved, setSaved] = useState(false);
     }
   };
   const handleMealChange = (value) => {
+    mealQuantitiesRef.current[meal] = Math.max(
+      0,
+      Math.floor(Number(quantity) || 0)
+    );
     setMeal(value);
     setSaved(false);
-    if (existingEntry) {
-      const currentMealQty =
-        value === "Breakfast"
-          ? Number(
-              existingEntry.breakfastQty || 0
-            )
-          : value === "Lunch"
-            ? Number(
-                existingEntry.lunchQty || 0
-              )
-            : Number(
-                existingEntry.dinnerQty || 0
-              );
+    const nextQuantity =
+      mealQuantitiesRef.current[value] ?? 0;
+    setQuantity(
+      Math.max(
+        0,
+        Math.floor(Number(nextQuantity) || 0)
+      )
+    );
+  };
+  const handlePreviousMeal = () => {
+    mealQuantitiesRef.current[meal] = Math.max(
+      0,
+      Math.floor(Number(quantity) || 0)
+    );
+    const previousMeal =
+      meal === "Dinner"
+        ? "Lunch"
+        : meal === "Lunch"
+          ? "Breakfast"
+          : "Breakfast";
+    setMeal(previousMeal);
+    setQuantity(
+      Math.max(
+        0,
+        Math.floor(
+          Number(
+            mealQuantitiesRef.current[previousMeal]
+          ) || 0
+        )
+      )
+    );
+    setSaved(false);
+  };
+  const handleNextMeal = async () => {
+    mealQuantitiesRef.current[meal] = Math.max(
+      0,
+      Math.floor(Number(quantity) || 0)
+    );
+    if (meal === "Breakfast") {
+      setMeal("Lunch");
       setQuantity(
-          Math.max(
-            0,
-            currentMealQty || 0
+        Math.max(
+          0,
+          Math.floor(
+            Number(
+              mealQuantitiesRef.current.Lunch
+            ) || 0
           )
-        );
-    } else {
-      setQuantity(0);
+        )
+      );
+      setSaved(false);
+      return;
     }
+    if (meal === "Lunch") {
+      setMeal("Dinner");
+      setQuantity(
+        Math.max(
+          0,
+          Math.floor(
+            Number(
+              mealQuantitiesRef.current.Dinner
+            ) || 0
+          )
+        )
+      );
+      setSaved(false);
+      return;
+    }
+    await handleSave();
   };
   const decreaseQuantity = () => {
-  setQuantity((prev) =>
-    Math.max(0, Number(prev || 0) - 1)
-  );
-  setSaved(false);
-};
+    setQuantity((prev) =>
+      Math.max(
+        0,
+        Number(prev || 0) - 1
+      )
+    );
+    setSaved(false);
+  };
   const increaseQuantity = () => {
-  setQuantity((prev) =>
-    Math.max(0, Number(prev || 0) + 1)
-  );
-  setSaved(false);
-};
+    setQuantity((prev) =>
+      Math.max(
+        0,
+        Number(prev || 0) + 1
+      )
+    );
+    setSaved(false);
+  };
   const handleQuantityChange = (value) => {
     const numericValue = Math.floor(Number(value));
-    if (!Number.isFinite(numericValue) || numericValue < 1) {
+    if (
+      !Number.isFinite(numericValue) ||
+      numericValue < 1
+    ) {
       setQuantity(0);
     } else {
       setQuantity(numericValue);
@@ -709,6 +804,35 @@ const [saved, setSaved] = useState(false);
       );
       return;
     }
+    // Always store the currently visible meal quantity.
+    mealQuantitiesRef.current[meal] = Math.max(
+      0,
+      Math.floor(Number(quantity) || 0)
+    );
+    const breakfastQuantity = Math.max(
+      0,
+      Math.floor(
+        Number(
+          mealQuantitiesRef.current.Breakfast
+        ) || 0
+      )
+    );
+    const lunchQuantity = Math.max(
+      0,
+      Math.floor(
+        Number(
+          mealQuantitiesRef.current.Lunch
+        ) || 0
+      )
+    );
+    const dinnerQuantity = Math.max(
+      0,
+      Math.floor(
+        Number(
+          mealQuantitiesRef.current.Dinner
+        ) || 0
+      )
+    );
     const cleanExtraItems = extraItems
       .map((item) => ({
         description: String(
@@ -734,37 +858,12 @@ const [saved, setSaved] = useState(false);
       );
       return;
     }
-    const mealQuantity = Math.max(
-  0,
-  Math.floor(Number(quantity) || 0)
-);
-    // IMPORTANT:
-    // Preserve already saved quantities for
-    // other meals instead of resetting them to 0.
-    const previousBreakfastQty = Number(
-      existingEntry?.breakfastQty || 0
-    );
-    const previousLunchQty = Number(
-      existingEntry?.lunchQty || 0
-    );
-    const previousDinnerQty = Number(
-      existingEntry?.dinnerQty || 0
-    );
     const payload = {
       customer: customer._id,
       date,
-      breakfastQty:
-        meal === "Breakfast"
-          ? mealQuantity
-          : previousBreakfastQty,
-      lunchQty:
-        meal === "Lunch"
-          ? mealQuantity
-          : previousLunchQty,
-      dinnerQty:
-        meal === "Dinner"
-          ? mealQuantity
-          : previousDinnerQty,
+      breakfastQty: breakfastQuantity,
+      lunchQty: lunchQuantity,
+      dinnerQty: dinnerQuantity,
       extraItems: cleanExtraItems,
       remark: String(
         remark || ""
@@ -775,22 +874,33 @@ const [saved, setSaved] = useState(false);
     try {
       const response =
         await saveDailyEntry(payload);
-      // saveDailyEntry returns:
-      // { success, message, data }
       const savedEntry =
         response?.data?.data ||
         response?.data ||
-        response;
+        response ||
+        {};
       const normalizedSavedEntry = {
         ...savedEntry,
-        breakfastQty: Number(
-          savedEntry?.breakfastQty || 0
+        breakfastQty: Math.max(
+          0,
+          Number(
+            savedEntry?.breakfastQty ??
+              payload.breakfastQty
+          ) || 0
         ),
-        lunchQty: Number(
-          savedEntry?.lunchQty || 0
+        lunchQty: Math.max(
+          0,
+          Number(
+            savedEntry?.lunchQty ??
+              payload.lunchQty
+          ) || 0
         ),
-        dinnerQty: Number(
-          savedEntry?.dinnerQty || 0
+        dinnerQty: Math.max(
+          0,
+          Number(
+            savedEntry?.dinnerQty ??
+              payload.dinnerQty
+          ) || 0
         ),
         extraItems: Array.isArray(
           savedEntry?.extraItems
@@ -798,10 +908,18 @@ const [saved, setSaved] = useState(false);
           ? savedEntry.extraItems
           : cleanExtraItems,
         remark:
-          savedEntry?.remark ||
-          String(remark || "").trim(),
+          savedEntry?.remark ??
+          payload.remark,
       };
-      // Keep the freshly saved entry in memory.
+      // Keep all saved quantities in memory.
+      mealQuantitiesRef.current = {
+        Breakfast:
+          normalizedSavedEntry.breakfastQty,
+        Lunch:
+          normalizedSavedEntry.lunchQty,
+        Dinner:
+          normalizedSavedEntry.dinnerQty,
+      };
       setExistingEntry(
         normalizedSavedEntry
       );
@@ -811,7 +929,6 @@ const [saved, setSaved] = useState(false);
       setRemark(
         normalizedSavedEntry.remark
       );
-      // Keep current meal quantity visible.
       const savedMealQty =
         meal === "Breakfast"
           ? normalizedSavedEntry.breakfastQty
@@ -819,21 +936,20 @@ const [saved, setSaved] = useState(false);
             ? normalizedSavedEntry.lunchQty
             : normalizedSavedEntry.dinnerQty;
       setQuantity(
-    Math.max(
-      0,
-      Number(savedMealQty) || 0
-    )
-  );
+        Math.max(
+          0,
+          Number(savedMealQty) || 0
+        )
+      );
       setSaved(true);
-      
-    // After saving this customer entry,
-    // automatically reopen camera for the next barcode.
-    autoReopenScannerRef.current = true;
-    setShowEntryModal(false);
-    resetCustomer();
-    setTimeout(() => {
-      barcodeInputRef.current?.focus();
-    }, 100);
+      // Close this customer and automatically
+      // reopen scanner for the next barcode.
+      autoReopenScannerRef.current = true;
+      setShowEntryModal(false);
+      resetCustomer();
+      setTimeout(() => {
+        barcodeInputRef.current?.focus();
+      }, 100);
       console.log(
         "Daily Entry Saved:",
         normalizedSavedEntry
@@ -859,6 +975,11 @@ const [saved, setSaved] = useState(false);
     setBarcode("");
     setExtraItems([]);
     setRemark("");
+    mealQuantitiesRef.current = {
+      Breakfast: 0,
+      Lunch: 0,
+      Dinner: 0,
+    };
     setMeal("Lunch");
     setQuantity(0);
     setSaved(false);
@@ -1388,46 +1509,45 @@ Customer Details
                 />
               </div>
               {/* ACTIONS */}
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={
-                    loading ||
-                    loadingExisting ||
-                    saved
-                  }
-                  className={
-                    "w-full sm:w-auto sm:min-w-[140px] py-3 rounded-xl font-bold " +
-                    "flex items-center justify-center gap-2 " +
-                    (
-                      saved
-                        ? "bg-green-600 text-white"
-                        : "bg-blue-600 text-white hover:bg-blue-700"
-                    ) +
-                    " disabled:opacity-70"
-                  }
-                >
-                  {saved ? (
-                    <>
-                      <FaCheckCircle />
-                      Entry Saved
-                    </>
-                  ) : (
-                    <>
-                      <FaSave />
-                      {loading ? "Saving..." : "Next"}
-                    </>
-                  )}
-                </button>
+              <div className="flex flex-col sm:flex-row sm:justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={resetCustomer}
                   disabled={loading}
-                  className="px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <FaTimes />
                   Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePreviousMeal}
+                  disabled={
+                    loading ||
+                    loadingExisting ||
+                    meal === "Breakfast"
+                  }
+                  className="w-full sm:w-auto sm:min-w-[140px] py-3 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  ← Previous
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextMeal}
+                  disabled={
+                    loading ||
+                    loadingExisting
+                  }
+                  className="w-full sm:w-auto sm:min-w-[150px] py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 font-bold flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {meal === "Dinner" ? (
+                    <>
+                      <FaSave />
+                      {loading ? "Saving..." : "Save & Scan"}
+                    </>
+                  ) : (
+                    <>Next →</>
+                  )}
                 </button>
               </div>
             </div>
@@ -1446,6 +1566,9 @@ Customer Details
   );
 };
 export default BarcodeEntry;
+
+
+
 
 
 

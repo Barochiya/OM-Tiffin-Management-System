@@ -651,17 +651,17 @@ const [saved, setSaved] = useState(false);
     }
   };
   const decreaseQuantity = () => {
-    setQuantity((prev) =>
-      Math.max(1, Number(prev || 1) - 1)
-    );
-    setSaved(false);
-  };
+  setQuantity((prev) =>
+    Math.max(0, Number(prev || 0) - 1)
+  );
+  setSaved(false);
+};
   const increaseQuantity = () => {
-    setQuantity((prev) =>
-      Math.max(1, Number(prev || 1) + 1)
-    );
-    setSaved(false);
-  };
+  setQuantity((prev) =>
+    Math.max(0, Number(prev || 0) + 1)
+  );
+  setSaved(false);
+};
   const handleQuantityChange = (value) => {
     const numericValue = Math.floor(Number(value));
     if (!Number.isFinite(numericValue) || numericValue < 1) {
@@ -735,9 +735,9 @@ const [saved, setSaved] = useState(false);
       return;
     }
     const mealQuantity = Math.max(
-      1,
-      Math.floor(Number(quantity) || 1)
-    );
+  0,
+  Math.floor(Number(quantity) || 0)
+);
     // IMPORTANT:
     // Preserve already saved quantities for
     // other meals instead of resetting them to 0.
@@ -819,11 +819,11 @@ const [saved, setSaved] = useState(false);
             ? normalizedSavedEntry.lunchQty
             : normalizedSavedEntry.dinnerQty;
       setQuantity(
-        Math.max(
-          1,
-          savedMealQty || 1
-        )
-      );
+    Math.max(
+      0,
+      Number(savedMealQty) || 0
+    )
+  );
       setSaved(true);
       
     // After saving this customer entry,
@@ -1446,6 +1446,10 @@ Customer Details
   );
 };
 export default BarcodeEntry;
+
+
+
+
 
 
 

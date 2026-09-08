@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import {
   FaBarcode,
@@ -38,7 +38,7 @@ const BarcodeEntry = () => {
   const [customer, setCustomer] = useState(null);
   const [showEntryModal, setShowEntryModal] = useState(false);
   const [meal, setMeal] = useState("Lunch");
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(0);
   const [extraItems, setExtraItems] = useState([]);
   const [remark, setRemark] = useState("");
   const [date, setDate] = useState(
@@ -233,7 +233,7 @@ const [saved, setSaved] = useState(false);
         setExistingEntry(null);
         setExtraItems([]);
         setRemark("");
-        setQuantity(1);
+        setQuantity(0);
       }
     } catch (error) {
       console.error(
@@ -245,7 +245,7 @@ const [saved, setSaved] = useState(false);
       setExistingEntry(null);
       setExtraItems([]);
       setRemark("");
-      setQuantity(1);
+      setQuantity(0);
     } finally {
       setLoadingExisting(false);
     }
@@ -285,7 +285,6 @@ const [saved, setSaved] = useState(false);
   // BARCODE SCAN BEEP
   // ==========================================================
   const beepAudioContextRef = useRef(null);
-
   const initBeepContext = async () => {
     try {
       if (!beepAudioContextRef.current) {
@@ -312,6 +311,9 @@ const [saved, setSaved] = useState(false);
   };
   const playScanBeep = async () => {
     try {
+      // Make sure hardware scanner also gets an initialized
+      // AudioContext even when camera scanner was never opened.
+      await initBeepContext();
       const audioContext =
         beepAudioContextRef.current;
       if (!audioContext) {
@@ -320,33 +322,76 @@ const [saved, setSaved] = useState(false);
       if (audioContext.state === "suspended") {
         await audioContext.resume();
       }
-      const oscillator =
-        audioContext.createOscillator();
-      const gain =
+      const now = audioContext.currentTime;
+      // Master volume for a clearly audible scanner-style beep.
+      const masterGain =
         audioContext.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(
-        880,
-        audioContext.currentTime
+      masterGain.gain.setValueAtTime(
+        0.85,
+        now
       );
-      gain.gain.setValueAtTime(
+      masterGain.connect(
+        audioContext.destination
+      );
+      // First sharp scanner beep.
+      const oscillator1 =
+        audioContext.createOscillator();
+      const gain1 =
+        audioContext.createGain();
+      oscillator1.type = "square";
+      oscillator1.frequency.setValueAtTime(
+        1100,
+        now
+      );
+      gain1.gain.setValueAtTime(
         0.0001,
-        audioContext.currentTime
+        now
       );
-      gain.gain.exponentialRampToValueAtTime(
-        0.18,
-        audioContext.currentTime + 0.01
+      gain1.gain.exponentialRampToValueAtTime(
+        0.75,
+        now + 0.008
       );
-      gain.gain.exponentialRampToValueAtTime(
+      gain1.gain.exponentialRampToValueAtTime(
         0.0001,
-        audioContext.currentTime + 0.12
+        now + 0.14
       );
-      oscillator.connect(gain);
-      gain.connect(audioContext.destination);
-      oscillator.start();
-      oscillator.stop(
-        audioContext.currentTime + 0.13
+      oscillator1.connect(gain1);
+      gain1.connect(masterGain);
+      oscillator1.start(now);
+      oscillator1.stop(now + 0.15);
+      // Tiny second tone gives it the familiar
+      // retail barcode-scanner confirmation sound.
+      const oscillator2 =
+        audioContext.createOscillator();
+      const gain2 =
+        audioContext.createGain();
+      oscillator2.type = "square";
+      oscillator2.frequency.setValueAtTime(
+        1450,
+        now + 0.055
       );
+      gain2.gain.setValueAtTime(
+        0.0001,
+        now + 0.055
+      );
+      gain2.gain.exponentialRampToValueAtTime(
+        0.45,
+        now + 0.063
+      );
+      gain2.gain.exponentialRampToValueAtTime(
+        0.0001,
+        now + 0.14
+      );
+      oscillator2.connect(gain2);
+      gain2.connect(masterGain);
+      oscillator2.start(now + 0.055);
+      oscillator2.stop(now + 0.15);
+      // Disconnect after playback.
+      setTimeout(() => {
+        try {
+          masterGain.disconnect();
+        } catch {}
+      }, 250);
     } catch (error) {
       console.debug(
         "Scan beep warning:",
@@ -578,7 +623,7 @@ const [saved, setSaved] = useState(false);
         )
       );
     } else {
-      setQuantity(1);
+      setQuantity(0);
     }
   };
   const decreaseQuantity = () => {
@@ -596,7 +641,7 @@ const [saved, setSaved] = useState(false);
   const handleQuantityChange = (value) => {
     const numericValue = Math.floor(Number(value));
     if (!Number.isFinite(numericValue) || numericValue < 1) {
-      setQuantity(1);
+      setQuantity(0);
     } else {
       setQuantity(numericValue);
     }
@@ -787,7 +832,7 @@ const [saved, setSaved] = useState(false);
     setExtraItems([]);
     setRemark("");
     setMeal("Lunch");
-    setQuantity(1);
+    setQuantity(0);
     setSaved(false);
     setCameraError("");
   };
@@ -1047,7 +1092,7 @@ Customer Details
                     className="shrink-0 h-9 w-9 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 font-bold text-xl flex items-center justify-center"
                     aria-label="Close daily entry"
                   >
-                    ×
+                    &times;
                   </button>
                 </div>
                 <div className="p-3 sm:p-6">              {/* CUSTOMER */}
@@ -1134,7 +1179,7 @@ Customer Details
                   </button>
                   <input
                     type="number"
-                    min="1"
+                    min="0"
                     step="1"
                     value={quantity}
                     onChange={(e) =>
@@ -1239,8 +1284,22 @@ Customer Details
                 </p>
               </div>
               {/* REMARK */}
-              
-              </div>             </div>          {/* ACTIONS */}
+              <div className="mt-5">
+                <label className="block text-sm font-bold text-slate-700 mb-2">
+                  Remark
+                </label>
+                <input
+                  type="text"
+                  value={remark}
+                  onChange={(e) => {
+                    setRemark(e.target.value);
+                    setSaved(false);
+                  }}
+                  placeholder="Optional remark"
+                  className="w-full border border-slate-300 rounded-xl px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              {/* ACTIONS */}
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6 pt-4 border-t border-slate-200">
                 <button
                   type="button"
@@ -1251,8 +1310,8 @@ Customer Details
                     saved
                   }
                   className={
-                    `w-full sm:w-auto sm:min-w-[140px] py-3 rounded-xl font-bold ` +
-                    `flex items-center justify-center gap-2 ` +
+                    "w-full sm:w-auto sm:min-w-[140px] py-3 rounded-xl font-bold " +
+                    "flex items-center justify-center gap-2 " +
                     (
                       saved
                         ? "bg-green-600 text-white"
@@ -1269,9 +1328,7 @@ Customer Details
                   ) : (
                     <>
                       <FaSave />
-                      {loading
-                        ? "Saving..."
-                        : "Next"}
+                      {loading ? "Saving..." : "Next"}
                     </>
                   )}
                 </button>
@@ -1285,25 +1342,10 @@ Customer Details
                   Clear
                 </button>
               </div>
-            
-              <div className="mt-5">
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Remark
-                </label>
-                <input
-                  type="text"
-                  value={remark}
-                  onChange={(e) => {
-                    setRemark(e.target.value);
-                    setSaved(false);
-                  }}
-                  placeholder="Optional remark"
-                  className="w-full border border-slate-300 rounded-xl px-3 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                 </div>
-</div>
-          )}
-        {showAllBarcodeModal && (
+            </div>
+          </div>
+        </div>
+      )}{showAllBarcodeModal && (
           <CustomerBarcodeModal
             customer={null}
             customers={activeBarcodeCustomers}
@@ -1316,6 +1358,7 @@ Customer Details
   );
 };
 export default BarcodeEntry;
+
 
 
 

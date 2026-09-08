@@ -1165,9 +1165,7 @@ Customer Details
               </div>
               {/* QUANTITY */}
               <div className="mt-5">
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Tiffin Quantity
-                </label>
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2"><FaBoxOpen /> Tiffin Quantity</label>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -1285,9 +1283,7 @@ Customer Details
               </div>
               {/* REMARK */}
               <div className="mt-5">
-                <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Remark
-                </label>
+                <label className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-2"><FaStickyNote /> Remark</label>
                 <input
                   type="text"
                   value={remark}
@@ -1358,6 +1354,7 @@ Customer Details
   );
 };
 export default BarcodeEntry;
+
 
 
 

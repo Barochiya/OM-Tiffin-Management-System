@@ -340,94 +340,140 @@ const dinnerAmount =
     }
 
     // ===============================
-    // Update Existing Bill
-    // ===============================
-    if (bill) {
-      bill.breakfastQty = breakfastQty;
-      bill.lunchQty = lunchQty;
-      bill.dinnerQty = dinnerQty;
+// ===============================
+const isNewBill = !bill;
 
-      bill.breakfastAmount = breakfastAmount;
-      bill.lunchAmount = lunchAmount;
-      bill.dinnerAmount = dinnerAmount;
-
-      bill.extraAmount = totalExtraAmount;
-
-      // IMPORTANT:
-      // Save complete date-wise details
-      bill.dailyDetails = dailyDetails;
-
-      bill.totalAmount = totalAmount;
-
-      // Keep existing paid amount and apply advance
-      applyAdvance(customerData, bill);
-
-      bill.pendingAmount = Math.max(
+// Previous Pending Carry Forward
+// ===============================
+// Determine the immediately previous billing period.
+let previousBillQuery = {
+  customer,
+};
+if (String(cycle) === "2") {
+  // For Cycle 2, previous bill is Cycle 1 of the same month/year.
+  previousBillQuery.month = Number(month);
+  previousBillQuery.year = Number(year);
+  previousBillQuery.cycle = "1";
+} else {
+  // For Cycle 1, previous bill is Cycle 2 of the previous month.
+  let previousMonth = Number(month) - 1;
+  let previousYear = Number(year);
+  if (previousMonth === 0) {
+    previousMonth = 12;
+    previousYear -= 1;
+  }
+  previousBillQuery.month = previousMonth;
+  previousBillQuery.year = previousYear;
+  previousBillQuery.cycle = "2";
+}
+previousBillQuery.carriedForward = {
+  $ne: true,
+};
+const previousBill = await Bill.findOne(
+  previousBillQuery
+);
+const previousPendingAmount =
+  isNewBill && previousBill
+    ? Math.max(
         0,
-        totalAmount - Number(bill.paidAmount || 0)
+        Number(previousBill.pendingAmount || 0)
+      )
+    : Number(
+        bill?.previousPendingAmount || 0
       );
-
-      if (bill.pendingAmount <= 0) {
-        bill.pendingAmount = 0;
-        bill.status = "Paid";
-      } else if (Number(bill.paidAmount || 0) > 0) {
-        bill.status = "Partial";
-      } else {
-        bill.status = "Pending";
-      }
-    } else {
-      // ===============================
-      // Create New Bill
-      // ===============================
-      bill = new Bill({
-        invoiceNo,
-
-        customer,
-        month,
-        year,
-        cycle: String(cycle),
-
-        breakfastQty,
-        lunchQty,
-        dinnerQty,
-
-        breakfastAmount,
-        lunchAmount,
-        dinnerAmount,
-
-        extraAmount: totalExtraAmount,
-
-        // IMPORTANT:
-        // Save date-wise details
-        dailyDetails,
-
-        totalAmount,
-
-        paidAmount: 0,
-        pendingAmount: totalAmount,
-        status: "Pending",
-      });
-
-      // Apply customer advance
-      applyAdvance(customerData, bill);
-
-      bill.pendingAmount = Math.max(
-        0,
-        totalAmount - Number(bill.paidAmount || 0)
-      );
-
-      if (bill.pendingAmount <= 0) {
-        bill.pendingAmount = 0;
-        bill.status = "Paid";
-      } else if (Number(bill.paidAmount || 0) > 0) {
-        bill.status = "Partial";
-      } else {
-        bill.status = "Pending";
-      }
-    }
-
-    // ===============================
-    // Save Customer Advance Changes
+const previousPendingBill =
+  isNewBill && previousPendingAmount > 0
+    ? previousBill?._id || null
+    : bill?.previousPendingBill || null;
+// ===============================
+// Update Existing Bill
+// ===============================
+if (bill) {
+  bill.breakfastQty = breakfastQty;
+  bill.lunchQty = lunchQty;
+  bill.dinnerQty = dinnerQty;
+  bill.breakfastAmount = breakfastAmount;
+  bill.lunchAmount = lunchAmount;
+  bill.dinnerAmount = dinnerAmount;
+  bill.extraAmount = totalExtraAmount;
+  // IMPORTANT:
+  // Save complete date-wise details.
+  bill.dailyDetails = dailyDetails;
+  // Keep previous carry-forward amount already stored
+  // on this bill. Do NOT add it again when regenerating.
+  const currentBillAmount = totalAmount;
+  bill.totalAmount =
+    currentBillAmount +
+    Number(bill.previousPendingAmount || 0);
+  // Keep existing paid amount and apply advance.
+  applyAdvance(customerData, bill);
+  bill.pendingAmount = Math.max(
+    0,
+    Number(bill.totalAmount || 0) -
+      Number(bill.paidAmount || 0)
+  );
+  if (bill.pendingAmount <= 0) {
+    bill.pendingAmount = 0;
+    bill.status = "Paid";
+  } else if (
+    Number(bill.paidAmount || 0) > 0
+  ) {
+    bill.status = "Partial";
+  } else {
+    bill.status = "Pending";
+  }
+} else {
+  // ===============================
+  // Create New Bill
+  // ===============================
+  const payableAmount =
+    Number(totalAmount || 0) +
+    previousPendingAmount;
+  bill = new Bill({
+    invoiceNo,
+    customer,
+    month,
+    year,
+    cycle: String(cycle),
+    breakfastQty,
+    lunchQty,
+    dinnerQty,
+    breakfastAmount,
+    lunchAmount,
+    dinnerAmount,
+    extraAmount: totalExtraAmount,
+    // IMPORTANT:
+    // Save date-wise details.
+    dailyDetails,
+    // Current cycle amount + previous pending.
+    totalAmount: payableAmount,
+    previousPendingAmount,
+    previousPendingBill,
+    paidAmount: 0,
+    pendingAmount: payableAmount,
+    status: "Pending",
+  });
+  // Apply customer advance.
+  applyAdvance(customerData, bill);
+  bill.pendingAmount = Math.max(
+    0,
+    Number(bill.totalAmount || 0) -
+      Number(bill.paidAmount || 0)
+  );
+  if (bill.pendingAmount <= 0) {
+    bill.pendingAmount = 0;
+    bill.status = "Paid";
+  } else if (
+    Number(bill.paidAmount || 0) > 0
+  ) {
+    bill.status = "Partial";
+  } else {
+    bill.status = "Pending";
+  }
+}
+// ===============================
+// Save Customer Advance Changes
+// ===============================
     // ===============================
     if (customerData.isModified()) {
       await customerData.save();
@@ -436,8 +482,23 @@ const dinnerAmount =
     // ===============================
     // Save Bill
     // ===============================
-    await bill.save();
-
+await bill.save();
+// ===============================
+// Mark Previous Bill as Carried Forward
+// ===============================
+// Keep the old bill for history, but exclude it
+// from outstanding calculations after transfer.
+if (
+  isNewBill &&
+  previousBill &&
+  previousPendingAmount > 0 &&
+  previousBill._id &&
+  String(previousBill._id) !== String(bill._id)
+) {
+  previousBill.carriedForward = true;
+  previousBill.carriedForwardTo = bill._id;
+  await previousBill.save();
+}
     // ===============================
     // Response
     // ===============================
@@ -531,9 +592,7 @@ const sendBillWhatsApp = async (req, res) => {
     sentAt: null,
     reason: "Mobile number missing",
   };
-
-  await bill.save();
-
+await bill.save();
   return res.status(400).json({
     success: false,
     message: "Customer phone number not found.",
@@ -594,9 +653,7 @@ bill.whatsappDelivery = {
 
   meta: result || {},
 };
-
 await bill.save();
-
 return res.json({
   success: true,
   message:
@@ -716,9 +773,7 @@ bill.whatsappDelivery = {
 
   meta: response,
 };
-
 await bill.save();
-
   completedCustomers.push({
     customer: customer.customerName,
     billId: generatedBill._id,
@@ -959,9 +1014,7 @@ const retryFailedBill = async (req, res) => {
 
       meta: response,
     };
-
-    await bill.save();
-
+await bill.save();
     return res.json({
       success: true,
       message:

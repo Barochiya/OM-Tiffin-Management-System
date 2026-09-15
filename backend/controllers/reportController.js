@@ -1,4 +1,4 @@
-const Bill = require("../models/Bill");
+﻿const Bill = require("../models/Bill");
 const Payment = require("../models/Payment");
 
 // ========================================
@@ -61,6 +61,7 @@ const getPendingReport = async (req, res) => {
 
     const bills = await Bill.find({
       pendingAmount: { $gt: 0 },
+  carriedForward: { $ne: true },
     })
       .populate("customer", "customerName phone")
       .sort({ pendingAmount: -1 });

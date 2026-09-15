@@ -1,4 +1,4 @@
-const Payment = require("../models/Payment");
+﻿const Payment = require("../models/Payment");
 const Bill = require("../models/Bill");
 const Tiffin = require("../models/Tiffin");
 const DailyEntry = require("../models/DailyEntry");
@@ -51,6 +51,9 @@ exports.getDashboard = async (req, res) => {
     const pendingBills = await Bill.find({
       pendingAmount: {
         $gt: 0,
+      },
+      carriedForward: {
+        $ne: true,
       },
     }).populate("customer");
 

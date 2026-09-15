@@ -211,6 +211,28 @@ const billSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // ==========================
+    // Previous Pending Carry Forward
+    // ==========================
+    previousPendingAmount: {
+      type: Number,
+      default: 0,
+    },
+    previousPendingBill: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bill",
+      default: null,
+    },
+    // Previous pending amount has been transferred to a newer bill.
+    carriedForward: {
+      type: Boolean,
+      default: false,
+    },
+    carriedForwardTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Bill",
+      default: null,
+    },
 
   
 // ==========================

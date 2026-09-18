@@ -10,7 +10,10 @@ const {
 const Bill = require("../models/Bill");
 const AnnouncementDelivery = require("../models/AnnouncementDelivery");
 const WhatsAppMessage = require("../models/WhatsAppMessage");
+const CustomerOtp = require("../models/CustomerOtp");
 const Tiffin = require("../models/Tiffin");
+const CustomerModificationWhatsAppAction = require("../models/CustomerModificationWhatsAppAction");
+const { approveCustomerModificationRequest } = require("../services/customerModificationApprovalService");
 
 // =====================================================
 // WhatsApp Webhook Verification
@@ -31,7 +34,7 @@ router.get("/webhook", (req, res) => {
     token === verifyToken
   ) {
     console.log(
-      "✅ WhatsApp Webhook Verified"
+      "âœ… WhatsApp Webhook Verified"
     );
 
     return res
@@ -40,7 +43,7 @@ router.get("/webhook", (req, res) => {
   }
 
   console.log(
-    "❌ WhatsApp Webhook Verification Failed"
+    "âŒ WhatsApp Webhook Verification Failed"
   );
 
   return res.sendStatus(403);
@@ -52,7 +55,7 @@ router.get("/webhook", (req, res) => {
 
 router.post("/webhook", async (req, res) => {
   console.log(
-    "📩 WhatsApp Webhook Received"
+    "ðŸ“© WhatsApp Webhook Received"
   );
 
   console.log(
@@ -98,19 +101,101 @@ const incomingMessages = Array.isArray(
 for (const incoming of incomingMessages) {
   try {
     console.log(
-      "📩 Incoming WhatsApp Message:",
+      "ðŸ“© Incoming WhatsApp Message:",
       JSON.stringify(incoming, null, 2)
     );
 
+    console.log("WEBHOOK INCOMING TYPE CHECK:", incoming?.type, incoming?.button?.payload || "");
     const phoneNumber =
       incoming?.from || null;
 
     const whatsappMessageId =
       incoming?.id || null;
 
+    // =================================================
+    // Customer Modification WhatsApp Approve Callback
+    // =================================================
+    const modificationButtonPayload =
+      incoming?.type === "button"
+        ? incoming?.button?.payload ||
+          incoming?.button?.text ||
+          ""
+        : incoming?.type === "interactive"
+          ? incoming?.interactive?.button_reply?.id ||
+            incoming?.interactive?.button_reply?.title ||
+            ""
+          : "";
+    const isModificationApproval =
+      String(modificationButtonPayload)
+        .trim()
+        .toUpperCase() === "APPROVE";
+    console.log("MODIFICATION APPROVAL CHECK:", { incomingType: incoming?.type, buttonPayload: modificationButtonPayload, isModificationApproval, phoneNumber, contextMessageId: incoming?.context?.id || null });
+    if (isModificationApproval) {
+      try {
+        const adminPhoneDigits =
+          String(phoneNumber).replace(/\D/g, "");
+        const normalizedAdminPhone =
+          adminPhoneDigits.length >= 10
+            ? adminPhoneDigits.slice(-10)
+            : adminPhoneDigits;
+        const originalMessageId =
+          incoming?.context?.id || null;
+        if (!originalMessageId) {
+          console.log(
+            "Customer modification approval callback missing context message ID."
+          );
+        } else {
+          const action =
+            await CustomerModificationWhatsAppAction.findOne({
+              whatsappMessageId: originalMessageId,
+              adminPhone: normalizedAdminPhone,
+              action: "APPROVE",
+              status: "PENDING",
+            });
+          if (!action) {
+            console.log(
+              "Customer modification approval mapping not found:",
+              {
+                originalMessageId,
+                adminPhone: normalizedAdminPhone,
+              }
+            );
+          } else {
+            const approvalResult =
+              await approveCustomerModificationRequest({
+                requestId: action.request,
+                reviewedBy: null,
+                source: "WHATSAPP",
+              });
+            if (
+              approvalResult.approved ||
+              approvalResult.alreadyApproved
+            ) {
+              action.status = "USED";
+              action.usedAt = new Date();
+              await action.save();
+              console.log(
+                "Customer modification approved from WhatsApp:",
+                {
+                  requestId: action.request,
+                  adminPhone: normalizedAdminPhone,
+                  originalMessageId,
+                }
+              );
+            }
+          }
+        }
+      } catch (approvalError) {
+        console.error(
+          "Customer modification WhatsApp approval failed:",
+          approvalError.message
+        );
+      }
+    }
+
     if (!phoneNumber || !whatsappMessageId) {
       console.log(
-        "⚠️ Incoming message missing phone or message ID"
+        "âš ï¸ Incoming message missing phone or message ID"
       );
 
       continue;
@@ -232,12 +317,12 @@ const customer =
       "payment screenshot",
       "screenshot",
       "upi",
-      "પેમેન્ટ",
-      "પેમેન્ટ કર્યું",
-      "પેમેન્ટ કર્યુ",
-      "પેમેન્ટ સ્ક્રીનશોટ",
-      "ભર્યું",
-      "ભર્યુ",
+      "àªªà«‡àª®à«‡àª¨à«àªŸ",
+      "àªªà«‡àª®à«‡àª¨à«àªŸ àª•àª°à«àª¯à«àª‚",
+      "àªªà«‡àª®à«‡àª¨à«àªŸ àª•àª°à«àª¯à«",
+      "àªªà«‡àª®à«‡àª¨à«àªŸ àª¸à«àª•à«àª°à«€àª¨àª¶à«‹àªŸ",
+      "àª­àª°à«àª¯à«àª‚",
+      "àª­àª°à«àª¯à«",
     ];
 
     const searchableText =
@@ -299,7 +384,7 @@ const customer =
       });
 
     console.log(
-      "✅ Incoming WhatsApp message saved:",
+      "âœ… Incoming WhatsApp message saved:",
       {
         id: savedMessage._id,
         customer:
@@ -314,7 +399,7 @@ const customer =
     );
   } catch (incomingError) {
     console.error(
-      "❌ Incoming WhatsApp message processing failed:",
+      "âŒ Incoming WhatsApp message processing failed:",
       incomingError.message
     );
   }
@@ -335,7 +420,7 @@ const customer =
 
         for (const status of statuses) {
           console.log(
-            "📦 WhatsApp Status:",
+            "ðŸ“¦ WhatsApp Status:",
             {
               id: status.id,
               status: status.status,
@@ -348,7 +433,7 @@ const customer =
 
           if (!status.id) {
             console.log(
-              "⚠️ Status message ID missing"
+              "âš ï¸ Status message ID missing"
             );
 
             continue;
@@ -373,6 +458,14 @@ const customer =
               whatsappMessageId:
                 status.id,
             });
+      // =========================================
+      // Find Customer OTP
+      // =========================================
+      const customerOtp =
+        await CustomerOtp.findOne({
+          whatsappMessageId:
+            status.id,
+        });
 
           console.log(
             "Announcement Delivery =",
@@ -390,11 +483,12 @@ const customer =
           // =========================================
 
           if (
-            !bill &&
-            !announcementDelivery
-          ) {
+        !bill &&
+        !announcementDelivery &&
+        !customerOtp
+      ) {
             console.log(
-              "❌ No Bill or AnnouncementDelivery found for message:",
+              "âŒ No Bill or AnnouncementDelivery found for message:",
               status.id
             );
 
@@ -481,7 +575,7 @@ const customer =
               );
 
               console.log(
-                "✅ AnnouncementDelivery updated:",
+                "âœ… AnnouncementDelivery updated:",
                 {
                   id:
                     announcementDelivery._id,
@@ -496,11 +590,56 @@ const customer =
 
           // =================================================
           // If this is only an announcement, continue
-          // =================================================
-
-          if (!bill) {
-            continue;
-          }
+          // =================================================      // =================================================
+      // Customer OTP WhatsApp Status Tracking
+      // =================================================
+      if (customerOtp) {
+        const otpUpdate = {};
+        if (status.status === "sent") {
+          otpUpdate.whatsappStatus = "sent";
+          otpUpdate.whatsappSentAt =
+            new Date(Number(status.timestamp) * 1000);
+        }
+        if (status.status === "delivered") {
+          otpUpdate.whatsappStatus = "delivered";
+          otpUpdate.whatsappDeliveredAt =
+            new Date(Number(status.timestamp) * 1000);
+        }
+        if (status.status === "read") {
+          otpUpdate.whatsappStatus = "read";
+          otpUpdate.whatsappReadAt =
+            new Date(Number(status.timestamp) * 1000);
+        }
+        if (status.status === "failed") {
+          otpUpdate.whatsappStatus = "failed";
+          otpUpdate.whatsappFailedAt =
+            new Date(Number(status.timestamp) * 1000);
+          otpUpdate.whatsappFailureReason =
+            status.errors?.[0]?.title ||
+            status.errors?.[0]?.message ||
+            "WhatsApp delivery failed.";
+        }
+        if (Object.keys(otpUpdate).length > 0) {
+          await CustomerOtp.updateOne(
+            { _id: customerOtp._id },
+            { $set: otpUpdate }
+          );
+          console.log(
+            "Customer OTP WhatsApp Status Updated:",
+            {
+              id: customerOtp._id,
+              messageId: status.id,
+              status: status.status,
+            }
+          );
+        }
+      }
+      // =================================================
+      // If this is only an announcement, continue
+      // =================================================
+      if (!bill) {
+        continue;
+      }
 
           // =================================================
           // Bill WhatsApp Status Tracking
@@ -557,7 +696,7 @@ const customer =
             );
 
             console.log(
-              "❌ Bill marked as FAILED:",
+              "âŒ Bill marked as FAILED:",
               bill.invoiceNo
             );
 
@@ -575,7 +714,7 @@ const customer =
             )
           ) {
             console.log(
-              "⚠️ Unknown WhatsApp status:",
+              "âš ï¸ Unknown WhatsApp status:",
               incomingStatus
             );
 
@@ -606,7 +745,7 @@ const customer =
             currentPriority
           ) {
             console.log(
-              "⏭️ Ignoring older WhatsApp status:",
+              "â­ï¸ Ignoring older WhatsApp status:",
               {
                 bill:
                   bill.invoiceNo,
@@ -655,7 +794,7 @@ const customer =
             ] = "Message sent";
 
             console.log(
-              "📤 BILL SENT:",
+              "ðŸ“¤ BILL SENT:",
               bill.invoiceNo
             );
           }
@@ -682,7 +821,7 @@ const customer =
               "Message delivered";
 
             console.log(
-              "✅ BILL DELIVERED:",
+              "âœ… BILL DELIVERED:",
               bill.invoiceNo
             );
           }
@@ -695,7 +834,7 @@ const customer =
             incomingStatus === "read"
           ) {
             console.log(
-              "👁️ READ EVENT RECEIVED:",
+              "ðŸ‘ï¸ READ EVENT RECEIVED:",
               bill.invoiceNo
             );
 
@@ -712,7 +851,7 @@ const customer =
             ] = "Message read";
 
             console.log(
-              "🔵 BILL READ:",
+              "ðŸ”µ BILL READ:",
               bill.invoiceNo
             );
           }
@@ -729,7 +868,7 @@ const customer =
           );
 
           console.log(
-            "✅ Bill WhatsApp status updated:",
+            "âœ… Bill WhatsApp status updated:",
             {
               invoice:
                 bill.invoiceNo,
@@ -748,7 +887,7 @@ const customer =
     return res.sendStatus(200);
   } catch (error) {
     console.error(
-      "❌ Webhook Error:",
+      "âŒ Webhook Error:",
       error
     );
 
@@ -777,7 +916,7 @@ router.post("/send", async (req, res) => {
 
     if (!configuredSecret) {
       console.error(
-        "❌ WHATSAPP_SEND_SECRET is not configured"
+        "âŒ WHATSAPP_SEND_SECRET is not configured"
       );
 
       return res.status(500).json({
@@ -888,7 +1027,7 @@ router.post("/send", async (req, res) => {
     });
   } catch (error) {
     console.error(
-      "❌ WhatsApp send error:",
+      "âŒ WhatsApp send error:",
       error
     );
 

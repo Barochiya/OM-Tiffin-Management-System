@@ -1,4 +1,4 @@
-﻿const dashboardRoutes = require("./routes/dashboardRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const express = require("express");
 const cors = require("cors");
@@ -14,6 +14,12 @@ console.log("app.js loaded");
 
 const tiffinRoutes = require("./routes/tiffinRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const customerAuthRoutes = require("./routes/customerAuthRoutes");
+const customerAccountRoutes = require("./routes/customerAccountRoutes");
+const customerPortalRoutes = require("./routes/customerPortalRoutes");
+const customerModificationAdminRoutes = require("./routes/customerModificationAdminRoutes");
+const customerModificationSettingsRoutes = require("./routes/customerModificationSettingsRoutes");
+
 const priceRoutes = require("./routes/priceRoutes");
 const dailyEntryRoutes = require("./routes/dailyEntryRoutes");
 const billRoutes = require("./routes/billRoutes");
@@ -43,7 +49,7 @@ app.use(
   "http://localhost:5174",
 ],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: [
   "Content-Type",
   "Authorization",
@@ -108,6 +114,12 @@ app.use("/api/tiffins", tiffinRoutes);
 
 // Admin
 app.use("/api/admin", adminRoutes);
+app.use("/api/customer-auth", customerAuthRoutes);
+app.use("/api/customer-accounts", customerAccountRoutes);
+app.use("/api/customer-portal", customerPortalRoutes);
+app.use("/api/customer-modification-admin", customerModificationAdminRoutes);
+app.use("/api/customer-modification-admin", customerModificationSettingsRoutes);
+
 
 // Meal Prices
 app.use("/api/prices", priceRoutes);
@@ -169,9 +181,3 @@ app.use(errorHandler);
 // ===============================
 
 module.exports = app;
-
-
-
-
-
-

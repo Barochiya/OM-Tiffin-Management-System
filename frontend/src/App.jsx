@@ -1,8 +1,14 @@
-﻿import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminLayout from "./layouts/AdminLayout";
 
 import Login from "./pages/Login";
+import CustomerLogin from "./pages/CustomerLogin";
+import CustomerAccountSetup from "./pages/CustomerAccountSetup";
+import CustomerDashboard from "./pages/CustomerDashboard";
+import CustomerChangePassword from "./pages/CustomerChangePassword";
+import CustomerForgotPassword from "./pages/CustomerForgotPassword";
+import CustomerForgotUserId from "./pages/CustomerForgotUserId";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import AddCustomer from "./pages/AddCustomer";
@@ -21,8 +27,11 @@ import WhatsAppInbox from "./pages/WhatsAppInbox";
 import WhatsAppPaymentApproval from "./pages/WhatsAppPaymentApproval";
 import AnnouncementDeliveryStatus from "./pages/AnnouncementDeliveryStatus";
 import BillDeliveryStatus from "./pages/BillDeliveryStatus";
+import CustomerModificationRequests from "./pages/CustomerModificationRequests";
+import CustomerModificationSettings from "./pages/CustomerModificationSettings";
 import BusinessInfo from "./pages/BusinessInfo";
 import ProtectedRoute from "./components/ProtectedRoute";
+import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
 
 export default function App() {
   return (
@@ -38,6 +47,29 @@ export default function App() {
         path="/login"
         element={<Login />}
       />
+
+	<Route path="/customer-login" element={<CustomerLogin />} />
+       <Route path="/customer-account-setup" element={<CustomerAccountSetup />} />
+       <Route
+         path="/customer-forgot-password"
+         element={<CustomerForgotPassword />}
+       />
+
+
+      <Route
+        path="/customer-forgot-user-id"
+        element={<CustomerForgotUserId />}
+       />
+      <Route element={<CustomerProtectedRoute />}>
+  <Route
+    path="/customer/dashboard"
+    element={<CustomerDashboard />}
+  />
+  <Route
+    path="/customer/change-password"
+    element={<CustomerChangePassword />}
+  />
+</Route>
 
       <Route
         path="/business-info"
@@ -198,17 +230,31 @@ export default function App() {
           }
         />
 
-        <Route
-          path="/view-bills/:id"
-          element={
-            <ProtectedRoute>
-              <SingleBill />
-            </ProtectedRoute>
-          }
-        />
-      </Route>
+                    <Route
+        path="/customer-modification-requests"
+        element={
+          <ProtectedRoute>
+            <CustomerModificationRequests />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customer-modification-settings"
+        element={
+          <ProtectedRoute>
+            <CustomerModificationSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/view-bills/:id"
+        element={
+          <ProtectedRoute>
+            <SingleBill />
+          </ProtectedRoute>
+        }
+      />
 
-      {/* 404 */}
       <Route
         path="*"
         element={
@@ -217,9 +263,7 @@ export default function App() {
           </h1>
         }
       />
+      </Route>
     </Routes>
   );
 }
-
-
-

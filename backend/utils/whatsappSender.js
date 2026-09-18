@@ -90,7 +90,8 @@ const sendMetaMessageRequest = async (payload) => {
     baseUrl,
   } = getWhatsAppConfig();
 
-  const response = await fetch(
+  console.log("META WHATSAPP FETCH START");
+const response = await fetch(
     `${baseUrl}/${phoneNumberId}/messages`,
     {
       method: "POST",
@@ -104,7 +105,11 @@ const sendMetaMessageRequest = async (payload) => {
     }
   );
 
-  return parseMetaResponse(response);
+  console.log("META WHATSAPP RESPONSE:", {
+  status: response.status,
+  ok: response.ok,
+});
+return parseMetaResponse(response);
 };
 
 // =====================================================
@@ -150,13 +155,13 @@ const sendWhatsAppMessage = async ({
     },
   };
 
-  console.log("📤 Sending WhatsApp text:", {
+  console.log("ðŸ“¤ Sending WhatsApp text:", {
     to: normalizedTo,
   });
 
   const data = await sendMetaMessageRequest(payload);
 
-  console.log("✅ WhatsApp text sent:", data);
+  console.log("âœ… WhatsApp text sent:", data);
 
   return data;
 };
@@ -217,11 +222,11 @@ const sendWhatsAppTemplate = async ({
   };
 
   console.log(
-  "📦 WhatsApp Template Payload:",
+  "ðŸ“¦ WhatsApp Template Payload:",
   JSON.stringify(payload, null, 2)
 );
 
-  console.log("📤 Sending WhatsApp template:", {
+  console.log("ðŸ“¤ Sending WhatsApp template:", {
     to: normalizedTo,
     templateName,
     languageCode,
@@ -229,7 +234,7 @@ const sendWhatsAppTemplate = async ({
 
   const data = await sendMetaMessageRequest(payload);
 
-  console.log("✅ WhatsApp template sent:", data);
+  console.log("âœ… WhatsApp template sent:", data);
 
   return data;
 };
@@ -276,7 +281,8 @@ const uploadPdf = async ({
     filename || "om-tiffin-bill.pdf"
   );
 
-  const response = await fetch(
+  console.log("META WHATSAPP FETCH START");
+const response = await fetch(
     `${baseUrl}/${phoneNumberId}/media`,
     {
       method: "POST",
@@ -289,7 +295,11 @@ const uploadPdf = async ({
     }
   );
 
-  return parseMetaResponse(response);
+  console.log("META WHATSAPP RESPONSE:", {
+  status: response.status,
+  ok: response.ok,
+});
+return parseMetaResponse(response);
 };
 
 // =====================================================
@@ -341,7 +351,7 @@ const sendWhatsAppDocument = async ({
     payload.document.caption = caption;
   }
 
-  console.log("📤 Sending WhatsApp document:", {
+  console.log("ðŸ“¤ Sending WhatsApp document:", {
   to: normalizedTo,
   filename,
 });
@@ -352,7 +362,7 @@ const data = await sendMetaMessageRequest(
   payload
 );
 
-console.log("✅ WhatsApp document sent:", data);
+console.log("âœ… WhatsApp document sent:", data);
 
 return data;
 };
@@ -398,16 +408,16 @@ const sendPdfBillWhatsApp = async ({
   }
 
   const caption =
-  `🍱 *OM TIFFIN SERVICE* 🍱\n\n` +
-  `━━━━━━━━━━━━━━\n\n` +
-  `🧾 *NEW BILL GENERATED*\n\n` +
-  `👤 *Customer:* ${customerName || "Customer"}\n\n` +
-  `📄 *Invoice No:* ${invoiceNo || "N/A"}\n\n` +
-  `💰 *Total Amount:* ₹${Number(totalAmount || 0)}\n\n` +
-  `📅 *Date:* ${new Date().toLocaleDateString("en-GB")}\n\n` +
-  `━━━━━━━━━━━━━━\n\n` +
-  `🙏 Thank you for choosing\n` +
-  `🌿 *OM TIFFIN SERVICE* 🌿`;
+  `ðŸ± *OM TIFFIN SERVICE* ðŸ±\n\n` +
+  `â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n` +
+  `ðŸ§¾ *NEW BILL GENERATED*\n\n` +
+  `ðŸ‘¤ *Customer:* ${customerName || "Customer"}\n\n` +
+  `ðŸ“„ *Invoice No:* ${invoiceNo || "N/A"}\n\n` +
+  `ðŸ’° *Total Amount:* â‚¹${Number(totalAmount || 0)}\n\n` +
+  `ðŸ“… *Date:* ${new Date().toLocaleDateString("en-GB")}\n\n` +
+  `â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n` +
+  `ðŸ™ Thank you for choosing\n` +
+  `ðŸŒ¿ *OM TIFFIN SERVICE* ðŸŒ¿`;
   
   const result = await sendWhatsAppDocument({
   to,
@@ -447,11 +457,11 @@ const sendBillTemplateWithPdf = async ({
     filename,
   });
 
-  console.log("📤 Uploading PDF:", filename);
+  console.log("ðŸ“¤ Uploading PDF:", filename);
 
-console.log("📄 Media ID:", media.id);
+console.log("ðŸ“„ Media ID:", media.id);
 
-console.log("📤 Sending WhatsApp template:", {
+console.log("ðŸ“¤ Sending WhatsApp template:", {
   to,
   template: "om_tiffin_bill",
   customerName,

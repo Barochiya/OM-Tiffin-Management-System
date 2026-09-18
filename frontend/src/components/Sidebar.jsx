@@ -242,6 +242,30 @@ const closeSidebar = () => {
           WhatsApp Payment Approval
         </Link>
 
+      <Link
+        to="/customer-modification-requests"
+        onClick={closeSidebar}
+        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+          location.pathname === "/customer-modification-requests"
+            ? "bg-white text-blue-700 font-semibold shadow"
+            : "hover:bg-blue-600"
+        }`}
+      >
+        <FaCalendarAlt className="text-orange-300" />
+        Tiffin Modifications
+      </Link>
+      <Link
+        to="/customer-modification-settings"
+        onClick={closeSidebar}
+        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+          location.pathname === "/customer-modification-settings"
+            ? "bg-white text-blue-700 font-semibold shadow"
+            : "hover:bg-blue-600"
+        }`}
+      >
+        <FaCog className="text-cyan-300" />
+        Tiffin Modification Settings
+      </Link>
       </nav>
 
       {/* Footer */}
@@ -268,6 +292,8 @@ const closeSidebar = () => {
 };
 
 export default Sidebar;
+
+
 
 
 

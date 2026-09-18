@@ -13,6 +13,7 @@ const WhatsAppMessage = require("../models/WhatsAppMessage");
 const CustomerOtp = require("../models/CustomerOtp");
 const Tiffin = require("../models/Tiffin");
 const CustomerModificationWhatsAppAction = require("../models/CustomerModificationWhatsAppAction");
+const { normalizeIndianPhone } = require("../utils/whatsappSender");
 const { approveCustomerModificationRequest } = require("../services/customerModificationApprovalService");
 
 // =====================================================
@@ -132,12 +133,7 @@ for (const incoming of incomingMessages) {
     console.log("MODIFICATION APPROVAL CHECK:", { incomingType: incoming?.type, buttonPayload: modificationButtonPayload, isModificationApproval, phoneNumber, contextMessageId: incoming?.context?.id || null });
     if (isModificationApproval) {
       try {
-        const adminPhoneDigits =
-          String(phoneNumber).replace(/\D/g, "");
-        const normalizedAdminPhone =
-          adminPhoneDigits.length >= 10
-            ? adminPhoneDigits.slice(-10)
-            : adminPhoneDigits;
+        const normalizedAdminPhone = normalizeIndianPhone(phoneNumber);
         const originalMessageId =
           incoming?.context?.id || null;
         if (!originalMessageId) {

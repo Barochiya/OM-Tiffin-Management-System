@@ -35,7 +35,7 @@ router.get("/webhook", (req, res) => {
     token === verifyToken
   ) {
     console.log(
-      "âœ… WhatsApp Webhook Verified"
+      "[OK] WhatsApp Webhook Verified"
     );
 
     return res
@@ -44,7 +44,7 @@ router.get("/webhook", (req, res) => {
   }
 
   console.log(
-    "âŒ WhatsApp Webhook Verification Failed"
+    "[ERROR] WhatsApp Webhook Verification Failed"
   );
 
   return res.sendStatus(403);
@@ -56,7 +56,7 @@ router.get("/webhook", (req, res) => {
 
 router.post("/webhook", async (req, res) => {
   console.log(
-    "ðŸ“© WhatsApp Webhook Received"
+    "[WHATSAPP] WhatsApp Webhook Received"
   );
 
   console.log(
@@ -102,7 +102,7 @@ const incomingMessages = Array.isArray(
 for (const incoming of incomingMessages) {
   try {
     console.log(
-      "ðŸ“© Incoming WhatsApp Message:",
+      "[WHATSAPP] Incoming WhatsApp Message:",
       JSON.stringify(incoming, null, 2)
     );
 
@@ -191,7 +191,7 @@ for (const incoming of incomingMessages) {
 
     if (!phoneNumber || !whatsappMessageId) {
       console.log(
-        "âš ï¸ Incoming message missing phone or message ID"
+        "[WARN] Incoming message missing phone or message ID"
       );
 
       continue;
@@ -380,7 +380,7 @@ const customer =
       });
 
     console.log(
-      "âœ… Incoming WhatsApp message saved:",
+      "[OK] Incoming WhatsApp message saved:",
       {
         id: savedMessage._id,
         customer:
@@ -395,7 +395,7 @@ const customer =
     );
   } catch (incomingError) {
     console.error(
-      "âŒ Incoming WhatsApp message processing failed:",
+      "[ERROR] Incoming WhatsApp message processing failed:",
       incomingError.message
     );
   }
@@ -416,7 +416,7 @@ const customer =
 
         for (const status of statuses) {
           console.log(
-            "ðŸ“¦ WhatsApp Status:",
+            "[WHATSAPP] WhatsApp Status:",
             {
               id: status.id,
               status: status.status,
@@ -429,7 +429,7 @@ const customer =
 
           if (!status.id) {
             console.log(
-              "âš ï¸ Status message ID missing"
+              "[WARN] Status message ID missing"
             );
 
             continue;
@@ -484,7 +484,7 @@ const customer =
         !customerOtp
       ) {
             console.log(
-              "âŒ No Bill or AnnouncementDelivery found for message:",
+              "[WARN] No Bill or AnnouncementDelivery found for message:",
               status.id
             );
 
@@ -571,7 +571,7 @@ const customer =
               );
 
               console.log(
-                "âœ… AnnouncementDelivery updated:",
+                "[OK] AnnouncementDelivery updated:",
                 {
                   id:
                     announcementDelivery._id,
@@ -692,7 +692,7 @@ const customer =
             );
 
             console.log(
-              "âŒ Bill marked as FAILED:",
+              "[ERROR] Bill marked as FAILED:",
               bill.invoiceNo
             );
 
@@ -710,7 +710,7 @@ const customer =
             )
           ) {
             console.log(
-              "âš ï¸ Unknown WhatsApp status:",
+              "[WHATSAPP] WhatsApp Status:",
               incomingStatus
             );
 
@@ -741,7 +741,7 @@ const customer =
             currentPriority
           ) {
             console.log(
-              "â­ï¸ Ignoring older WhatsApp status:",
+              "[WHATSAPP] WhatsApp Status:",
               {
                 bill:
                   bill.invoiceNo,
@@ -790,7 +790,7 @@ const customer =
             ] = "Message sent";
 
             console.log(
-              "ðŸ“¤ BILL SENT:",
+              "[WHATSAPP] BILL SENT:",
               bill.invoiceNo
             );
           }
@@ -817,7 +817,7 @@ const customer =
               "Message delivered";
 
             console.log(
-              "âœ… BILL DELIVERED:",
+              "[OK] BILL DELIVERED:",
               bill.invoiceNo
             );
           }
@@ -830,7 +830,7 @@ const customer =
             incomingStatus === "read"
           ) {
             console.log(
-              "ðŸ‘ï¸ READ EVENT RECEIVED:",
+              "[WHATSAPP] READ EVENT RECEIVED:",
               bill.invoiceNo
             );
 
@@ -847,7 +847,7 @@ const customer =
             ] = "Message read";
 
             console.log(
-              "ðŸ”µ BILL READ:",
+              "[WHATSAPP] BILL READ:",
               bill.invoiceNo
             );
           }
@@ -864,7 +864,7 @@ const customer =
           );
 
           console.log(
-            "âœ… Bill WhatsApp status updated:",
+            "[OK] Bill WhatsApp status updated:",
             {
               invoice:
                 bill.invoiceNo,
@@ -883,7 +883,7 @@ const customer =
     return res.sendStatus(200);
   } catch (error) {
     console.error(
-      "âŒ Webhook Error:",
+      "[ERROR] Webhook Error:",
       error
     );
 
@@ -912,7 +912,7 @@ router.post("/send", async (req, res) => {
 
     if (!configuredSecret) {
       console.error(
-        "âŒ WHATSAPP_SEND_SECRET is not configured"
+        "[ERROR] WHATSAPP_SEND_SECRET is not configured"
       );
 
       return res.status(500).json({
@@ -1023,7 +1023,7 @@ router.post("/send", async (req, res) => {
     });
   } catch (error) {
     console.error(
-      "âŒ WhatsApp send error:",
+      "[ERROR] WhatsApp send error:",
       error
     );
 

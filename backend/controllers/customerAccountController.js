@@ -1,9 +1,12 @@
-const crypto = require("crypto");
+﻿const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const {
   createCustomerAccount,
 } = require("../services/customerAccountService");
 const CustomerAccount = require("../models/CustomerAccount");
+const Tiffin = require("../models/Tiffin");
+const { sendWhatsAppTemplate } = require("../utils/whatsappSender");
+const WHATSAPP_TEMPLATES = require("../config/whatsappTemplates");
 const TEMP_PASSWORD_LENGTH = 10;
 const generateTemporaryPassword = () => {
   const alphabet =
@@ -104,23 +107,43 @@ const setCustomerLoginEnabled = async (req, res) => {
 const regenerateTemporaryPassword = async (req, res) => {
   try {
     const { customerId } = req.params;
+
     if (!customerId) {
       return res.status(400).json({
         success: false,
         message: "Customer ID is required",
       });
     }
+
     const account = await CustomerAccount.findOne({
       customer: customerId,
     });
+
     if (!account) {
       return res.status(404).json({
         success: false,
         message: "Customer account not found",
       });
     }
-    const temporaryPassword =
-      generateTemporaryPassword();
+
+    const customer = await Tiffin.findById(customerId);
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+    }
+
+    if (!customer.phone) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer phone number is not available",
+      });
+    }
+
+    const temporaryPassword = generateTemporaryPassword();
+
     account.passwordHash = await bcrypt.hash(
       temporaryPassword,
       12
@@ -129,17 +152,58 @@ const regenerateTemporaryPassword = async (req, res) => {
     account.passwordChangedAt = null;
     account.failedLoginAttempts = 0;
     account.lockedUntil = null;
-    await account.save();
+
+    await account.save();    const credentialsMessage =
+      `Your OM Tiffin Customer User ID: ${account.userId}. Tap the button below to set up your account and create your password.`;
+
+    const template = WHATSAPP_TEMPLATES.CUSTOM_ANNOUNCEMENT;
+
+    if (!template) {
+      throw new Error(
+        "CUSTOM_ANNOUNCEMENT WhatsApp template is not configured"
+      );
+    }
+
+    const whatsappResponse = await sendWhatsAppTemplate({
+      to: customer.phone,
+      templateName: template.name,
+      languageCode: template.language,
+      components: [
+        {
+          type: "body",
+          parameters: [
+            {
+              type: "text",
+              text: customer.customerName || "Customer",
+            },
+            {
+              type: "text",
+              text: credentialsMessage,
+            },
+          ],
+        },
+      ],
+    });
+
+    const whatsappMessageId =
+      whatsappResponse?.messages?.[0]?.id || null;
+
     return res.status(200).json({
       success: true,
       message:
-        "Temporary password regenerated successfully",
+        "Temporary password regenerated and sent to customer WhatsApp successfully",
       account: {
         id: account._id,
         customer: account.customer,
         userId: account.userId,
         loginEnabled: account.loginEnabled,
         isFirstLogin: account.isFirstLogin,
+      },
+      whatsapp: {
+        sent: true,
+        messageId: whatsappMessageId,
+        status:
+          whatsappResponse?.messages?.[0]?.message_status || null,
       },
       temporaryPassword,
     });
@@ -148,6 +212,7 @@ const regenerateTemporaryPassword = async (req, res) => {
       "regenerateTemporaryPassword:",
       error
     );
+
     return res.status(500).json({
       success: false,
       message:
@@ -179,3 +244,6 @@ module.exports = {
   regenerateTemporaryPassword,
   getCustomerAccountStatuses,
 };
+
+
+

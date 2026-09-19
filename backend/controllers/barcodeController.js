@@ -1,4 +1,4 @@
-const Tiffin = require("../models/Tiffin");
+﻿const Tiffin = require("../models/Tiffin");
 const BarcodeCounter = require("../models/BarcodeCounter");
 const nextBarcode = async () => {
   const counter = await BarcodeCounter.findOneAndUpdate(
@@ -123,4 +123,5 @@ module.exports = {
   getCustomerBarcode,
   getAllCustomerBarcodes,
   lookupBarcode,
+  ensureBarcode,
 };

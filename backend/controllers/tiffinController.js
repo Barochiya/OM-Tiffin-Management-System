@@ -1,8 +1,15 @@
-const Price = require("../models/Price");
-console.log("✅ Controller Loaded");
+﻿const Price = require("../models/Price");
+console.log("Controller Loaded");
 
 const Tiffin = require("../models/Tiffin");
 const Bill = require("../models/Bill");
+const { ensureBarcode } = require("./barcodeController");
+const {
+    createCustomerAccount,
+} = require("../services/customerAccountService");
+const {
+    sendWhatsAppTemplate,
+} = require("../utils/whatsappSender");
 
 
 // ======================================================
@@ -93,94 +100,122 @@ const preparePricing = async (incomingPricing) => {
 // Create Tiffin / Customer
 // ======================================================
 const createTiffin = async (req, res) => {
-
-    console.log("🔥 createTiffin API Called");
-
+    console.log("createTiffin API Called");
     try {
-
         const currentMonth =
             new Date().toLocaleString("default", {
                 month: "long",
             });
-
-        // Get proper pricing
         const pricing = await preparePricing(
             req.body.pricing
         );
-
         console.log(
-            "💰 Customer Pricing:",
+            "Customer Pricing:",
             pricing
         );
-
         const tiffin = await Tiffin.create({
-
             customerName:
                 req.body.customerName,
-
             phone:
                 req.body.phone,
-
             address:
                 req.body.address,
-
             mealType:
                 req.body.mealType,
-
-            // Old monthly price
-            // Billing system calculates actual amount
             price: 0,
-
             status:
                 req.body.status || "Active",
-
             paymentStatus: "Pending",
-
             pendingAmount: 0,
-
             paymentDate: null,
-
             paymentMonth:
                 currentMonth,
-
             pricing: pricing,
         });
-
-
         console.log(
-            "✅ Customer Created:",
+            "Customer Created:",
             tiffin._id
         );
-
+        // ======================================================
+        // AUTO BARCODE + CUSTOMER ACCOUNT + WHATSAPP CREDENTIALS
+        // ======================================================
+        let accountProvisioning = {
+            success: false,
+            created: false,
+            whatsappSent: false,
+        };
+        try {
+            const barcode =
+                await ensureBarcode(tiffin);
+            const accountResult =
+                await createCustomerAccount(
+                    tiffin._id
+                );
+            accountProvisioning.created =
+                accountResult.created;
+            if (
+                accountResult.created
+            ) {                const credentialsMessage =
+                    `Your OM Tiffin Customer User ID: ${accountResult.account.userId}. Tap the button below to set up your account and create your password.`;
+                await sendWhatsAppTemplate({
+                    to: tiffin.phone,
+                    templateName:
+                        "om_tiffin_custom_announcement",
+                    languageCode: "en_GB",
+                    components: [
+                        {
+                            type: "body",
+                            parameters: [
+                                {
+                                    type: "text",
+                                    text:
+                                        tiffin.customerName ||
+                                        "Customer",
+                                },
+                                {
+                                    type: "text",
+                                    text: credentialsMessage,
+                                },
+                            ],
+                        },
+                    ],
+                });
+                accountProvisioning.whatsappSent =
+                    true;
+            }
+            accountProvisioning.success =
+                true;
+            console.log(
+                "Customer account provisioned:",
+                {
+                    customerId: tiffin._id,
+                    userId: barcode,
+                    whatsappSent:
+                        accountProvisioning.whatsappSent,
+                }
+            );
+        } catch (accountError) {
+            console.error(
+                "Customer account/WhatsApp provisioning failed:",
+                accountError.message
+            );
+        }
         res.status(201).json({
-
             success: true,
-
             data: tiffin,
-
+            accountProvisioning,
         });
-
     } catch (error) {
-
         console.error(
-            "❌ Create Tiffin Error:",
+            "Create Tiffin Error:",
             error
         );
-
         res.status(500).json({
-
             success: false,
-
             message: error.message,
-
         });
-
     }
-};
-
-
-// ======================================================
-// Get All Tiffins
+};// Get All Tiffins
 // ======================================================
 const getAllTiffins = async (req, res) => {
 
@@ -312,7 +347,7 @@ const getAllTiffins = async (req, res) => {
     } catch (error) {
 
         console.error(
-            "❌ Get All Tiffins Error:",
+            "âŒ Get All Tiffins Error:",
             error
         );
 
@@ -335,7 +370,7 @@ const getAllTiffins = async (req, res) => {
 const getTiffinById = async (req, res) => {
 
     console.log(
-        "🔎 getTiffinById Called:",
+        "ðŸ”Ž getTiffinById Called:",
         req.params.id
     );
 
@@ -453,7 +488,7 @@ const getTiffinById = async (req, res) => {
 
 
         console.log(
-            "📦 Customer Response:",
+            "ðŸ“¦ Customer Response:",
             {
                 customerName:
                     customerData.customerName,
@@ -486,7 +521,7 @@ const getTiffinById = async (req, res) => {
     } catch (error) {
 
         console.error(
-            "❌ Get Tiffin By ID Error:",
+            "âŒ Get Tiffin By ID Error:",
             error
         );
 
@@ -588,7 +623,7 @@ const updateTiffin = async (req, res) => {
 
 
         console.log(
-            "✅ Customer Updated:",
+            "âœ… Customer Updated:",
             tiffin._id
         );
 
@@ -607,14 +642,14 @@ const updateTiffin = async (req, res) => {
 
     catch (error) {
   console.error(
-    "❌ Create Tiffin Error:",
+    "âŒ Create Tiffin Error:",
     error
   );
 
   if (error.errors?.phone) {
     return res.status(400).json({
       success: false,
-      message: "❌ Invalid mobile number",
+      message: "âŒ Invalid mobile number",
     });
   }
 
@@ -668,7 +703,7 @@ const deleteTiffin = async (req, res) => {
     } catch (error) {
 
         console.error(
-            "❌ Delete Tiffin Error:",
+            "âŒ Delete Tiffin Error:",
             error
         );
 
@@ -742,7 +777,7 @@ const markPaymentPaid = async (req, res) => {
     } catch (error) {
 
         console.error(
-            "❌ Mark Payment Paid Error:",
+            "âŒ Mark Payment Paid Error:",
             error
         );
 
@@ -766,7 +801,7 @@ const markPaymentPaid = async (req, res) => {
 const getDashboardStats = async (req, res) => {
 
     console.log(
-        "✅ getDashboardStats Called"
+        "âœ… getDashboardStats Called"
     );
 
 
@@ -867,7 +902,7 @@ const getDashboardStats = async (req, res) => {
     } catch (error) {
 
         console.error(
-            "❌ Dashboard Stats Error:",
+            "âŒ Dashboard Stats Error:",
             error
         );
 
@@ -905,3 +940,16 @@ module.exports = {
     getDashboardStats,
 
 };
+
+
+
+
+
+
+
+
+
+
+
+
+

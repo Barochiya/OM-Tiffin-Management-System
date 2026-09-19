@@ -1,3 +1,5 @@
+﻿const https = require("https");
+
 const getWhatsAppConfig = () => {
   const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
@@ -90,32 +92,58 @@ const sendMetaMessageRequest = async (payload) => {
     baseUrl,
   } = getWhatsAppConfig();
 
-  console.log("META WHATSAPP FETCH START");
-const response = await fetch(
-    `${baseUrl}/${phoneNumberId}/messages`,
-    {
-      method: "POST",
+  const url = new URL(`${baseUrl}/${phoneNumberId}/messages`);
 
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+  console.log("META WHATSAPP HTTPS START");
+
+  const response = await new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: url.hostname,
+        path: `${url.pathname}${url.search}`,
+        method: "POST",
+        family: 4,
+        timeout: 20000,
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
       },
+      (res) => {
+        let body = "";
+        res.setEncoding("utf8");
 
-      body: JSON.stringify(payload),
-    }
-  );
+        res.on("data", (chunk) => {
+          body += chunk;
+        });
+
+        res.on("end", () => {
+          resolve({
+            status: res.statusCode || 0,
+            ok: (res.statusCode || 0) >= 200 && (res.statusCode || 0) < 300,
+            text: async () => body,
+          });
+        });
+      }
+    );
+
+    req.on("timeout", () => {
+      req.destroy(new Error("WhatsApp Meta API request timed out"));
+    });
+
+    req.on("error", reject);
+
+    req.write(JSON.stringify(payload));
+    req.end();
+  });
 
   console.log("META WHATSAPP RESPONSE:", {
-  status: response.status,
-  ok: response.ok,
-});
-return parseMetaResponse(response);
+    status: response.status,
+    ok: response.ok,
+  });
+
+  return parseMetaResponse(response);
 };
-
-// =====================================================
-// Send Normal Text WhatsApp Message
-// =====================================================
-
 const sendWhatsAppMessage = async ({
   to,
   message,
@@ -155,13 +183,13 @@ const sendWhatsAppMessage = async ({
     },
   };
 
-  console.log("ðŸ“¤ Sending WhatsApp text:", {
+  console.log("Ã°Å¸â€œÂ¤ Sending WhatsApp text:", {
     to: normalizedTo,
   });
 
   const data = await sendMetaMessageRequest(payload);
 
-  console.log("âœ… WhatsApp text sent:", data);
+  console.log("Ã¢Å“â€¦ WhatsApp text sent:", data);
 
   return data;
 };
@@ -222,11 +250,11 @@ const sendWhatsAppTemplate = async ({
   };
 
   console.log(
-  "ðŸ“¦ WhatsApp Template Payload:",
+  "WhatsApp Template Payload:",
   JSON.stringify(payload, null, 2)
 );
 
-  console.log("ðŸ“¤ Sending WhatsApp template:", {
+  console.log("Sending WhatsApp template:", {
     to: normalizedTo,
     templateName,
     languageCode,
@@ -234,7 +262,7 @@ const sendWhatsAppTemplate = async ({
 
   const data = await sendMetaMessageRequest(payload);
 
-  console.log("âœ… WhatsApp template sent:", data);
+  console.log("WhatsApp template sent:", data);
 
   return data;
 };
@@ -351,7 +379,7 @@ const sendWhatsAppDocument = async ({
     payload.document.caption = caption;
   }
 
-  console.log("ðŸ“¤ Sending WhatsApp document:", {
+  console.log("Ã°Å¸â€œÂ¤ Sending WhatsApp document:", {
   to: normalizedTo,
   filename,
 });
@@ -362,7 +390,7 @@ const data = await sendMetaMessageRequest(
   payload
 );
 
-console.log("âœ… WhatsApp document sent:", data);
+console.log("Ã¢Å“â€¦ WhatsApp document sent:", data);
 
 return data;
 };
@@ -408,16 +436,16 @@ const sendPdfBillWhatsApp = async ({
   }
 
   const caption =
-  `ðŸ± *OM TIFFIN SERVICE* ðŸ±\n\n` +
-  `â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n` +
-  `ðŸ§¾ *NEW BILL GENERATED*\n\n` +
-  `ðŸ‘¤ *Customer:* ${customerName || "Customer"}\n\n` +
-  `ðŸ“„ *Invoice No:* ${invoiceNo || "N/A"}\n\n` +
-  `ðŸ’° *Total Amount:* â‚¹${Number(totalAmount || 0)}\n\n` +
-  `ðŸ“… *Date:* ${new Date().toLocaleDateString("en-GB")}\n\n` +
-  `â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n` +
-  `ðŸ™ Thank you for choosing\n` +
-  `ðŸŒ¿ *OM TIFFIN SERVICE* ðŸŒ¿`;
+  `Ã°Å¸ÂÂ± *OM TIFFIN SERVICE* Ã°Å¸ÂÂ±\n\n` +
+  `Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â\n\n` +
+  `Ã°Å¸Â§Â¾ *NEW BILL GENERATED*\n\n` +
+  `Ã°Å¸â€˜Â¤ *Customer:* ${customerName || "Customer"}\n\n` +
+  `Ã°Å¸â€œâ€ž *Invoice No:* ${invoiceNo || "N/A"}\n\n` +
+  `Ã°Å¸â€™Â° *Total Amount:* Ã¢â€šÂ¹${Number(totalAmount || 0)}\n\n` +
+  `Ã°Å¸â€œâ€¦ *Date:* ${new Date().toLocaleDateString("en-GB")}\n\n` +
+  `Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â\n\n` +
+  `Ã°Å¸â„¢Â Thank you for choosing\n` +
+  `Ã°Å¸Å’Â¿ *OM TIFFIN SERVICE* Ã°Å¸Å’Â¿`;
   
   const result = await sendWhatsAppDocument({
   to,
@@ -457,11 +485,11 @@ const sendBillTemplateWithPdf = async ({
     filename,
   });
 
-  console.log("ðŸ“¤ Uploading PDF:", filename);
+  console.log("Ã°Å¸â€œÂ¤ Uploading PDF:", filename);
 
-console.log("ðŸ“„ Media ID:", media.id);
+console.log("Ã°Å¸â€œâ€ž Media ID:", media.id);
 
-console.log("ðŸ“¤ Sending WhatsApp template:", {
+  console.log("Sending WhatsApp template:", {
   to,
   template: "om_tiffin_bill",
   customerName,
@@ -642,3 +670,11 @@ module.exports = {
   sendBillTemplateWithPdf,
   sendPdfPaymentReceiptWhatsApp,
 };
+
+
+
+
+
+
+
+

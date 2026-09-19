@@ -21,6 +21,7 @@ import {
   getCustomers,
   deleteCustomer,
   markPaymentPaid,
+  getCustomerAccountStatuses,
 } from "../services/customerService";
 import { sendBulkPaymentReminders } from "../services/paymentReminderService";
 import JsBarcode from "jsbarcode";
@@ -30,6 +31,7 @@ export default function Customers() {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
   const [payingId, setPayingId] = useState(null);
+  const [customerAccountStatuses, setCustomerAccountStatuses] = useState({});
   const [barcodeCustomer, setBarcodeCustomer] = useState(null);
 
   const barcodeModal = barcodeCustomer
@@ -40,6 +42,10 @@ export default function Customers() {
     : null;
 
   const barcodeRef = useRef(null);
+  useEffect(() => {
+    loadCustomerAccountStatuses();
+  }, []);
+
   useEffect(() => {
     if (!barcodeCustomer || !barcodeRef.current) return;
     const barcodeValue =
@@ -60,7 +66,21 @@ export default function Customers() {
 
   const pageSize = 10;
 
-  const loadCustomers = async () => {
+  const loadCustomerAccountStatuses = async () => {
+    try {
+      const response = await getCustomerAccountStatuses();
+      if (!response?.success || !Array.isArray(response.accounts)) {
+        return;
+      }
+      const statusMap = {};
+      response.accounts.forEach((account) => {
+        statusMap[String(account.customer)] = account;
+      });
+      setCustomerAccountStatuses(statusMap);
+    } catch (error) {
+      console.error("Customer account status error:", error);
+    }
+  };  const loadCustomers = async () => {
     try {
       setLoading(true);
 
@@ -76,9 +96,7 @@ export default function Customers() {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
+  };useEffect(() => {
     loadCustomers();
   }, []);
 
@@ -740,3 +758,10 @@ How can we help you today?`;
 
 );
 }
+
+
+
+
+
+
+

@@ -124,4 +124,35 @@ export const updatePrices =
     );
 
     return response.data;
-  };
+  };/* ===========================
+Customer Portal Account
+=========================== */
+export const provisionCustomerAccount = async (customerId) => {
+  const response = await api.post(
+    "/customer-accounts/provision",
+    { customerId }
+  );
+  return response.data;
+};
+export const setCustomerLoginEnabled = async (
+  customerId,
+  enabled
+) => {
+  const response = await api.put(
+    `/customer-accounts/${customerId}/login`,
+    { enabled }
+  );
+  return response.data;
+};
+export const regenerateTemporaryPassword = async (
+  customerId
+) => {
+  const response = await api.post(
+    `/customer-accounts/${customerId}/regenerate-password`
+  );
+  return response.data;
+};
+export const getCustomerAccountStatuses = async () => {
+  const response = await api.get("/customer-accounts/status");
+  return response.data;
+};

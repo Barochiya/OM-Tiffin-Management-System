@@ -55,6 +55,16 @@ const loginCustomer = async (req, res) => {
         message: "Customer login is disabled",
       });
     }
+    // Sequence 2: Reject login when the linked Tiffin customer
+    // has been deleted from the admin panel.
+    const activeCustomer = await Tiffin.findById(account.customer);
+    if (!activeCustomer) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You are no longer an active OM Tiffin Service customer. Please contact OM Tiffin Service.",
+      });
+    }
     if (
       account.lockedUntil &&
       account.lockedUntil.getTime() > Date.now()
@@ -1124,5 +1134,4 @@ const setCustomerAccountSetupPassword = async (req, res) => {
   sendCustomerUserIdRecoveryOtp,
   verifyCustomerUserIdRecoveryOtp,
 };
-
 

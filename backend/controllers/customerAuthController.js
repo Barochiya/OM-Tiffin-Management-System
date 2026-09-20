@@ -1,4 +1,4 @@
-const bcrypt = require("bcryptjs");
+﻿const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const CustomerAccount = require("../models/CustomerAccount");
 const crypto = require("crypto");
@@ -798,7 +798,14 @@ const sendCustomerAccountSetupOtp = async (req, res) => {
       userId,
       loginEnabled: true,
     }).populate("customer");
-    if (!account || !account.customer) {
+    if (account && account.isFirstLogin === false) {
+return res.status(409).json({
+success: false,
+alreadyRegistered: true,
+message: "You are already registered. Please log in.",
+});
+}
+if (!account || !account.customer) {
       return res.status(200).json({
         success: true,
         message:
@@ -925,6 +932,13 @@ const verifyCustomerAccountSetupOtp = async (req, res) => {
       userId,
       loginEnabled: true,
     });
+    if (account && account.isFirstLogin === false) {
+      return res.status(409).json({
+        success: false,
+        alreadyRegistered: true,
+        message: "You are already registered. Please log in.",
+      });
+    }
     if (!account) {
       return res.status(401).json({
         success: false,
@@ -1031,6 +1045,13 @@ const setCustomerAccountSetupPassword = async (req, res) => {
       userId,
       loginEnabled: true,
     });
+    if (account && account.isFirstLogin === false) {
+      return res.status(409).json({
+        success: false,
+        alreadyRegistered: true,
+        message: "You are already registered. Please log in.",
+      });
+    }
     if (!account) {
       return res.status(401).json({
         success: false,
@@ -1103,3 +1124,5 @@ const setCustomerAccountSetupPassword = async (req, res) => {
   sendCustomerUserIdRecoveryOtp,
   verifyCustomerUserIdRecoveryOtp,
 };
+
+

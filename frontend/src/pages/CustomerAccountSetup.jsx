@@ -15,6 +15,7 @@ const CustomerAccountSetup = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const handleSendOtp = async (e) => {
     e.preventDefault();
     const normalizedUserId = userId.trim().toUpperCase();
@@ -25,6 +26,7 @@ const CustomerAccountSetup = () => {
     try {
       setLoading(true);
       setMessage("");
+      setAlreadyRegistered(false);
       const data = await sendCustomerAccountSetupOtp(
         normalizedUserId
       );
@@ -42,10 +44,17 @@ const CustomerAccountSetup = () => {
         );
       }
     } catch (error) {
-      setMessage(
-        error.response?.data?.message ||
-          "Unable to send verification code. Please try again."
-      );
+      if (error.response?.data?.alreadyRegistered) {
+        setAlreadyRegistered(true);
+        setMessage(
+          "You are already registered. Please log in."
+        );
+      } else {
+        setMessage(
+          error.response?.data?.message ||
+            "Unable to send verification code. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -144,6 +153,7 @@ const CustomerAccountSetup = () => {
     }
   };
   const handleChangeUserId = () => {
+    setAlreadyRegistered(false);
     setStep(1);
     setOtp("");
     setSetupToken("");
@@ -183,20 +193,36 @@ const CustomerAccountSetup = () => {
                 required
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-bold transition-all disabled:bg-gray-400"
-            >
-              {loading
-                ? "Sending..."
-                : "Send Verification Code"}
-            </button>
+            {!alreadyRegistered && (
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-bold transition-all disabled:bg-gray-400"
+              >
+                {loading
+                  ? "Sending..."
+                  : "Send Verification Code"}
+              </button>
+            )}
+            {alreadyRegistered && (
+              <button
+                type="button"
+                onClick={() =>
+                  navigate("/customer-login", {
+                    replace: true,
+                  })
+                }
+                className="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-xl font-bold transition-all shadow-lg"
+              >
+                Go to Customer Login
+              </button>
+            )}
             <button
               type="button"
-              onClick={() =>
-                navigate("/customer-login")
-              }
+              onClick={() => {
+                setAlreadyRegistered(false);
+                navigate("/customer-login");
+              }}
               className="w-full text-blue-700 font-semibold text-sm"
             >
               Back to Customer Login
@@ -333,3 +359,4 @@ const CustomerAccountSetup = () => {
   );
 };
 export default CustomerAccountSetup;
+

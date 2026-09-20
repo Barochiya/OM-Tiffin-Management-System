@@ -197,7 +197,8 @@ export default function CustomerModificationRequests() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <table className="min-w-[950px] w-full text-left">
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
@@ -262,7 +263,75 @@ export default function CustomerModificationRequests() {
                 })}
               </tbody>
             </table>
-          </div>
+          </div>      {/* Mobile: 1 request = 1 card */}
+      <div className="space-y-3 md:hidden">
+        {filteredRequests.map((request) => {
+          const status =
+            STATUS_META[request.status] || STATUS_META.PENDING;
+          return (
+            <div
+              key={request._id}
+              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              <div className="mb-4 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-bold text-slate-800">
+                    {request.customer?.customerName || "Unknown Customer"}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {request.customer?.barcode || "-"}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${status.className}`}
+                >
+                  {status.label}
+                </span>
+              </div>
+              <div className="space-y-2 rounded-xl bg-slate-50 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-xs font-medium text-slate-500">
+                    Request
+                  </span>
+                  <span className="text-right text-sm font-semibold text-slate-800">
+                    {REQUEST_TYPE_LABELS[request.requestType] ||
+                      request.requestType ||
+                      "-"}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-xs font-medium text-slate-500">
+                    Date
+                  </span>
+                  <span className="text-right text-sm font-semibold text-slate-800">
+                    {formatDate(request.requestDate)}
+                  </span>
+                </div>
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-xs font-medium text-slate-500">
+                    Meal
+                  </span>
+                  <span className="text-right text-sm font-semibold text-slate-800">
+                    {MEAL_LABELS[request.meal] || request.meal || "-"}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedRequest(request);
+                  setRemark(request.adminRemark || "");
+                }}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+              >
+                <FaEye />
+                View Request
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      </>
         )}
       </div>
       {selectedRequest && (
@@ -401,3 +470,9 @@ export default function CustomerModificationRequests() {
     </div>
   );
 }
+
+
+
+
+
+

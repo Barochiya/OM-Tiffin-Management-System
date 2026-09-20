@@ -87,9 +87,19 @@ const closeSidebar = () => {
         >
           <FaUsers className="text-blue-200" />
           Customers
-        </Link>
-
-        <Link
+        </Link>        <Link
+          to="/users"
+          onClick={closeSidebar}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+            duration-300 ${
+              location.pathname === "/users"
+                ? "bg-white text-blue-700 font-semibold shadow"
+                : "hover:bg-blue-600"
+            }`}
+        >
+          <FaUsers className="text-blue-200" />
+          Users
+        </Link><Link
           to="/add-customer"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -317,6 +327,8 @@ const closeSidebar = () => {
 };
 
 export default Sidebar;
+
+
 
 
 

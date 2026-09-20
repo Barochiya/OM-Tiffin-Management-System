@@ -43,6 +43,12 @@ const customerAccountSchema = new mongoose.Schema(
     lockedUntil: {
       type: Date,
       default: null,
+    },    // Timestamp of the customer's first successful login.
+    // This value is set only once and is never overwritten.
+    firstLoginAt: {
+      type: Date,
+      default: null,
+      index: true,
     },
     lastLoginAt: {
       type: Date,
@@ -57,3 +63,4 @@ module.exports = mongoose.model(
   "CustomerAccount",
   customerAccountSchema
 );
+

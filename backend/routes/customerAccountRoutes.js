@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const {
@@ -6,6 +6,7 @@ const {
   setCustomerLoginEnabled,
   regenerateTemporaryPassword,
   getCustomerAccountStatuses,
+  getCustomerUsers,
 } = require("../controllers/customerAccountController");
 // Admin-authorized customer account provisioning
 router.post(
@@ -31,4 +32,12 @@ router.get(
   protect,
   getCustomerAccountStatuses
 );
+// Admin-authorized logged-in customer users list.
+// Only customers with a successful first-login record are returned.
+router.get(
+  "/users",
+  protect,
+  getCustomerUsers
+);
 module.exports = router;
+

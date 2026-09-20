@@ -10,7 +10,7 @@ import {
   FaRupeeSign,
   FaCheckCircle,
   FaSave,
-  FaTimes,
+
   FaSpinner,
   FaPlus,
   FaTrash,
@@ -46,7 +46,7 @@ const [selectedYear, setSelectedYear] = useState(
 
 const [selectedCycle, setSelectedCycle] = useState("2");
 
-const [editingEntryId, setEditingEntryId] = useState(null);
+
 const [savingEntryId, setSavingEntryId] = useState(null);
 
   useEffect(() => {
@@ -61,7 +61,28 @@ useEffect(() => {
   if (!id) return;
 
   loadDailyEntries();
-}, [id, selectedMonth, selectedYear, selectedCycle]);
+}, [id, selectedMonth, selectedYear, selectedCycle]);// =======================================
+// AUTO BILLING CYCLE
+// =======================================
+// Current month:
+// Day 1-15   => Cycle 1
+// Day 16-end => Cycle 2
+//
+// Other month/year:
+// Default => Cycle 1
+// =======================================
+useEffect(() => {
+  const today = new Date();
+  const isCurrentMonth =
+    Number(selectedYear) === today.getFullYear() &&
+    Number(selectedMonth) === today.getMonth() + 1;
+  const nextCycle = isCurrentMonth
+    ? today.getDate() <= 15
+      ? "1"
+      : "2"
+    : "1";
+  setSelectedCycle(nextCycle);
+}, [selectedMonth, selectedYear]);
 
 const loadDailyEntries = async () => {
   try {
@@ -142,7 +163,7 @@ const loadDailyEntries = async () => {
 
     if (selectedMonthDate > currentMonthDate) {
       setDailyEntries([]);
-      setEditingEntryId(null);
+
       return;
     }
 
@@ -215,7 +236,7 @@ for (
 }
 
 setDailyEntries(generatedEntries);
-setEditingEntryId(null);
+
   } catch (error) {
     console.error(
       "Load customer daily entries error:",
@@ -235,17 +256,6 @@ setEditingEntryId(null);
 // Edit Daily Entry
 // =======================================
 
-const handleEditEntry = (entryId) => {
-  setEditingEntryId(entryId);
-};
-
-// =======================================
-// Cancel Daily Entry Edit
-// =======================================
-
-const handleCancelEdit = () => {
-  setEditingEntryId(null);
-};
 
 // =======================================
 // Change Daily Entry Field
@@ -409,13 +419,13 @@ const handleSaveDailyEntry = async (entryId) => {
       remark: entry.remark || "",
     });
 
-    setEditingEntryId(null);
+    
 
     // Reload from backend so UI shows
     // the actual saved data.
     await loadDailyEntries();
 
-    alert("Daily entry saved successfully.");
+
   } catch (error) {
     console.error(
       "Save Daily Entry Error:",
@@ -920,10 +930,6 @@ const handleSaveDailyEntry = async (entryId) => {
                 <tbody>
 
   {dailyEntries.map((entry) => {
-
-    const isEditing =
-      editingEntryId === entry._id;
-
     const isSaving =
       savingEntryId === entry._id;
 
@@ -999,7 +1005,6 @@ const dailyTotal =
         {/* BREAKFAST */}
         <td className="px-4 py-4 text-center align-top">
 
-          {isEditing ? (
 
             <input
               type="number"
@@ -1028,30 +1033,13 @@ const dailyTotal =
               "
             />
 
-          ) : (
-
-            <span className="
-              inline-flex
-              min-w-[45px]
-              justify-center
-              px-3
-              py-1.5
-              rounded-lg
-              bg-orange-50
-              text-orange-700
-              font-bold
-            ">
-              {Number(entry.breakfastQty || 0)}
-            </span>
-
-          )}
 
         </td>
 
         {/* LUNCH */}
         <td className="px-4 py-4 text-center align-top">
 
-          {isEditing ? (
+          <>
 
             <input
               type="number"
@@ -1080,30 +1068,14 @@ const dailyTotal =
               "
             />
 
-          ) : (
-
-            <span className="
-              inline-flex
-              min-w-[45px]
-              justify-center
-              px-3
-              py-1.5
-              rounded-lg
-              bg-green-50
-              text-green-700
-              font-bold
-            ">
-              {Number(entry.lunchQty || 0)}
-            </span>
-
-          )}
+          </>
 
         </td>
 
         {/* DINNER */}
         <td className="px-4 py-4 text-center align-top">
 
-          {isEditing ? (
+          <>
 
             <input
               type="number"
@@ -1132,30 +1104,14 @@ const dailyTotal =
               "
             />
 
-          ) : (
-
-            <span className="
-              inline-flex
-              min-w-[45px]
-              justify-center
-              px-3
-              py-1.5
-              rounded-lg
-              bg-indigo-50
-              text-indigo-700
-              font-bold
-            ">
-              {Number(entry.dinnerQty || 0)}
-            </span>
-
-          )}
+          </>
 
         </td>
 
         {/* EXTRA ITEMS */}
         <td className="px-5 py-4 align-top">
 
-          {isEditing ? (
+          <>
 
             <div className="space-y-2 min-w-[220px]">
 
@@ -1278,53 +1234,14 @@ const dailyTotal =
               </button>
 
             </div>
-
-          ) : (
-
-            Array.isArray(entry.extraItems) &&
-            entry.extraItems.length > 0 ? (
-
-              <div className="space-y-1.5">
-
-                {entry.extraItems.map(
-                  (item, index) => (
-
-                    <div
-                      key={index}
-                      className="text-sm"
-                    >
-
-                      <span className="font-medium text-slate-700">
-                        {item.description || "-"}
-                      </span>
-
-                      <span className="text-slate-500 ml-2">
-                        ₹{Number(item.amount || 0)}
-                      </span>
-
-                    </div>
-
-                  )
-                )}
-
-              </div>
-
-            ) : (
-
-              <span className="text-sm text-slate-400">
-                —
-              </span>
-
-            )
-
-          )}
+          </>
 
         </td>
 
         {/* REMARK */}
         <td className="px-5 py-4 align-top">
 
-          {isEditing ? (
+          <>
 
             <input
               type="text"
@@ -1352,13 +1269,7 @@ const dailyTotal =
               "
             />
 
-          ) : (
-
-            <span className="text-sm text-slate-600">
-              {entry.remark || "—"}
-            </span>
-
-          )}
+          </>
 
         </td>
 
@@ -1385,7 +1296,7 @@ const dailyTotal =
         {/* ACTION */}
         <td className="px-5 py-4 text-center align-top">
 
-          {isEditing ? (
+          <>
 
             <div className="
               flex
@@ -1437,63 +1348,10 @@ const dailyTotal =
 
               </button>
 
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                disabled={isSaving}
-                className="
-                  inline-flex
-                  items-center
-                  justify-center
-                  gap-2
-                  min-w-[90px]
-                  px-3
-                  py-2
-                  rounded-lg
-                  bg-slate-200
-                  hover:bg-slate-300
-                  disabled:opacity-50
-                  text-slate-700
-                  text-sm
-                  font-bold
-                  transition
-                "
-              >
-                <FaTimes />
-                Cancel
-              </button>
 
             </div>
+          </>
 
-          ) : (
-
-            <button
-              type="button"
-              onClick={() =>
-                handleEditEntry(entry._id)
-              }
-              className="
-                inline-flex
-                items-center
-                justify-center
-                gap-2
-                min-w-[90px]
-                px-3
-                py-2
-                rounded-lg
-                bg-blue-600
-                hover:bg-blue-700
-                text-white
-                text-sm
-                font-bold
-                transition
-              "
-            >
-              <FaEdit />
-              Edit
-            </button>
-
-          )}
 
         </td>
 
@@ -1517,10 +1375,6 @@ const dailyTotal =
           <div className="block md:hidden w-full max-w-none p-3 space-y-4">
 
             {dailyEntries.map((entry) => {
-
-              const isEditing =
-                editingEntryId === entry._id;
-
               const isSaving =
                 savingEntryId === entry._id;
 
@@ -1618,7 +1472,6 @@ const dailyTotal =
                           Breakfast
                         </label>
 
-                        {isEditing ? (
                           <input
                             type="number"
                             min="0"
@@ -1644,18 +1497,6 @@ const dailyTotal =
                               focus:ring-orange-400
                             "
                           />
-                        ) : (
-                          <div className="
-                            bg-orange-50
-                            text-orange-700
-                            rounded-xl
-                            py-3
-                            text-center
-                            font-bold
-                          ">
-                            {breakfastQty}
-                          </div>
-                        )}
                       </div>
 
                       {/* LUNCH */}
@@ -1664,7 +1505,6 @@ const dailyTotal =
                           Lunch
                         </label>
 
-                        {isEditing ? (
                           <input
                             type="number"
                             min="0"
@@ -1690,18 +1530,6 @@ const dailyTotal =
                               focus:ring-green-400
                             "
                           />
-                        ) : (
-                          <div className="
-                            bg-green-50
-                            text-green-700
-                            rounded-xl
-                            py-3
-                            text-center
-                            font-bold
-                          ">
-                            {lunchQty}
-                          </div>
-                        )}
                       </div>
 
                       {/* DINNER */}
@@ -1710,7 +1538,6 @@ const dailyTotal =
                           Dinner
                         </label>
 
-                        {isEditing ? (
                           <input
                             type="number"
                             min="0"
@@ -1736,18 +1563,6 @@ const dailyTotal =
                               focus:ring-indigo-400
                             "
                           />
-                        ) : (
-                          <div className="
-                            bg-indigo-50
-                            text-indigo-700
-                            rounded-xl
-                            py-3
-                            text-center
-                            font-bold
-                          ">
-                            {dinnerQty}
-                          </div>
-                        )}
                       </div>
 
                     </div>
@@ -1758,7 +1573,6 @@ const dailyTotal =
                         Extra Items
                       </label>
 
-                      {isEditing ? (
                         <div className="space-y-2">
 
                           {(entry.extraItems || []).map(
@@ -1872,43 +1686,6 @@ const dailyTotal =
                           </button>
 
                         </div>
-                      ) : (
-                        Array.isArray(entry.extraItems) &&
-                        entry.extraItems.length > 0 ? (
-                          <div className="space-y-2">
-
-                            {entry.extraItems.map(
-                              (item, index) => (
-                                <div
-                                  key={index}
-                                  className="
-                                    flex
-                                    items-center
-                                    justify-between
-                                    bg-slate-50
-                                    rounded-lg
-                                    px-3
-                                    py-2
-                                  "
-                                >
-                                  <span className="text-sm font-medium">
-                                    {item.description || "-"}
-                                  </span>
-
-                                  <span className="text-sm font-semibold text-slate-600">
-                                    ₹{Number(item.amount || 0)}
-                                  </span>
-                                </div>
-                              )
-                            )}
-
-                          </div>
-                        ) : (
-                          <span className="text-sm text-slate-400">
-                            —
-                          </span>
-                        )
-                      )}
 
                     </div>
 
@@ -1918,7 +1695,6 @@ const dailyTotal =
                         Remark
                       </label>
 
-                      {isEditing ? (
                         <input
                           type="text"
                           placeholder="Enter remark"
@@ -1943,11 +1719,6 @@ const dailyTotal =
                             focus:ring-blue-400
                           "
                         />
-                      ) : (
-                        <div className="text-sm text-slate-600">
-                          {entry.remark || "—"}
-                        </div>
-                      )}
                     </div>
 
                     {/* TOTAL */}
@@ -1972,7 +1743,7 @@ const dailyTotal =
                     </div>
 
                     {/* ACTION */}
-                    {isEditing ? (
+                    <>
                       <div className="grid grid-cols-2 gap-2">
 
                         <button
@@ -2012,55 +1783,9 @@ const dailyTotal =
                           )}
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={handleCancelEdit}
-                          disabled={isSaving}
-                          className="
-                            w-full
-                            inline-flex
-                            items-center
-                            justify-center
-                            gap-2
-                            bg-slate-200
-                            hover:bg-slate-300
-                            text-slate-700
-                            py-3
-                            rounded-xl
-                            font-bold
-                            text-sm
-                          "
-                        >
-                          <FaTimes />
-                          Cancel
-                        </button>
 
                       </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleEditEntry(entry._id)
-                        }
-                        className="
-                          w-full
-                          inline-flex
-                          items-center
-                          justify-center
-                          gap-2
-                          bg-blue-600
-                          hover:bg-blue-700
-                          text-white
-                          py-3
-                          rounded-xl
-                          font-bold
-                          text-sm
-                        "
-                      >
-                        <FaEdit />
-                        Edit Entry
-                      </button>
-                    )}
+                    </>
 
                   </div>
                 </div>
@@ -2153,6 +1878,16 @@ const dailyTotal =
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

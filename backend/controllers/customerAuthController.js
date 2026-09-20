@@ -1,6 +1,7 @@
 ﻿const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const CustomerAccount = require("../models/CustomerAccount");
+const CustomerFirstLoginLog = require("../models/CustomerFirstLoginLog");
 const crypto = require("crypto");
 const Tiffin = require("../models/Tiffin");
 const CustomerOtp = require("../models/CustomerOtp");
@@ -112,7 +113,30 @@ const loginCustomer = async (req, res) => {
     }
     account.failedLoginAttempts = 0;
     account.lockedUntil = null;
-    account.lastLoginAt = new Date();
+    const loginAt = new Date();
+    // Create exactly ONE first-login record.
+    // $setOnInsert ensures an existing first-login record is never overwritten.
+    try {
+      await CustomerFirstLoginLog.updateOne(
+        { customerAccount: account._id },
+        {
+          $setOnInsert: {
+            customerAccount: account._id,
+            customer: account.customer,
+            userId: account.userId,
+            firstLoginAt: loginAt,
+          },
+        },
+        { upsert: true }
+      );
+    } catch (logError) {
+      // Ignore duplicate-key race if two login requests arrive together.
+      if (logError?.code !== 11000) {
+        throw logError;
+      }
+    }
+    // Existing behaviour: latest successful login is always updated.
+    account.lastLoginAt = loginAt;
     await account.save();
     const token = createCustomerToken(
       account._id.toString(),
@@ -1134,4 +1158,5 @@ const setCustomerAccountSetupPassword = async (req, res) => {
   sendCustomerUserIdRecoveryOtp,
   verifyCustomerUserIdRecoveryOtp,
 };
+
 

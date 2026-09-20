@@ -21,6 +21,7 @@ import CustomerForgotPassword from "./pages/CustomerForgotPassword";
 import CustomerForgotUserId from "./pages/CustomerForgotUserId";
 import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
+import Users from "./pages/Users";
 import AddCustomer from "./pages/AddCustomer";
 import EditCustomer from "./pages/EditCustomer";
 import ViewCustomer from "./pages/ViewCustomer";
@@ -134,8 +135,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
+          path="/users"
+          element={
+            <ProtectedRoute>
+              <Users />
+            </ProtectedRoute>
+          }
+        />
+<Route
           path="/add-customer"
           element={
             <ProtectedRoute>
@@ -323,6 +331,9 @@ export default function App() {
     </CartProvider>
   );
 }
+
+
+
 
 
 

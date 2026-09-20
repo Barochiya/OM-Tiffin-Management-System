@@ -237,13 +237,24 @@ How can we help you today?`;
   const filteredCustomers = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return customers.filter((customer) => {
-      const matchesSearch =
-        !query ||
-        customer.customerName
-          ?.toLowerCase()
-          .includes(query) ||
-        customer.phone?.includes(query);
+    return customers.filter((customer) => {        const customerName = String(
+          customer.customerName || ""
+        ).toLowerCase();
+        const customerPhone = String(
+          customer.phone || ""
+        ).toLowerCase();
+        const customerBarcode = String(
+          customer.barcode || ""
+        ).toLowerCase();
+        const customerUserId = String(
+          customer.userId || customer.barcode || ""
+        ).toLowerCase();
+        const matchesSearch =
+          !query ||
+          customerName.includes(query) ||
+          customerPhone.includes(query) ||
+          customerBarcode.includes(query) ||
+          customerUserId.includes(query);
 
       const matchesStatus =
         statusFilter === "All" ||
@@ -370,7 +381,7 @@ How can we help you today?`;
 
               <input
                 type="text"
-                placeholder="Search customer by name or phone..."
+                placeholder="Search customer by name, phone, User ID or barcode..."
                 value={search}
                 onChange={(event) => {
                   setSearch(event.target.value);
@@ -758,6 +769,8 @@ How can we help you today?`;
 
 );
 }
+
+
 
 
 

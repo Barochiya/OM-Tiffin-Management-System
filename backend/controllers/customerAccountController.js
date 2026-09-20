@@ -4,6 +4,7 @@ const {
   createCustomerAccount,
 } = require("../services/customerAccountService");
 const CustomerAccount = require("../models/CustomerAccount");
+const CustomerFirstLoginLog = require("../models/CustomerFirstLoginLog");
 const Tiffin = require("../models/Tiffin");
 const { sendWhatsAppTemplate } = require("../utils/whatsappSender");
 const WHATSAPP_TEMPLATES = require("../config/whatsappTemplates");
@@ -238,12 +239,88 @@ const getCustomerAccountStatuses = async (req, res) => {
     });
   }
 };
+/**
+ * Get customers who have successfully logged in at least once.
+ *
+ * Important:
+ * - Only customers with a first-login record are returned.
+ * - Passwords/passwordHash are never selected.
+ * - First login time comes from CustomerFirstLoginLog.
+ * - Latest login time comes from CustomerAccount.lastLoginAt.
+ */
+const getCustomerUsers = async (req, res) => {
+  try {
+    const logs = await CustomerFirstLoginLog.find({})
+      .select("customerAccount customer userId firstLoginAt")
+      .populate({
+        path: "customer",
+        select: "customerName phone barcode status",
+      })
+      .lean();
+    const accountIds = logs
+      .map((log) => log.customerAccount)
+      .filter(Boolean);
+    const accounts = await CustomerAccount.find({
+      _id: { $in: accountIds },
+    })
+      .select("_id userId lastLoginAt loginEnabled")
+      .lean();
+    const accountMap = new Map(
+      accounts.map((account) => [
+        String(account._id),
+        account,
+      ])
+    );
+    const users = logs
+      .map((log) => {
+        const account = accountMap.get(
+          String(log.customerAccount)
+        );
+        if (!account) {
+          return null;
+        }
+        return {
+          customerId: log.customer?._id || log.customer || null,
+          customerName: log.customer?.customerName || "",
+          phone: log.customer?.phone || "",
+          barcode: log.customer?.barcode || log.userId || "",
+          userId: log.userId || account.userId || "",
+          firstLoginAt: log.firstLoginAt || null,
+          lastLoginAt: account.lastLoginAt || null,
+          loginEnabled: account.loginEnabled === true,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => {
+        const aTime = a.firstLoginAt
+          ? new Date(a.firstLoginAt).getTime()
+          : 0;
+        const bTime = b.firstLoginAt
+          ? new Date(b.firstLoginAt).getTime()
+          : 0;
+        return bTime - aTime;
+      });
+    return res.status(200).json({
+      success: true,
+      count: users.length,
+      data: users,
+    });
+  } catch (error) {
+    console.error("getCustomerUsers error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load customer users.",
+    });
+  }
+};
 module.exports = {
+  getCustomerUsers,
   provisionCustomerAccount,
   setCustomerLoginEnabled,
   regenerateTemporaryPassword,
   getCustomerAccountStatuses,
 };
+
 
 
 

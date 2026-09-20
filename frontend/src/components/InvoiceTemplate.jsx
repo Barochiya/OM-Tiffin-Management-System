@@ -1,4 +1,4 @@
-
+﻿
 >         '[data-pdf-bill="true"]'
         );
 
@@ -183,7 +183,7 @@
 
             <h1 className="text-3xl font-bold text-slate-800">
 
-              🧾 Billing Management
+              ðŸ§¾ Billing Management
 
             </h1>
 
@@ -523,7 +523,7 @@ rounded-xl font-bold"
 
                     <p className="text-gray-500">
 
-                      Healthy • Fresh • Homemade
+                      Healthy â€¢ Fresh â€¢ Homemade
 
                     </p>
 
@@ -647,7 +647,7 @@ rounded-xl font-bold"
   <div className="mt-8 overflow-x-auto">
 
     <h3 className="text-2xl font-bold text-slate-800 mb-5">
-      📍… Date-wise Meal Details
+      ðŸ“â€¦ Date-wise Meal Details
     </h3>
 
     <table className="min-w-full border border-gray-300 text-sm">
@@ -731,7 +731,7 @@ rounded-xl font-bold"
                     <div>
 
                       <div className="font-semibold">
-                        {day.breakfastQty} × ₹
+                        {day.breakfastQty} Ã— ₹
                         {day.breakfastAmount /
                           Number(day.breakfastQty || 1)}
                       </div>
@@ -745,7 +745,7 @@ rounded-xl font-bold"
                   ) : (
 
                     <span className="text-gray-400">
-                      â€”
+                      —
                     </span>
 
                   )}
@@ -761,7 +761,7 @@ rounded-xl font-bold"
                     <div>
 
                       <div className="font-semibold">
-                        {day.lunchQty} × ₹
+                        {day.lunchQty} Ã— ₹
                         {day.lunchAmount /
                           Number(day.lunchQty || 1)}
                       </div>
@@ -775,7 +775,7 @@ rounded-xl font-bold"
                   ) : (
 
                     <span className="text-gray-400">
-                      â€”
+                      —
                     </span>
 
                   )}
@@ -791,7 +791,7 @@ rounded-xl font-bold"
                     <div>
 
                       <div className="font-semibold">
-                        {day.dinnerQty} × ₹
+                        {day.dinnerQty} Ã— ₹
                         {day.dinnerAmount /
                           Number(day.dinnerQty || 1)}
                       </div>
@@ -805,7 +805,7 @@ rounded-xl font-bold"
                   ) : (
 
                     <span className="text-gray-400">
-                      â€”
+                      —
                     </span>
 
                   )}
@@ -838,7 +838,7 @@ rounded-xl font-bold"
                   ) : (
 
                     <span className="text-gray-400">
-                      â€”
+                      —
                     </span>
 
                   )}
@@ -1153,7 +1153,7 @@ rounded-xl font-bold"
 
     >
 
-      🖨️ Print Invoice
+      ðŸ–¨ï¸ Print Invoice
 
     </button>
 
@@ -1161,7 +1161,7 @@ rounded-xl font-bold"
       onClick={handleDownloadPdf}
       className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl"
     >
-      📄 Download PDF
+      ðŸ“„ Download PDF
     </button>
 
     <button
@@ -1196,7 +1196,7 @@ rounded-xl flex items-center gap-2"
 
         <h3 className="text-xl font-bold text-blue-700 mb-3">
 
-          Thank You â¤ï¸
+          Thank You ❤️
 
         </h3>
 
@@ -1225,7 +1225,7 @@ rounded-xl flex items-center gap-2"
 
         <p>
 
-          📞 +91 70162 97983
+          ðŸ“ž +91 70162 97983
 
         </p>
 
@@ -1233,7 +1233,7 @@ rounded-xl flex items-center gap-2"
 
         <p>
 
-          📍 Gandhinagar, Gujarat
+          ðŸ“Â Gandhinagar, Gujarat
 
         </p>
 
@@ -1245,7 +1245,7 @@ rounded-xl flex items-center gap-2"
 
     <div className="border-t mt-8 pt-5 text-center text-gray-500 text-sm">
 
-      © 2026 OM TIFFIN SERVICE
+      Â© 2026 OM TIFFIN SERVICE
 
       <br />
 
@@ -1268,3 +1268,4 @@ rounded-xl flex items-center gap-2"
     );
 
   }
+

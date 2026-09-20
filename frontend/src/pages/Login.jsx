@@ -54,7 +54,7 @@ const Login = () => {
         data.token
       );
 
-      alert("âœ… Login Successful");
+      alert("✅ Login Successful");
 
       navigate("/dashboard", {
         replace: true,
@@ -170,7 +170,7 @@ const Login = () => {
         </form>
 
         <div className="text-center mt-8 text-sm text-gray-500">
-          Â© 2026 OM Tiffin Service
+          © 2026 OM Tiffin Service
         </div>
       </div>
     </div>
@@ -178,4 +178,5 @@ const Login = () => {
 };
 
 export default Login;
+
 

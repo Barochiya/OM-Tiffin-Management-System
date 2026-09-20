@@ -56,8 +56,17 @@ const CustomerChangePassword = () => {
   };
   return (
     <div className="min-h-screen bg-gray-100">
-      <header className="bg-blue-700 text-white px-6 py-4 flex items-center justify-between">
-        <div>
+      <header className="bg-blue-700 text-white px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("customer-sidebar-open"))}
+            aria-label="Open customer menu"
+            className="lg:hidden w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center shrink-0"
+          >
+            ☰
+          </button>
+          <div className="min-w-0">
           <h1 className="text-2xl font-bold">
             OM TIFFIN SERVICE
           </h1>
@@ -71,6 +80,7 @@ const CustomerChangePassword = () => {
         >
           Logout
         </button>
+        </div>
       </header>
       <main className="max-w-xl mx-auto p-6">
         <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -156,6 +166,8 @@ const CustomerChangePassword = () => {
   );
 };
 export default CustomerChangePassword;
+
+
 
 
 

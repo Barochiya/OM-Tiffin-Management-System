@@ -1,5 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 import {
   getCustomerMealHistory,
   getCustomerProfile,
@@ -7,6 +8,7 @@ import {
 } from "../services/customerAuthService";
 import useCustomerAutoRefresh from "../customer/hooks/useCustomerAutoRefresh";
 import CustomerModificationRequest from "../customer/components/CustomerModificationRequest";
+import CustomerSidebar from "../customer/components/CustomerSidebar";
 const CustomerDashboard = () => {
   const navigate = useNavigate();
   const now = new Date();
@@ -122,9 +124,21 @@ const CustomerDashboard = () => {
       <header className="sticky top-0 z-30 bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="min-h-[76px] flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-11 h-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-xl font-bold shadow-inner">
-                OM
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new Event("customer-sidebar-open"))}
+                aria-label="Open customer menu"
+                className="lg:hidden w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-lg shrink-0"
+              >
+                ☰
+              </button>
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white border-2 border-white/40 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                <img
+                  src={logo}
+                  alt="OM Tiffin Service"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-xl font-bold tracking-tight truncate">
@@ -554,6 +568,16 @@ const CustomerDashboard = () => {
   );
 };
 export default CustomerDashboard;
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,4 +1,4 @@
-import axios from "axios";
+﻿import axios from "axios";
 const API_URL =
   import.meta.env.VITE_API_URL ||
   "http://localhost:5000";
@@ -45,7 +45,21 @@ export const changeCustomerPassword = async (
   );
   return response.data;
 };
-export const getCustomerProfile = async () => {
+export const updateCustomerProfile = async ({
+  customerName,
+  phone,
+  address,
+}) => {
+  const response = await customerApi.put(
+    "/customer-portal/profile",
+    {
+      customerName,
+      phone,
+      address,
+    }
+  );
+  return response.data;
+};export const getCustomerProfile = async () => {
   const response = await customerApi.get(
     "/customer-portal/profile"
   );
@@ -149,7 +163,18 @@ export const setCustomerAccountSetupPassword = async (
   );
   return response.data;
 };
-export const getCustomerMealHistory = async (month, year, cycle) => {
+export const getCustomerBills = async () => {
+  const response = await customerApi.get(
+    "/customer-portal/bills"
+  );
+  return response.data;
+};
+export const getCustomerBillById = async (billId) => {
+  const response = await customerApi.get(
+    `/customer-portal/bills/${billId}`
+  );
+  return response.data;
+};export const getCustomerMealHistory = async (month, year, cycle) => {
   const response = await customerApi.get(
     "/customer-portal/meal-history",
     {
@@ -166,3 +191,26 @@ export const getCustomerMealHistory = async (month, year, cycle) => {
   sessionStorage.removeItem("customerUser");
 };
 export default customerApi;
+
+
+export const downloadCustomerBillPdf = async (billId) => {
+  const response = await customerApi.get(
+    `/customer-portal/bills/${billId}/pdf`,
+    {
+      responseType: "blob",
+    }
+  );
+  return response;
+};
+export const getCustomerPayments = async () => {
+  const response = await customerApi.get(
+    "/customer-portal/payments"
+  );
+  return response.data;
+};
+export const getCustomerAnnouncements = async () => {
+  const response = await customerApi.get(
+    "/customer-portal/announcements"
+  );
+  return response.data;
+};

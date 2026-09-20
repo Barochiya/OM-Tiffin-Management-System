@@ -1,4 +1,4 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 
 const Tiffin = require("../models/Tiffin");
@@ -179,7 +179,49 @@ router.post("/send", async (req, res) => {
         }
 
         // --------------------------------------
-        // Create Initial Delivery Record
+        // Build Customer-Facing Announcement Text
+    let customerAnnouncementMessage = message.trim();
+    if (!customerAnnouncementMessage) {
+      switch (templateType) {
+        case "holiday":
+          customerAnnouncementMessage =
+            "Holiday Notice: " +
+            (holidayDate || "Tomorrow") +
+            ". " +
+            (reason || "Scheduled holiday") +
+            ". Service will resume on " +
+            (resumeDate || "the next working day") +
+            ".";
+          break;
+        case "festival":
+          customerAnnouncementMessage =
+            (festivalName || "Festival") +
+            " wishes from OM Tiffin Service.";
+          break;
+        case "delay":
+          customerAnnouncementMessage =
+            "Delivery Update: " +
+            (delayReason || "There is a delay") +
+            (expectedTime
+              ? " Expected delivery time: " + expectedTime + "."
+              : ".");
+          break;
+        case "menu":
+          customerAnnouncementMessage =
+            "Today's Menu - Breakfast: " +
+            (breakfast || "Not available") +
+            " | Lunch: " +
+            (lunch || "Not available") +
+            " | Dinner: " +
+            (dinner || "Not available");
+          break;
+        default:
+          customerAnnouncementMessage =
+            "Announcement sent by OM Tiffin Service.";
+      }
+    }
+
+    // Create Initial Delivery Record
         // --------------------------------------
 
         delivery =
@@ -192,11 +234,10 @@ router.post("/send", async (req, res) => {
             templateName:
               builtTemplate.template,
             title:
-              title.trim() ||
-              builtTemplate.template,
+          title.trim() ||
+          customerAnnouncementMessage,
             message:
-              message.trim() ||
-              builtTemplate.template,
+          customerAnnouncementMessage,
             status: "pending",
           });
 
@@ -399,3 +440,5 @@ router.get("/test", (req, res) => {
 });
 
 module.exports = router;
+
+

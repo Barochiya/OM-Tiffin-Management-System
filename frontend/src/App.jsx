@@ -1,11 +1,18 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+﻿import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminLayout from "./layouts/AdminLayout";
+import CustomerLayout from "./layouts/CustomerLayout";
 
 import Login from "./pages/Login";
 import CustomerLogin from "./pages/CustomerLogin";
 import CustomerAccountSetup from "./pages/CustomerAccountSetup";
 import CustomerDashboard from "./pages/CustomerDashboard";
+import CustomerProfile from "./pages/CustomerProfile";
+import CustomerBillHistory from "./pages/CustomerBillHistory";
+import CustomerBillDetail from "./pages/CustomerBillDetail";
+import CustomerPaymentHistory from "./pages/CustomerPaymentHistory";
+import CustomerTiffinPlan from "./pages/CustomerTiffinPlan";
+import CustomerAnnouncements from "./pages/CustomerAnnouncements";
 import CustomerChangePassword from "./pages/CustomerChangePassword";
 import CustomerForgotPassword from "./pages/CustomerForgotPassword";
 import CustomerForgotUserId from "./pages/CustomerForgotUserId";
@@ -61,15 +68,41 @@ export default function App() {
         element={<CustomerForgotUserId />}
        />
       <Route element={<CustomerProtectedRoute />}>
-  <Route
-    path="/customer/dashboard"
-    element={<CustomerDashboard />}
-  />
-  <Route
-    path="/customer/change-password"
-    element={<CustomerChangePassword />}
-  />
-</Route>
+        <Route element={<CustomerLayout />}>
+          <Route
+            path="/customer/dashboard"
+            element={<CustomerDashboard />}
+          />
+          <Route
+            path="/customer/profile"
+            element={<CustomerProfile />}
+          />
+          <Route
+            path="/customer/change-password"
+            element={<CustomerChangePassword />}
+          />
+          <Route
+            path="/customer/bills"
+            element={<CustomerBillHistory />}
+          />
+          <Route
+            path="/customer/bills/:billId"
+            element={<CustomerBillDetail />}
+          />
+          <Route
+            path="/customer/payments"
+            element={<CustomerPaymentHistory />}
+          />
+          <Route
+            path="/customer/tiffin-plan"
+            element={<CustomerTiffinPlan />}
+          />
+          <Route
+            path="/customer/announcements"
+            element={<CustomerAnnouncements />}
+          />
+        </Route>
+      </Route>
 
       <Route
         path="/business-info"
@@ -267,3 +300,16 @@ export default function App() {
     </Routes>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,3 +1,5 @@
+﻿require("dotenv").config();
+
 const dashboardRoutes = require("./routes/dashboardRoutes");
 
 const express = require("express");
@@ -181,3 +183,4 @@ app.use(errorHandler);
 // ===============================
 
 module.exports = app;
+

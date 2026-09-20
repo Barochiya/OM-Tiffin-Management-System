@@ -6,16 +6,57 @@ const {
 } = require("../middleware/customerAuth");
 const {
   getCustomerProfile,
+  updateCustomerProfile,
+  getCustomerBills,
+  getCustomerBillById,
+downloadCustomerBillPdf,
   getCustomerMealHistory,
   createCustomerModificationRequest,
   getCustomerModificationRequests,
+getCustomerPayments,
+getCustomerAnnouncements,
 } = require("../controllers/customerPortalController");
-// Customer's own profile
+// Customer updates their own profile
+router.put(
+  "/profile",
+  protectCustomer,
+  requirePasswordChanged,
+  updateCustomerProfile
+);// Customer's own profile
 router.get(
+  "/announcements",
+  protectCustomer,
+  requirePasswordChanged,
+  getCustomerAnnouncements
+);router.get(
+  "/payments",
+  protectCustomer,
+  requirePasswordChanged,
+  getCustomerPayments
+);router.get(
   "/profile",
   protectCustomer,
   requirePasswordChanged,
   getCustomerProfile
+);
+// Customer's own bill history
+router.get(
+  "/bills",
+  protectCustomer,
+  requirePasswordChanged,
+  getCustomerBills
+);
+router.get(
+  "/bills/:billId/pdf",
+  protectCustomer,
+  requirePasswordChanged,
+  downloadCustomerBillPdf
+);
+router.get(
+  "/bills/:billId",
+  protectCustomer,
+  requirePasswordChanged,
+  getCustomerBillById
 );
 // Customer's own meal history
 router.get(
@@ -39,3 +80,12 @@ router.get(
   getCustomerModificationRequests
 );
 module.exports = router;
+
+
+
+
+
+
+
+
+

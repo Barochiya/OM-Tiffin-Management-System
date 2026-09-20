@@ -5,6 +5,9 @@ import {
 } from "../services/customerAuthService";
 import logo from "../assets/logo.png";
 const CustomerLogin = () => {
+  useEffect(() => {
+    document.title = "OM Tiffin Service - Customer Login";
+  }, []);
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -151,6 +154,7 @@ const CustomerLogin = () => {
   );
 };
 export default CustomerLogin;
+
 
 
 

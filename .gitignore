@@ -1,5 +1,28 @@
-.vercel
+﻿.vercel
 backend/.env
 frontend/.env
 frontend/.env.local
 frontend/.env.development
+
+# Local backups and generated test artifacts
+*.backup
+*.bak
+*.before-*
+TEST-*.pdf
+barcode-backups-*
+
+# Barcode / PDF test artifacts
+backend/temp-barcode-check.js
+backend/utils/run-pdf-icon-test.js
+frontend/barcode-modal-backup-*
+frontend/src/backup-barcode-*
+frontend/src/barcode-final-safety-*
+frontend/src/barcode-jsx-fix-*
+frontend/src/barcode-repair-*
+frontend/src/barcode-repair-safety-*
+frontend/src/index.css.final-backup-*
+frontend/src/pages/*-backup
+frontend/src/pages/*-backup-*
+frontend/src/pages/*.corrupted-backup
+frontend/src/pages/*.final-backup-*
+frontend/src/pages/*.final-ui-backup-*

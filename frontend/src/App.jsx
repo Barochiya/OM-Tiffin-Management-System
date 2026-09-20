@@ -1,6 +1,9 @@
 ﻿import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminLayout from "./layouts/AdminLayout";
+import Home from "./pages/Home";
+import Cart from "./pages/Cart";
+import OrderDetails from "./pages/OrderDetails";
 import CustomerLayout from "./layouts/CustomerLayout";
 
 import Login from "./pages/Login";
@@ -37,17 +40,20 @@ import BillDeliveryStatus from "./pages/BillDeliveryStatus";
 import CustomerModificationRequests from "./pages/CustomerModificationRequests";
 import CustomerModificationSettings from "./pages/CustomerModificationSettings";
 import BusinessInfo from "./pages/BusinessInfo";
+import WebsiteSettings from "./pages/WebsiteSettings";
+import WebsiteMenu from "./pages/WebsiteMenu";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
+import { CartProvider } from "./context/CartContext";
 
 export default function App() {
   return (
-    <Routes>
+    <CartProvider>
+      <Routes>
       {/* Default */}
-      <Route
-        path="/"
-        element={<Navigate to="/login" replace />}
-      />
+      <Route path="/" element={<Home />} />
+      <Route path="/cart" element={<Cart />} />
+      <Route path="/order-details" element={<OrderDetails />} />
 
       {/* Public Routes */}
       <Route
@@ -264,6 +270,22 @@ export default function App() {
         />
 
                     <Route
+        path="/website-menu"
+        element={
+          <ProtectedRoute>
+            <WebsiteMenu />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/website-settings"
+        element={
+          <ProtectedRoute>
+            <WebsiteSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/customer-modification-requests"
         element={
           <ProtectedRoute>
@@ -297,9 +319,20 @@ export default function App() {
         }
       />
       </Route>
-    </Routes>
+      </Routes>
+    </CartProvider>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

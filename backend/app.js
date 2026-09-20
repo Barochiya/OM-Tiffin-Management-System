@@ -1,6 +1,9 @@
 ﻿require("dotenv").config();
 
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const websiteSettingsRoutes = require("./routes/websiteSettingsRoutes");
+const websiteMenuRoutes = require("./routes/websiteMenuRoutes");
+const websiteOrderRoutes = require("./routes/websiteOrderRoutes");
 
 const express = require("express");
 const cors = require("cors");
@@ -121,6 +124,9 @@ app.use("/api/customer-accounts", customerAccountRoutes);
 app.use("/api/customer-portal", customerPortalRoutes);
 app.use("/api/customer-modification-admin", customerModificationAdminRoutes);
 app.use("/api/customer-modification-admin", customerModificationSettingsRoutes);
+app.use("/api/website-settings", websiteSettingsRoutes);
+app.use("/api/website-menu", websiteMenuRoutes);
+app.use("/api/website-orders", websiteOrderRoutes);
 
 
 // Meal Prices

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginAdmin } from "../services/authService";
 
@@ -12,6 +12,9 @@ import {
 } from "react-icons/fa";
 
 const Login = () => {
+  useEffect(() => {
+    document.title = "OM Tiffin Service - Admin Login";
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] =
     useState("");
@@ -51,7 +54,7 @@ const Login = () => {
         data.token
       );
 
-      alert("✅ Login Successful");
+      alert("âœ… Login Successful");
 
       navigate("/dashboard", {
         replace: true,
@@ -167,7 +170,7 @@ const Login = () => {
         </form>
 
         <div className="text-center mt-8 text-sm text-gray-500">
-          © 2026 OM Tiffin Service
+          Â© 2026 OM Tiffin Service
         </div>
       </div>
     </div>
@@ -175,3 +178,4 @@ const Login = () => {
 };
 
 export default Login;
+

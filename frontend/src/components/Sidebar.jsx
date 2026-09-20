@@ -12,6 +12,7 @@ import {
   FaTruck,
   FaWhatsapp,
   FaMoneyCheckAlt,
+  FaUtensils,
 } from "react-icons/fa";
 
 const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
@@ -266,6 +267,30 @@ const closeSidebar = () => {
         <FaCog className="text-cyan-300" />
         Tiffin Modification Settings
       </Link>
+            <Link
+        to="/website-menu"
+        onClick={closeSidebar}
+        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+          location.pathname === "/website-menu"
+            ? "bg-white text-blue-700 font-semibold shadow"
+            : "hover:bg-blue-600"
+        }`}
+      >
+        <FaUtensils className="text-orange-300" />
+        Website Menu
+      </Link>
+            <Link
+        to="/website-settings"
+        onClick={closeSidebar}
+        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+          location.pathname === "/website-settings"
+            ? "bg-white text-blue-700 font-semibold shadow"
+            : "hover:bg-blue-600"
+        }`}
+      >
+        <FaCog className="text-yellow-300" />
+        Website Settings
+      </Link>
       </nav>
 
       {/* Footer */}
@@ -292,6 +317,10 @@ const closeSidebar = () => {
 };
 
 export default Sidebar;
+
+
+
+
 
 
 

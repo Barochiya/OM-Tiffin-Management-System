@@ -1,10 +1,13 @@
-import { Outlet } from "react-router-dom";
-import { useState } from "react";
+﻿import { Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 
 export default function AdminLayout() {
+  useEffect(() => {
+    document.title = "OM Tiffin Service - Admin";
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (

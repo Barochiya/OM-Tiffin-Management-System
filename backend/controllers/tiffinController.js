@@ -6,6 +6,7 @@ const Bill = require("../models/Bill");
 const { ensureBarcode } = require("./barcodeController");
 const {
     createCustomerAccount,
+    ensureCustomerAccount,
 } = require("../services/customerAccountService");
 const {
     sendWhatsAppTemplate,
@@ -628,7 +629,41 @@ const updateTiffin = async (req, res) => {
         );
 
 
-        res.status(200).json({
+        // ======================================================
+    // ENSURE CUSTOMER ACCOUNT
+    // ======================================================
+    // Existing account remains unchanged.
+    // Missing account is created automatically.
+    // No WhatsApp credentials are sent during normal update.
+    let accountProvisioning = {
+        success: false,
+        created: false,
+    };
+    try {
+        const accountResult =
+            await ensureCustomerAccount(
+                tiffin._id
+            );
+        accountProvisioning.created =
+            accountResult.created;
+        accountProvisioning.success =
+            true;
+        console.log(
+            "Customer account reconciliation:",
+            {
+                customerId: tiffin._id,
+                userId: accountResult.account?.userId,
+                created: accountResult.created,
+            }
+        );
+    } catch (accountError) {
+        console.error(
+            "Customer account reconciliation failed:",
+            accountError.message
+        );
+    }
+
+    res.status(200).json({
 
             success: true,
 
@@ -940,6 +975,11 @@ module.exports = {
     getDashboardStats,
 
 };
+
+
+
+
+
 
 
 

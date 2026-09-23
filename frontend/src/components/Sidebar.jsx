@@ -240,6 +240,19 @@ const closeSidebar = () => {
           WhatsApp Inbox
         </Link>
 
+       <Link
+         to="/customer-login-id-sender"
+         onClick={closeSidebar}
+         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+           location.pathname === "/customer-login-id-sender"
+             ? "bg-white text-blue-700 font-semibold shadow"
+             : "hover:bg-blue-600"
+         }`}
+       >
+         <FaWhatsapp className="text-green-400" />
+         Customer Login ID Sender
+       </Link>
+
         <Link
           to="/whatsapp-payment-approval"
           onClick={closeSidebar}

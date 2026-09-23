@@ -313,14 +313,241 @@ const getCustomerUsers = async (req, res) => {
     });
   }
 };
+const getLoginIdRecipients = async (req, res) => {
+  try {
+    const customers = await Tiffin.find({
+      barcode: { $exists: true, $ne: "" },
+    })
+      .select("_id customerName phone barcode status")
+      .sort({ barcode: 1 })
+      .lean();
+    const customerIds = customers.map((customer) => customer._id);
+    const accounts = await CustomerAccount.find({
+      customer: { $in: customerIds },
+    })
+      .select("_id customer userId loginEnabled isFirstLogin")
+      .lean();
+    const accountMap = new Map(
+      accounts.map((account) => [
+        String(account.customer),
+        account,
+      ])
+    );
+    const data = customers.map((customer) => {
+      const account = accountMap.get(
+        String(customer._id)
+      );
+      return {
+        customerId: customer._id,
+        customerName: customer.customerName || "",
+        phone: customer.phone || "",
+        barcode: customer.barcode || "",
+        userId: account?.userId || customer.barcode || "",
+        status: customer.status || "Active",
+        accountExists: Boolean(account),
+        loginEnabled: account?.loginEnabled === true,
+        isFirstLogin: account?.isFirstLogin === true,
+        ready:
+          Boolean(account) &&
+          Boolean(account.userId) &&
+          Boolean(customer.phone),
+      };
+    });
+    return res.status(200).json({
+      success: true,
+      count: data.length,
+      readyCount: data.filter((item) => item.ready).length,
+      data,
+    });
+  } catch (error) {
+    console.error("getLoginIdRecipients:", error);
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to load customer login ID recipients",
+    });
+  }
+};
+const sendLoginIdsWhatsApp = async (req, res) => {
+  try {
+    const { customerIds, userIds } = req.body;
+    if (
+      (!Array.isArray(customerIds) || customerIds.length === 0) &&
+      (!Array.isArray(userIds) || userIds.length === 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "customerIds or userIds must contain at least one customer",
+      });
+    }
+    let customers = [];
+    if (
+      Array.isArray(customerIds) &&
+      customerIds.length > 0
+    ) {
+      customers = await Tiffin.find({
+        _id: { $in: customerIds },
+      })
+        .select("_id customerName phone barcode status")
+        .lean();
+    } else {
+      const normalizedUserIds = userIds
+        .map((value) => String(value || "").trim().toUpperCase())
+        .filter(Boolean);
+      const accounts = await CustomerAccount.find({
+        userId: { $in: normalizedUserIds },
+      })
+        .select("customer userId loginEnabled")
+        .lean();
+      const customerIdsFromAccounts = accounts
+        .map((account) => account.customer)
+        .filter(Boolean);
+      customers = await Tiffin.find({
+        _id: { $in: customerIdsFromAccounts },
+      })
+        .select("_id customerName phone barcode status")
+        .lean();
+    }
+    const customerMap = new Map(
+      customers.map((customer) => [
+        String(customer._id),
+        customer,
+      ])
+    );
+    const accounts = await CustomerAccount.find({
+      customer: {
+        $in: customers.map((customer) => customer._id),
+      },
+    })
+      .select("_id customer userId loginEnabled")
+      .lean();
+    const accountMap = new Map(
+      accounts.map((account) => [
+        String(account.customer),
+        account,
+      ])
+    );
+    const results = [];
+    for (const customer of customers) {
+      const account = accountMap.get(
+        String(customer._id)
+      );
+      if (!account) {
+        results.push({
+          customerId: customer._id,
+          customerName: customer.customerName,
+          userId: customer.barcode || "",
+          success: false,
+          status: "failed",
+          error: "Customer account not found",
+        });
+        continue;
+      }
+      if (!customer.phone) {
+        results.push({
+          customerId: customer._id,
+          customerName: customer.customerName,
+          userId: account.userId,
+          success: false,
+          status: "failed",
+          error: "Customer phone number is not available",
+        });
+        continue;
+      }
+      const credentialsMessage =
+        `Your OM Tiffin Customer User ID: ${account.userId}. ` +
+        `Tap the button below to set up your account and create your password.`;
+      try {
+        const template =
+          WHATSAPP_TEMPLATES.CUSTOM_ANNOUNCEMENT;
+        if (!template) {
+          throw new Error(
+            "CUSTOM_ANNOUNCEMENT WhatsApp template is not configured"
+          );
+        }
+        const whatsappResponse =
+          await sendWhatsAppTemplate({
+            to: customer.phone,
+            templateName: template.name,
+            languageCode: template.language,
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  {
+                    type: "text",
+                    text:
+                      customer.customerName ||
+                      "Customer",
+                  },
+                  {
+                    type: "text",
+                    text: credentialsMessage,
+                  },
+                ],
+              },
+            ],
+          });
+        results.push({
+          customerId: customer._id,
+          customerName: customer.customerName,
+          userId: account.userId,
+          success: true,
+          status: "sent",
+          messageId:
+            whatsappResponse?.messages?.[0]?.id ||
+            null,
+          messageStatus:
+            whatsappResponse?.messages?.[0]
+              ?.message_status || null,
+        });
+      } catch (sendError) {
+        results.push({
+          customerId: customer._id,
+          customerName: customer.customerName,
+          userId: account.userId,
+          success: false,
+          status: "failed",
+          error:
+            sendError.message ||
+            "WhatsApp message failed",
+        });
+      }
+    }
+    const sent = results.filter(
+      (item) => item.status === "sent"
+    ).length;
+    const failed = results.filter(
+      (item) => item.status === "failed"
+    ).length;
+    return res.status(200).json({
+      success: true,
+      message: "Customer login ID WhatsApp sending completed",
+      summary: {
+        total: results.length,
+        sent,
+        failed,
+      },
+      data: results,
+    });
+  } catch (error) {
+    console.error("sendLoginIdsWhatsApp:", error);
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to send customer login IDs",
+    });
+  }
+};
 module.exports = {
+  getLoginIdRecipients,
+  sendLoginIdsWhatsApp,
   getCustomerUsers,
   provisionCustomerAccount,
   setCustomerLoginEnabled,
   regenerateTemporaryPassword,
   getCustomerAccountStatuses,
 };
-
-
-
-

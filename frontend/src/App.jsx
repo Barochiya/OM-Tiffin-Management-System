@@ -26,6 +26,7 @@ import CustomerChangePassword from "./pages/CustomerChangePassword";
 import CustomerForgotPassword from "./pages/CustomerForgotPassword";
 import CustomerForgotUserId from "./pages/CustomerForgotUserId";
 import Dashboard from "./pages/Dashboard";
+import CustomerLoginIdSender from "./pages/CustomerLoginIdSender";
 import Customers from "./pages/Customers";
 import Users from "./pages/Users";
 import AddCustomer from "./pages/AddCustomer";
@@ -237,6 +238,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+      <Route
+        path="/customer-login-id-sender"
+        element={
+          <ProtectedRoute>
+            <CustomerLoginIdSender />
+          </ProtectedRoute>
+        }
+      />
 
         <Route
           path="/announcement"

@@ -7,8 +7,19 @@ const {
   regenerateTemporaryPassword,
   getCustomerAccountStatuses,
   getCustomerUsers,
+  getLoginIdRecipients,
+  sendLoginIdsWhatsApp,
 } = require("../controllers/customerAccountController");
-// Admin-authorized customer account provisioning
+router.get(
+  "/login-id-recipients",
+  protect,
+  getLoginIdRecipients
+);
+router.post(
+  "/send-login-ids",
+  protect,
+  sendLoginIdsWhatsApp
+);// Admin-authorized customer account provisioning
 router.post(
   "/provision",
   protect,
@@ -40,4 +51,5 @@ router.get(
   getCustomerUsers
 );
 module.exports = router;
+
 

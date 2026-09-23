@@ -1,0 +1,33 @@
+/* Shared visual polish for the public OM Tiffin pages. */
+.om-public-page {
+  min-height: calc(100vh - 80px);
+}
+
+.om-grid-pattern {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.om-card-hover {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+.om-card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.10);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .om-card-hover {
+    transition: none;
+  }
+
+  .om-card-hover:hover {
+    transform: none;
+  }
+}

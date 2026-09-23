@@ -61,8 +61,54 @@ const steps = [
     text: "Get fresh, homestyle meals with dependable daily service.",
   },
 ];
+const testimonials = [
+  {
+    name: "Happy Customer",
+    role: "OM Tiffin Customer",
+    text: "Fresh, homestyle meals and dependable daily service make my routine much easier.",
+  },
+  {
+    name: "Regular Customer",
+    role: "OM Tiffin Customer",
+    text: "The service is convenient, the meals are satisfying, and the support team is helpful.",
+  },
+  {
+    name: "Satisfied Customer",
+    role: "OM Tiffin Customer",
+    text: "A simple and reliable tiffin service for everyday meal requirements.",
+  },
+];
+
+const faqs = [
+  {
+    question: "How can I start OM Tiffin Service?",
+    answer: "Choose a suitable plan, contact OM Tiffin Service, and complete your customer details to get started.",
+  },
+  {
+    question: "Which meals are available?",
+    answer: "Meal availability depends on the current OM Tiffin Service settings and the meal options enabled for your service.",
+  },
+  {
+    question: "Can I change my meal requirements?",
+    answer: "Yes. Customers can submit a modification request through the customer portal for supported changes.",
+  },
+  {
+    question: "How does customer login work?",
+    answer: "Registered customers can use their OM Tiffin customer credentials to access the customer portal and manage their account.",
+  },
+  {
+    question: "How can I contact OM Tiffin Service?",
+    answer: "Use the Contact section on this website to reach OM Tiffin Service for plan details, service information, or assistance.",
+  },
+  {
+    question: "Are online orders currently available?",
+    answer: "Online ordering depends on the Online Orders setting. When online ordering is enabled, customers can add available menu items to the cart and place an order.",
+  },
+];
+
 export default function Home() {
-  useEffect(() => {
+  const [openFaq, setOpenFaq] = useState(null);
+useEffect(() => {
     document.title = "OM Tiffin Service";
   }, []);
   const {
@@ -157,75 +203,7 @@ export default function Home() {
   }
   return (
     <div className="min-h-screen bg-white text-slate-800">
-      {/* Navbar */}
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-3">
-            <img
-              src={logo}
-              alt="OM Tiffin Service"
-              className="h-12 w-12 rounded-full object-cover border border-slate-200"
-            />
-            <div>
-              <div className="text-lg font-extrabold tracking-tight text-blue-700">
-                OM TIFFIN
-              </div>
-              <div className="text-xs font-semibold tracking-[0.18em] text-slate-500">
-                SERVICE
-              </div>
-            </div>
-          </Link>
-          <nav className="hidden items-center gap-7 md:flex">
-            <a href="#home" className="text-sm font-semibold text-slate-700 hover:text-blue-600">
-              Home
-            </a>
-            <a href="#about" className="text-sm font-semibold text-slate-700 hover:text-blue-600">
-              About
-            </a>
-            <a href="#plans" className="text-sm font-semibold text-slate-700 hover:text-blue-600">
-              Plans
-            </a>
-            {settings.menuEnabled && (
-              <a
-                href="#menu"
-                className="text-sm font-semibold text-slate-700 hover:text-blue-600"
-              >
-                Menu
-              </a>
-            )}
-            <a href="#how-it-works" className="text-sm font-semibold text-slate-700 hover:text-blue-600">
-              How It Works
-            </a>
-            <a href="#contact" className="text-sm font-semibold text-slate-700 hover:text-blue-600">
-              Contact
-            </a>
-          </nav>
-          {settings.onlineOrdersEnabled && (
-        <Link
-            to="/cart"
-            aria-label={`Shopping cart with ${cartItemCount} items`}
-            className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-          >
-            <ShoppingCart size={20} />
-            {cartItemCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 px-1 text-[11px] font-black leading-none text-white ring-2 ring-white">
-                {cartItemCount > 99 ? "99+" : cartItemCount}
-              </span>
-            )}
-          </Link>
-        )}
-
-          {settings.customerLoginEnabled && (
-            <Link
-              to="/customer-login"
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
-            >
-              Customer Login
-              <ArrowRight size={16} />
-            </Link>
-          )}
-        </div>
-      </header>
+      {/* Hero */}
       {/* Hero */}
       <main>
         <section
@@ -629,6 +607,92 @@ export default function Home() {
             </div>
           </div>
         </section>
+        {/* Testimonials */}
+        {settings.testimonialsEnabled && (
+          <section id="testimonials" className="bg-slate-50 py-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="text-center">
+                <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-blue-600">
+                  Testimonials
+                </p>
+                <h2 className="mt-3 text-3xl font-black text-slate-900 sm:text-4xl">
+                  What our customers say
+                </h2>
+                <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+                  Simple, dependable tiffin service designed for everyday meal needs.
+                </p>
+              </div>
+              <div className="mt-12 grid gap-6 md:grid-cols-3">
+                {testimonials.map((testimonial) => (
+                  <article
+                    key={testimonial.name}
+                    className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
+                  >
+                    <div className="flex items-center gap-1 text-orange-500" aria-label="5 star rating">
+                      {"★★★★★"}
+                    </div>
+                    <p className="mt-5 leading-7 text-slate-600">
+                      &quot;{testimonial.text}&quot;
+                    </p>
+                    <div className="mt-6 border-t border-slate-100 pt-5">
+                      <p className="font-black text-slate-900">{testimonial.name}</p>
+                      <p className="mt-1 text-sm text-slate-500">{testimonial.role}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* FAQ */}
+        {settings.faqEnabled && (
+          <section id="faq" className="bg-white py-20">
+            <div className="mx-auto max-w-4xl px-4 sm:px-6">
+              <div className="text-center">
+                <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-blue-600">
+                  FAQ
+                </p>
+                <h2 className="mt-3 text-3xl font-black text-slate-900 sm:text-4xl">
+                  Frequently asked questions
+                </h2>
+                <p className="mx-auto mt-4 max-w-2xl text-slate-600">
+                  Find quick answers about plans, meals, customer accounts, and online ordering.
+                </p>
+              </div>
+              <div className="mt-10 space-y-3">
+                {faqs.map((faq, index) => {
+                  const isOpen = openFaq === index;
+                  return (
+                    <div
+                      key={faq.question}
+                      className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setOpenFaq(isOpen ? null : index)}
+                        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left font-bold text-slate-900 transition hover:bg-white sm:px-6"
+                        aria-expanded={isOpen}
+                      >
+                        <span>{faq.question}</span>
+                        <span className="shrink-0 text-xl text-blue-600">
+                          {isOpen ? "−" : "+"}
+                        </span>
+                      </button>
+                      {isOpen && (
+                        <div className="border-t border-slate-200 bg-white px-5 py-4 leading-7 text-slate-600 sm:px-6">
+                          {faq.answer}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+
         {/* CTA */}
         <section className="px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-gradient-to-r from-blue-700 to-indigo-700 px-6 py-12 text-center text-white sm:px-12">
@@ -708,6 +772,18 @@ export default function Home() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

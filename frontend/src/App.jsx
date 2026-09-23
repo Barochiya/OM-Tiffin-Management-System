@@ -2,9 +2,15 @@
 
 import AdminLayout from "./layouts/AdminLayout";
 import Home from "./pages/Home";
+import About from "./pages/About";
+import Plans from "./pages/Plans";
+import Menu from "./pages/Menu";
+import HowItWorks from "./pages/HowItWorks";
+import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import OrderDetails from "./pages/OrderDetails";
 import CustomerLayout from "./layouts/CustomerLayout";
+import PublicWebsiteLayout from "./layouts/PublicWebsiteLayout";
 
 import Login from "./pages/Login";
 import CustomerLogin from "./pages/CustomerLogin";
@@ -51,8 +57,16 @@ export default function App() {
   return (
     <CartProvider>
       <Routes>
-      {/* Default */}
-      <Route path="/" element={<Home />} />
+      
+            {/* Public Website */}
+      <Route element={<PublicWebsiteLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/plans" element={<Plans />} />
+        <Route path="/menu" element={<Menu />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/contact" element={<Contact />} />
+      </Route>
       <Route path="/cart" element={<Cart />} />
       <Route path="/order-details" element={<OrderDetails />} />
 
@@ -331,6 +345,11 @@ export default function App() {
     </CartProvider>
   );
 }
+
+
+
+
+
 
 
 

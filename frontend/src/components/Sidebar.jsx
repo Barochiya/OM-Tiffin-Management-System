@@ -1,4 +1,4 @@
-﻿import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   FaUsers,
   FaUserPlus,
@@ -13,6 +13,7 @@ import {
   FaWhatsapp,
   FaMoneyCheckAlt,
   FaUtensils,
+  FaStar,
 } from "react-icons/fa";
 
 const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
@@ -301,6 +302,18 @@ const closeSidebar = () => {
       >
         <FaUtensils className="text-orange-300" />
         Website Menu
+      </Link>
+      <Link
+        to="/website-reviews"
+        onClick={closeSidebar}
+        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+          location.pathname === "/website-reviews"
+            ? "bg-white text-blue-700 font-semibold shadow"
+            : "hover:bg-blue-600"
+        }`}
+      >
+        <FaStar className="text-yellow-300" />
+        Reviews
       </Link>
             <Link
         to="/website-settings"

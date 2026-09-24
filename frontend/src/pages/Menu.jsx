@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { getPublicMenuItems } from "../services/websiteMenuService";
 export default function Menu() {
@@ -31,8 +31,33 @@ export default function Menu() {
     }
   };
   useEffect(() => {
+  loadMenu();
+  // Refresh when the browser tab becomes active again
+  const handleFocus = () => {
     loadMenu();
-  }, []);
+  };
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === "visible") {
+      loadMenu();
+    }
+  };
+  window.addEventListener("focus", handleFocus);
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  // Periodic refresh while the page is open
+  const refreshInterval = window.setInterval(() => {
+    if (document.visibilityState === "visible") {
+      loadMenu();
+    }
+  }, 60 * 1000);
+  return () => {
+    window.removeEventListener("focus", handleFocus);
+    document.removeEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+    window.clearInterval(refreshInterval);
+  };
+}, []);
   const mealTypes = useMemo(() => {
     const types = menuItems
       .map((item) => item?.mealType)

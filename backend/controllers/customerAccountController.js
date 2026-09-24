@@ -5,6 +5,7 @@ const {
 } = require("../services/customerAccountService");
 const CustomerAccount = require("../models/CustomerAccount");
 const CustomerFirstLoginLog = require("../models/CustomerFirstLoginLog");
+const CustomerLoginIdDelivery = require("../models/CustomerLoginIdDelivery");
 const Tiffin = require("../models/Tiffin");
 const { sendWhatsAppTemplate } = require("../utils/whatsappSender");
 const WHATSAPP_TEMPLATES = require("../config/whatsappTemplates");
@@ -490,18 +491,31 @@ const sendLoginIdsWhatsApp = async (req, res) => {
               },
             ],
           });
+        const whatsappMessageId =
+          whatsappResponse?.messages?.[0]?.id || null;
+        const whatsappMessageStatus =
+          whatsappResponse?.messages?.[0]?.message_status ||
+          "accepted";
+        await CustomerLoginIdDelivery.create({
+          customer: customer._id,
+          customerAccount: account._id,
+          customerName:
+            customer.customerName || "Customer",
+          userId: account.userId,
+          phone: customer.phone,
+          templateName: template.name,
+          whatsappMessageId,
+          whatsappStatus: whatsappMessageStatus,
+          sentAt: null,
+        });
         results.push({
           customerId: customer._id,
           customerName: customer.customerName,
           userId: account.userId,
           success: true,
           status: "sent",
-          messageId:
-            whatsappResponse?.messages?.[0]?.id ||
-            null,
-          messageStatus:
-            whatsappResponse?.messages?.[0]
-              ?.message_status || null,
+          messageId: whatsappMessageId,
+          messageStatus: whatsappMessageStatus,
         });
       } catch (sendError) {
         results.push({
@@ -551,3 +565,5 @@ module.exports = {
   regenerateTemporaryPassword,
   getCustomerAccountStatuses,
 };
+
+

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -29,6 +29,8 @@ export default function OrderDetails() {
   const [orderSubmitting, setOrderSubmitting] = useState(false);
   const [orderMessage, setOrderMessage] = useState("");
   const [orderError, setOrderError] = useState("");
+  const [placedOrderItems, setPlacedOrderItems] = useState([]);
+  const [placedOrderTotal, setPlacedOrderTotal] = useState(0);
   useEffect(() => {
     const loadWebsiteSettings = async () => {
       try {
@@ -102,6 +104,8 @@ export default function OrderDetails() {
         totalAmount: cartTotal,
       });
       if (response?.success) {
+        setPlacedOrderItems([...cartItems]);
+        setPlacedOrderTotal(cartTotal);
         setOrderMessage(
           `Order placed successfully. Order ID: ${
             response.data?._id || "Created"
@@ -374,7 +378,7 @@ export default function OrderDetails() {
               </h2>
             </div>
             <div className="mt-6 space-y-4">
-              {cartItems.map((item) => (
+              {(orderMessage ? placedOrderItems : cartItems).map((item) => (
                 <div
                   key={`${item.menuItemId}-${item.mealType}`}
                   className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4"
@@ -402,7 +406,7 @@ export default function OrderDetails() {
                 Total
               </span>
               <span className="text-2xl font-black text-blue-700">
-                ₹{cartTotal.toFixed(0)}
+                ₹{(orderMessage ? placedOrderTotal : cartTotal).toFixed(0)}
               </span>
             </div>
           </aside>

@@ -4,6 +4,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const websiteSettingsRoutes = require("./routes/websiteSettingsRoutes");
 const websiteMenuRoutes = require("./routes/websiteMenuRoutes");
 const websiteOrderRoutes = require("./routes/websiteOrderRoutes");
+const websiteReviewRoutes = require("./routes/websiteReviewRoutes");
 
 const express = require("express");
 const cors = require("cors");
@@ -127,6 +128,7 @@ app.use("/api/customer-modification-admin", customerModificationSettingsRoutes);
 app.use("/api/website-settings", websiteSettingsRoutes);
 app.use("/api/website-menu", websiteMenuRoutes);
 app.use("/api/website-orders", websiteOrderRoutes);
+app.use("/api/website-reviews", websiteReviewRoutes);
 
 
 // Meal Prices
@@ -189,4 +191,5 @@ app.use(errorHandler);
 // ===============================
 
 module.exports = app;
+
 

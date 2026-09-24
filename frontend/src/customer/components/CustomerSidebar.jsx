@@ -58,13 +58,6 @@ const menuItems = [
     active: "bg-green-50 text-green-700",
   },
   {
-    label: "Download Bills",
-    path: "/customer/bills",
-    icon: FaDownload,
-    color: "text-violet-600",
-    active: "bg-violet-50 text-violet-700",
-  },
-  {
     label: "Announcements",
     path: "/customer/announcements",
     icon: FaBullhorn,
@@ -190,4 +183,5 @@ const CustomerSidebar = () => {
   );
 };
 export default CustomerSidebar;
+
 

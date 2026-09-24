@@ -1,4 +1,4 @@
-﻿import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminLayout from "./layouts/AdminLayout";
 import Home from "./pages/Home";
@@ -49,6 +49,7 @@ import CustomerModificationRequests from "./pages/CustomerModificationRequests";
 import CustomerModificationSettings from "./pages/CustomerModificationSettings";
 import BusinessInfo from "./pages/BusinessInfo";
 import WebsiteSettings from "./pages/WebsiteSettings";
+import WebsiteReviews from "./pages/WebsiteReviews";
 import WebsiteMenu from "./pages/WebsiteMenu";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
@@ -314,6 +315,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <WebsiteSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/website-reviews"
+        element={
+          <ProtectedRoute>
+            <WebsiteReviews />
           </ProtectedRoute>
         }
       />

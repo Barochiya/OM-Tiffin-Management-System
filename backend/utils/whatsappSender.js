@@ -1,4 +1,4 @@
-﻿const https = require("https");
+const https = require("https");
 
 const getWhatsAppConfig = () => {
   const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
@@ -183,13 +183,13 @@ const sendWhatsAppMessage = async ({
     },
   };
 
-  console.log("Ã°Å¸â€œÂ¤ Sending WhatsApp text:", {
+  console.log("ðŸ“¤ Sending WhatsApp text:", {
     to: normalizedTo,
   });
 
   const data = await sendMetaMessageRequest(payload);
 
-  console.log("Ã¢Å“â€¦ WhatsApp text sent:", data);
+  console.log("âœ… WhatsApp text sent:", data);
 
   return data;
 };
@@ -249,20 +249,27 @@ const sendWhatsAppTemplate = async ({
     template,
   };
 
-  console.log(
-  "WhatsApp Template Payload:",
-  JSON.stringify(payload, null, 2)
-);
+  console.log("WhatsApp template request:", {
+  to: normalizedTo.replace(/^(\d{2})\d+(\d{4})$/, "$1******$2"),
+  templateName: String(templateName),
+  languageCode: languageCode || "en_US",
+  hasComponents: Array.isArray(components) && components.length > 0,
+});
 
   console.log("Sending WhatsApp template:", {
-    to: normalizedTo,
-    templateName,
-    languageCode,
-  });
+  to: normalizedTo.replace(/^(\d{2})\d+(\d{4})$/, "$1******$2"),
+  templateName,
+  languageCode,
+});
 
   const data = await sendMetaMessageRequest(payload);
 
-  console.log("WhatsApp template sent:", data);
+  console.log("WhatsApp template accepted:", {
+  messageId: data?.messages?.[0]?.id || null,
+  messageStatus: data?.messages?.[0]?.message_status || null,
+  recipient: normalizedTo.replace(/^(\d{2})\d+(\d{4})$/, "$1******$2"),
+  templateName: String(templateName),
+});
 
   return data;
 };
@@ -379,7 +386,7 @@ const sendWhatsAppDocument = async ({
     payload.document.caption = caption;
   }
 
-  console.log("Ã°Å¸â€œÂ¤ Sending WhatsApp document:", {
+  console.log("ðŸ“¤ Sending WhatsApp document:", {
   to: normalizedTo,
   filename,
 });
@@ -390,7 +397,7 @@ const data = await sendMetaMessageRequest(
   payload
 );
 
-console.log("Ã¢Å“â€¦ WhatsApp document sent:", data);
+console.log("âœ… WhatsApp document sent:", data);
 
 return data;
 };
@@ -436,16 +443,16 @@ const sendPdfBillWhatsApp = async ({
   }
 
   const caption =
-  `Ã°Å¸ÂÂ± *OM TIFFIN SERVICE* Ã°Å¸ÂÂ±\n\n` +
-  `Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â\n\n` +
-  `Ã°Å¸Â§Â¾ *NEW BILL GENERATED*\n\n` +
-  `Ã°Å¸â€˜Â¤ *Customer:* ${customerName || "Customer"}\n\n` +
-  `Ã°Å¸â€œâ€ž *Invoice No:* ${invoiceNo || "N/A"}\n\n` +
-  `Ã°Å¸â€™Â° *Total Amount:* Ã¢â€šÂ¹${Number(totalAmount || 0)}\n\n` +
-  `Ã°Å¸â€œâ€¦ *Date:* ${new Date().toLocaleDateString("en-GB")}\n\n` +
-  `Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â\n\n` +
-  `Ã°Å¸â„¢Â Thank you for choosing\n` +
-  `Ã°Å¸Å’Â¿ *OM TIFFIN SERVICE* Ã°Å¸Å’Â¿`;
+  `ðŸ± *OM TIFFIN SERVICE* ðŸ±\n\n` +
+  `â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n` +
+  `ðŸ§¾ *NEW BILL GENERATED*\n\n` +
+  `ðŸ‘¤ *Customer:* ${customerName || "Customer"}\n\n` +
+  `ðŸ“„ *Invoice No:* ${invoiceNo || "N/A"}\n\n` +
+  `ðŸ’° *Total Amount:* â‚¹${Number(totalAmount || 0)}\n\n` +
+  `ðŸ“… *Date:* ${new Date().toLocaleDateString("en-GB")}\n\n` +
+  `â”â”â”â”â”â”â”â”â”â”â”â”â”â”\n\n` +
+  `ðŸ™ Thank you for choosing\n` +
+  `ðŸŒ¿ *OM TIFFIN SERVICE* ðŸŒ¿`;
   
   const result = await sendWhatsAppDocument({
   to,
@@ -485,9 +492,9 @@ const sendBillTemplateWithPdf = async ({
     filename,
   });
 
-  console.log("Ã°Å¸â€œÂ¤ Uploading PDF:", filename);
+  console.log("ðŸ“¤ Uploading PDF:", filename);
 
-console.log("Ã°Å¸â€œâ€ž Media ID:", media.id);
+console.log("ðŸ“„ Media ID:", media.id);
 
   console.log("Sending WhatsApp template:", {
   to,
@@ -670,6 +677,9 @@ module.exports = {
   sendBillTemplateWithPdf,
   sendPdfPaymentReceiptWhatsApp,
 };
+
+
+
 
 
 

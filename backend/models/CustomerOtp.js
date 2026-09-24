@@ -59,7 +59,6 @@ const customerOtpSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
     },
     attempts: {
       type: Number,
@@ -86,3 +85,4 @@ const customerOtpSchema = new mongoose.Schema(
 );
 customerOtpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 module.exports = mongoose.model("CustomerOtp", customerOtpSchema);
+

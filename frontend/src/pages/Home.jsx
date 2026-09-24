@@ -14,13 +14,14 @@ import {
 import logo from "../assets/logo.png";
 import { getWebsiteSettings } from "../services/websiteSettingsService";
 import { getPublicMenuItems } from "../services/websiteMenuService";
+import { getPublicReviews, createPublicReview } from "../services/websiteReviewService";
 import { createWebsiteOrder } from "../services/websiteOrderService";
 import { useCart } from "../context/CartContext";
 const plans = [
   {
     title: "Daily Tiffin",
     subtitle: "Fresh meal whenever you need it",
-    price: "Starting from ₹90",
+    price: "Starting from â‚¹90",
     icon: UtensilsCrossed,
   },
   {
@@ -129,6 +130,7 @@ useEffect(() => {
     dinnerEnabled: true,
     contactEnabled: true,
     customerLoginEnabled: true,
+    testimonialsEnabled: true,
   });
   useEffect(() => {
     let isMounted = true;
@@ -154,6 +156,16 @@ useEffect(() => {
   }, []);
   const [menuItems, setMenuItems] = useState([]);
   const [menuLoading, setMenuLoading] = useState(true);
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewError, setReviewError] = useState("");
+  const [reviewSuccess, setReviewSuccess] = useState("");
+  const [reviewForm, setReviewForm] = useState({
+    customerName: "",
+    rating: 0,
+    reviewText: "",
+  });
   useEffect(() => {
     const loadPublicMenu = async () => {
       try {
@@ -172,6 +184,61 @@ useEffect(() => {
       }
     };
     loadPublicMenu();
+  }, []);
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPublicReviews = async () => {
+      try {
+        setReviewsLoading(true);
+        const response = await getPublicReviews();
+
+        if (isMounted && response?.success) {
+          setReviews(response.data || []);
+        } else if (isMounted) {
+          setReviews([]);
+        }
+      } catch (error) {
+        console.error("Public Website Reviews Load Error:", error);
+        if (isMounted) {
+          setReviews([]);
+        }
+      } finally {
+        if (isMounted) {
+          setReviewsLoading(false);
+        }
+      }
+    };
+
+    loadPublicReviews();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // PUBLIC_REVIEW_AUTO_REFRESH_30S
+  useEffect(() => {
+    let isMounted = true;
+
+    const refreshPublicReviews = async () => {
+      try {
+        const response = await getPublicReviews();
+
+        if (isMounted && response?.success) {
+          setReviews(response.data || []);
+        }
+      } catch (error) {
+        console.error("Public Website Reviews Auto Refresh Error:", error);
+      }
+    };
+
+    const intervalId = setInterval(refreshPublicReviews, 30000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
   }, []);
   if (!settings.websiteEnabled) {
     return (
@@ -216,7 +283,7 @@ useEffect(() => {
             <div className="text-white">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur">
                 <Star size={16} className="fill-current" />
-                Fresh • Homestyle • Reliable
+                Fresh â€¢ Homestyle â€¢ Reliable
               </div>
               <h1 className="max-w-3xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
                 Fresh &amp; Delicious
@@ -277,10 +344,10 @@ useEffect(() => {
                   </div>
                   <div className="mt-6 space-y-4">
                     {[
-                      ["🍛", "Freshly Prepared Meals"],
-                      ["🥗", "Balanced & Delicious Food"],
-                      ["🕒", "Convenient Daily Service"],
-                      ["❤️", "Made for Your Comfort"],
+                      ["ðŸ›", "Freshly Prepared Meals"],
+                      ["ðŸ¥—", "Balanced & Delicious Food"],
+                      ["ðŸ•’", "Convenient Daily Service"],
+                      ["â¤ï¸", "Made for Your Comfort"],
                     ].map(([emoji, text]) => (
                       <div
                         key={text}
@@ -456,7 +523,7 @@ useEffect(() => {
                                     )}
                                   </div>
                                   <div className="shrink-0 rounded-xl bg-blue-50 px-3 py-2 text-sm font-black text-blue-700">
-                                    ₹{Number(item.price || 0).toFixed(0)}
+                                    â‚¹{Number(item.price || 0).toFixed(0)}
                                   </div>
                                 </div>
                                 <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
@@ -476,7 +543,7 @@ useEffect(() => {
     href="#contact"
     className="text-sm font-bold text-slate-800 hover:text-blue-600"
   >
-    Enquire Now →
+    Enquire Now â†’
   </a>
 )}
                                 </div>
@@ -537,7 +604,7 @@ useEffect(() => {
                                     )}
                                   </div>
                                   <div className="shrink-0 rounded-xl bg-blue-50 px-3 py-2 text-sm font-black text-blue-700">
-                                    ₹{Number(item.price || 0).toFixed(0)}
+                                    â‚¹{Number(item.price || 0).toFixed(0)}
                                   </div>
                                 </div>
                                 <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
@@ -557,7 +624,7 @@ useEffect(() => {
     href="#contact"
     className="text-sm font-bold text-slate-800 hover:text-blue-600"
   >
-    Enquire Now →
+    Enquire Now â†’
   </a>
 )}
                                 </div>
@@ -613,33 +680,238 @@ useEffect(() => {
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="text-center">
                 <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-blue-600">
-                  Testimonials
+                  Customer Reviews
                 </p>
                 <h2 className="mt-3 text-3xl font-black text-slate-900 sm:text-4xl">
                   What our customers say
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-slate-600">
-                  Simple, dependable tiffin service designed for everyday meal needs.
+                  Real reviews from customers who have shared their experience with OM Tiffin Service.
                 </p>
               </div>
-              <div className="mt-12 grid gap-6 md:grid-cols-3">
-                {testimonials.map((testimonial) => (
-                  <article
-                    key={testimonial.name}
-                    className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
-                  >
-                    <div className="flex items-center gap-1 text-orange-500" aria-label="5 star rating">
-                      {"★★★★★"}
+
+              {reviewsLoading ? (
+                <div className="mt-12 rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+                  <p className="font-semibold text-slate-600">Loading customer reviews...</p>
+                </div>
+              ) : reviews.length > 0 ? (
+                <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {reviews.map((review) => (
+                    <article
+                      key={review._id}
+                      className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
+                    >
+                      <div
+                        className="flex items-center gap-1 text-orange-500"
+                        aria-label={`${review.rating} star rating`}
+                      >
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={18}
+                            className={star <= review.rating ? "fill-current" : "text-slate-300"}
+                          />
+                        ))}
+                      </div>
+
+                      <p className="mt-5 leading-7 text-slate-600">
+                        &quot;{review.reviewText}&quot;
+                      </p>
+
+                      <div className="mt-6 border-t border-slate-100 pt-5">
+                        <p className="font-black text-slate-900">{review.customerName}</p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          Verified customer review
+                        </p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-12 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-orange-500">
+                    <Star size={26} className="fill-current" />
+                  </div>
+                  <h3 className="mt-5 text-xl font-black text-slate-900">
+                    Be the first to review OM Tiffin Service
+                  </h3>
+                  <p className="mt-2 text-slate-600">
+                    Share your experience with our tiffin service.
+                  </p>
+                </div>
+              )}
+
+              <div className="mx-auto mt-12 max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+                <div>
+                  <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-orange-500">
+                    Share your experience
+                  </p>
+                  <h3 className="mt-2 text-2xl font-black text-slate-900">
+                    Write a Review
+                  </h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Your review will be published after approval by OM Tiffin Service.
+                  </p>
+                </div>
+
+                <form
+                  className="mt-6 space-y-5"
+                  onSubmit={async (event) => {
+                    event.preventDefault();
+                    setReviewError("");
+                    setReviewSuccess("");
+
+                    const customerName = reviewForm.customerName.trim();
+                    const reviewText = reviewForm.reviewText.trim();
+
+                    if (!customerName) {
+                      setReviewError("Please enter your name.");
+                      return;
+                    }
+
+                    if (!reviewText) {
+                      setReviewError("Please write your review.");
+                      return;
+                    }
+
+                    if (reviewForm.rating < 1 || reviewForm.rating > 5) {
+                      setReviewError("Please select a rating from 1 to 5 stars.");
+                      return;
+                    }
+
+                    try {
+                      setReviewSubmitting(true);
+
+                      const response = await createPublicReview({
+                        customerName,
+                        rating: reviewForm.rating,
+                        reviewText,
+                      });
+
+                      if (!response?.success) {
+                        throw new Error(response?.message || "Unable to submit your review.");
+                      }
+
+                      setReviewForm({
+                        customerName: "",
+                        rating: 0,
+                        reviewText: "",
+                      });
+
+                      setReviewSuccess(
+                        "Thank you! Your review has been submitted and is waiting for approval."
+                      );
+                    } catch (error) {
+                      console.error("Public Review Submission Error:", error);
+                      setReviewError(
+                        error?.response?.data?.message ||
+                          error?.message ||
+                          "Unable to submit your review. Please try again."
+                      );
+                    } finally {
+                      setReviewSubmitting(false);
+                    }
+                  }}
+                >
+                  <div>
+                    <label
+                      htmlFor="review-customer-name"
+                      className="mb-2 block text-sm font-bold text-slate-800"
+                    >
+                      Your Name
+                    </label>
+                    <input
+                      id="review-customer-name"
+                      type="text"
+                      maxLength={100}
+                      value={reviewForm.customerName}
+                      onChange={(event) =>
+                        setReviewForm((current) => ({
+                          ...current,
+                          customerName: event.target.value,
+                        }))
+                      }
+                      placeholder="Enter your name"
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      disabled={reviewSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <span className="mb-2 block text-sm font-bold text-slate-800">
+                      Your Rating
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() =>
+                            setReviewForm((current) => ({
+                              ...current,
+                              rating: star,
+                            }))
+                          }
+                          disabled={reviewSubmitting}
+                          aria-label={`Rate ${star} out of 5 stars`}
+                          className="rounded-lg p-1 text-orange-500 transition hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <Star
+                            size={28}
+                            className={star <= reviewForm.rating ? "fill-current" : "text-slate-300"}
+                          />
+                        </button>
+                      ))}
                     </div>
-                    <p className="mt-5 leading-7 text-slate-600">
-                      &quot;{testimonial.text}&quot;
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="review-text"
+                      className="mb-2 block text-sm font-bold text-slate-800"
+                    >
+                      Your Review
+                    </label>
+                    <textarea
+                      id="review-text"
+                      rows={5}
+                      maxLength={1000}
+                      value={reviewForm.reviewText}
+                      onChange={(event) =>
+                        setReviewForm((current) => ({
+                          ...current,
+                          reviewText: event.target.value,
+                        }))
+                      }
+                      placeholder="Tell us about your experience..."
+                      className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      disabled={reviewSubmitting}
+                    />
+                    <p className="mt-1 text-right text-xs text-slate-400">
+                      {reviewForm.reviewText.length}/1000
                     </p>
-                    <div className="mt-6 border-t border-slate-100 pt-5">
-                      <p className="font-black text-slate-900">{testimonial.name}</p>
-                      <p className="mt-1 text-sm text-slate-500">{testimonial.role}</p>
+                  </div>
+
+                  {reviewError && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                      {reviewError}
                     </div>
-                  </article>
-                ))}
+                  )}
+
+                  {reviewSuccess && (
+                    <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+                      {reviewSuccess}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={reviewSubmitting}
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-3 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {reviewSubmitting ? "Submitting..." : "Submit Review"}
+                  </button>
+                </form>
               </div>
             </div>
           </section>
@@ -676,7 +948,7 @@ useEffect(() => {
                       >
                         <span>{faq.question}</span>
                         <span className="shrink-0 text-xl text-blue-600">
-                          {isOpen ? "−" : "+"}
+                          {isOpen ? "âˆ’" : "+"}
                         </span>
                       </button>
                       {isOpen && (
@@ -735,7 +1007,7 @@ useEffect(() => {
                 <MapPin size={19} className="text-blue-600" />
                 Gandhinagar
               </span>
-              <span className="hidden sm:block">•</span>
+              <span className="hidden sm:block">â€¢</span>
               <span>Contact OM Tiffin Service for plan details</span>
             </div>
             <div className="mt-8 flex justify-center">
@@ -758,7 +1030,7 @@ useEffect(() => {
               alt="OM Tiffin Service"
               className="h-9 w-9 rounded-full object-cover"
             />
-            <span>© 2026 OM Tiffin Service</span>
+            <span>Â© 2026 OM Tiffin Service</span>
           </div>
           <div className="flex gap-5">
             {settings.customerLoginEnabled && (
@@ -772,6 +1044,7 @@ useEffect(() => {
     </div>
   );
 }
+
 
 
 

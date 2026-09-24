@@ -19,15 +19,13 @@ export default function Contact() {
   }, []);
 
   const openWhatsApp = () => {
-    const text =
-      message.trim() ||
-      "Hello OM Tiffin Service, I would like to know more about your tiffin plans.";
-    window.open(
-      `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  };
+  const text =
+    message.trim() ||
+    "Hello OM Tiffin Service, I would like to know more about your tiffin plans.";
+  const whatsappUrl =
+    `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(text)}`;
+  window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+};
 
   return (
     <main className="om-public-page bg-slate-50 text-slate-800">

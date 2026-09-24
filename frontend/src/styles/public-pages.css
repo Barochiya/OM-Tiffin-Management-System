@@ -31,3 +31,66 @@
     transform: none;
   }
 }
+ /* =========================================================
+    OM TIFFIN PUBLIC ORDER / CART VISUAL POLISH
+    Visual-only styles — no business logic
+    ========================================================= */
+ /* Public form controls */
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="date"],
+textarea {
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+input[type="text"]:hover,
+input[type="tel"]:hover,
+input[type="email"]:hover,
+input[type="date"]:hover,
+textarea:hover {
+  border-color: rgb(148 163 184);
+}
+input[type="text"]:focus,
+input[type="tel"]:focus,
+input[type="email"]:focus,
+input[type="date"]:focus,
+textarea:focus {
+  border-color: rgb(37 99 235);
+  box-shadow: 0 0 0 4px rgba(219, 234, 254, 0.85);
+}
+/* Public order buttons */
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+ /* Cart and order card depth */
+.rounded-2xl.border-slate-200.bg-white,
+.rounded-3xl.border-slate-200.bg-white {
+  transition:
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+/* Better mobile form spacing */
+@media (max-width: 639px) {
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="date"],
+  textarea {
+    font-size: 16px;
+  }
+}
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="date"],
+  textarea,
+  .rounded-2xl.border-slate-200.bg-white,
+  .rounded-3xl.border-slate-200.bg-white {
+    transition: none;
+  }
+}

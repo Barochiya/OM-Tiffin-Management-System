@@ -11,6 +11,7 @@ const Bill = require("../models/Bill");
 const AnnouncementDelivery = require("../models/AnnouncementDelivery");
 const WhatsAppMessage = require("../models/WhatsAppMessage");
 const CustomerOtp = require("../models/CustomerOtp");
+const CustomerLoginIdDelivery = require("../models/CustomerLoginIdDelivery");
 const Tiffin = require("../models/Tiffin");
 const CustomerModificationWhatsAppAction = require("../models/CustomerModificationWhatsAppAction");
 const { normalizeIndianPhone } = require("../utils/whatsappSender");
@@ -462,6 +463,14 @@ const customer =
           whatsappMessageId:
             status.id,
         });
+      // =========================================
+      // Find Customer Login ID Delivery
+      // =========================================
+      const customerLoginIdDelivery =
+        await CustomerLoginIdDelivery.findOne({
+          whatsappMessageId:
+            status.id,
+        });
 
           console.log(
             "Announcement Delivery =",
@@ -481,7 +490,8 @@ const customer =
           if (
         !bill &&
         !announcementDelivery &&
-        !customerOtp
+        !customerOtp &&
+        !customerLoginIdDelivery
       ) {
             console.log(
               "[WARN] No Bill or AnnouncementDelivery found for message:",
@@ -633,6 +643,50 @@ const customer =
       // =================================================
       // If this is only an announcement, continue
       // =================================================
+      // =================================================
+      // Customer Login ID WhatsApp Status Tracking
+      // =================================================
+      if (customerLoginIdDelivery) {
+        const loginIdUpdate = {};
+        if (status.status === "sent") {
+          loginIdUpdate.whatsappStatus = "sent";
+          loginIdUpdate.sentAt =
+            new Date(Number(status.timestamp) * 1000);
+        }
+        if (status.status === "delivered") {
+          loginIdUpdate.whatsappStatus = "delivered";
+          loginIdUpdate.deliveredAt =
+            new Date(Number(status.timestamp) * 1000);
+        }
+        if (status.status === "read") {
+          loginIdUpdate.whatsappStatus = "read";
+          loginIdUpdate.readAt =
+            new Date(Number(status.timestamp) * 1000);
+        }
+        if (status.status === "failed") {
+          loginIdUpdate.whatsappStatus = "failed";
+          loginIdUpdate.failedAt =
+            new Date(Number(status.timestamp) * 1000);
+          loginIdUpdate.failureReason =
+            status.errors?.[0]?.title ||
+            status.errors?.[0]?.message ||
+            "WhatsApp delivery failed.";
+        }
+        if (Object.keys(loginIdUpdate).length > 0) {
+          await CustomerLoginIdDelivery.updateOne(
+            { _id: customerLoginIdDelivery._id },
+            { $set: loginIdUpdate }
+          );
+          console.log(
+            "Customer Login ID WhatsApp Status Updated:",
+            {
+              id: customerLoginIdDelivery._id,
+              messageId: status.id,
+              status: status.status,
+            }
+          );
+        }
+      }
       if (!bill) {
         continue;
       }

@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const router = express.Router();
 
 const Tiffin = require("../models/Tiffin");
@@ -323,6 +323,19 @@ router.post("/send", async (req, res) => {
           }`
         );
       } catch (error) {
+    console.error(
+      "FULL META ANNOUNCEMENT ERROR:",
+      JSON.stringify(
+        {
+          message: error?.message || null,
+          meta: error?.meta || null,
+          status: error?.status || null,
+          code: error?.code || null,
+        },
+        null,
+        2
+      )
+    );
         // --------------------------------------
         // Mark Delivery Failed
         // --------------------------------------

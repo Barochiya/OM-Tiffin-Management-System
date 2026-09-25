@@ -123,6 +123,12 @@ router.post("/send", async (req, res) => {
     // Template Data
     // ------------------------------------------
 
+    const announcementTitle = title.trim();
+    const announcementBody = message.trim();
+    const combinedAnnouncementMessage =
+      announcementTitle && announcementBody
+        ? `${announcementTitle}\n\n${announcementBody}`
+        : announcementTitle || announcementBody;
     const templateData = {
       holidayDate,
       reason,
@@ -133,7 +139,7 @@ router.post("/send", async (req, res) => {
       breakfast,
       lunch,
       dinner,
-      message: message.trim(),
+      message: combinedAnnouncementMessage,
     };
 
     // ------------------------------------------
@@ -440,5 +446,6 @@ router.get("/test", (req, res) => {
 });
 
 module.exports = router;
+
 
 

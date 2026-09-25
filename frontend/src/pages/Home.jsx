@@ -523,7 +523,7 @@ useEffect(() => {
                                     )}
                                   </div>
                                   <div className="shrink-0 rounded-xl bg-blue-50 px-3 py-2 text-sm font-black text-blue-700">
-â‚¹{Number(item.price || 0).toFixed(0)}
+₹{Number(item.price || 0).toFixed(0)}
                                   </div>
                                 </div>
                                 <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
@@ -604,7 +604,7 @@ useEffect(() => {
                                     )}
                                   </div>
                                   <div className="shrink-0 rounded-xl bg-blue-50 px-3 py-2 text-sm font-black text-blue-700">
-â‚¹{Number(item.price || 0).toFixed(0)}
+₹{Number(item.price || 0).toFixed(0)}
                                   </div>
                                 </div>
                                 <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">

@@ -29,6 +29,11 @@
     language: "en_GB",
     templateId: "1068303359115825",
   },
+  GENERAL_ANNOUNCEMENT: {
+    name: "om_tiffin_general_announcement",
+    language: "en_GB",
+    templateId: "1101264559057836",
+  },
   MODIFICATION_APPROVAL: {
     name: "om_tiffin_modification_approval",
     language: "en_GB",

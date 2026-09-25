@@ -126,8 +126,8 @@ const buildAnnouncementTemplate = (
       };
 
     // =========================================
-    // CUSTOM ANNOUNCEMENT
-    // Meta: om_tiffin_custom_announcement
+    // GENERAL ANNOUNCEMENT
+    // Meta: om_tiffin_general_announcement
     //
     // {{1}} = Customer Name
     // {{2}} = Announcement Message
@@ -136,10 +136,10 @@ const buildAnnouncementTemplate = (
     case "general":
       return {
         template:
-          templates.CUSTOM_ANNOUNCEMENT.name,
+          templates.GENERAL_ANNOUNCEMENT.name,
 
         language:
-          templates.CUSTOM_ANNOUNCEMENT.language,
+          templates.GENERAL_ANNOUNCEMENT.language,
 
         variables: [
           customerName,

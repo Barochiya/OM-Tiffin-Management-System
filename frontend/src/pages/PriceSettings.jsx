@@ -1,3 +1,4 @@
+import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
@@ -112,7 +113,7 @@ export default function PriceSettings() {
         <div className="mb-8 text-center">
 
           <h1 className="text-3xl sm:text-4xl font-bold text-slate-800">
-            💰 Meal Price Settings
+            <IndianRupee size={20} /> Meal Price Settings
           </h1>
 
           <p className="text-gray-500 mt-2 text-sm sm:text-base">
@@ -168,7 +169,7 @@ export default function PriceSettings() {
             {/* Breakfast */}
             <div>
               <label className="block font-semibold mb-2">
-                🍳 Breakfast Price
+                <Utensils size={18} /> Breakfast Price
               </label>
 
               <input
@@ -183,7 +184,7 @@ export default function PriceSettings() {
             {/* Lunch */}
             <div>
               <label className="block font-semibold mb-2">
-                🍛 Lunch Price
+                <Utensils size={18} /> Lunch Price
               </label>
 
               <input
@@ -198,7 +199,7 @@ export default function PriceSettings() {
             {/* Dinner */}
             <div>
               <label className="block font-semibold mb-2">
-                🌙 Dinner Price
+                <Moon size={18} /> Dinner Price
               </label>
 
               <input
@@ -231,7 +232,7 @@ export default function PriceSettings() {
                   ? "Saving..."
                   : saved
                   ? "✅ Prices Saved Successfully"
-                  : "💾 Save Prices"}
+                  : "Save Prices"}
 
               </button>
 
@@ -245,7 +246,7 @@ export default function PriceSettings() {
         <div className="mt-8 text-center text-gray-500 text-sm">
 
           <p>
-            💡 These prices will be used as the default meal rates
+            <Lightbulb size={18} /> These prices will be used as the default meal rates
             for new billing and daily entries.
           </p>
 

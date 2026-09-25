@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Image, Inbox, RefreshCw, MessageSquare, Smartphone, WalletCards, Trash2, Paperclip } from "lucide-react";
 
 import {
   getWhatsAppInbox,
@@ -57,7 +58,7 @@ const WhatsAppMediaPreview = ({ message }) => {
   if (loading) {
     return (
       <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-yellow-700">
-        📸 Loading image...
+        <Image className="inline-block mr-2" size={18} />Loading image...
       </div>
     );
   }
@@ -73,7 +74,7 @@ const WhatsAppMediaPreview = ({ message }) => {
   return (
     <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
       <p className="mb-3 font-semibold text-slate-700">
-        📸 WhatsApp Image
+        <Image className="inline-block mr-2" size={18} />WhatsApp Image
       </p>
 
       <div
@@ -301,7 +302,7 @@ const handleReply = async (id) => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>
             <h1 className="text-2xl lg:text-3xl font-bold text-slate-800">
-              📥 WhatsApp Inbox
+              <Inbox className="inline-block mr-2" size={20} />WhatsApp Inbox
             </h1>
 
             <p className="text-slate-500 mt-1">
@@ -314,7 +315,7 @@ const handleReply = async (id) => {
             onClick={() => loadMessages(true)}
             className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
           >
-            🔄 Refresh
+            <RefreshCw className="inline-block mr-2" size={18} />Refresh
           </button>
         </div>
 
@@ -333,7 +334,7 @@ const handleReply = async (id) => {
         ) : messages.length === 0 ? (
           <div className="bg-white rounded-xl shadow p-10 text-center">
             <div className="text-5xl mb-4">
-              📭
+              <Inbox size={48} className="mx-auto text-slate-400" />
             </div>
 
             <h2 className="text-xl font-semibold text-slate-700">
@@ -360,7 +361,7 @@ const handleReply = async (id) => {
                     </h2>
 
                     <p className="text-sm text-slate-500">
-                      📱 {item.phoneNumber}
+                      <Smartphone className="inline-block mr-1" size={16} />{item.phoneNumber}
                     </p>
                   </div>
 
@@ -379,7 +380,7 @@ const handleReply = async (id) => {
                     >
                       {item.paymentStatus ===
                       "pending_review"
-                        ? "💰 Payment Review"
+                        ? <><WalletCards className="inline-block mr-2" size={18} />Payment Review</>
                         : "Message"}
                     </span>
                   </div>
@@ -390,7 +391,7 @@ const handleReply = async (id) => {
                     }
                     className="px-3 py-2 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 text-sm font-semibold"
                     >
-                    🗑️ Delete
+                    <Trash2 className="inline-block mr-2" size={18} />Delete
                     </button>
                     <button
                         type="button"
@@ -420,7 +421,7 @@ const handleReply = async (id) => {
 >
   {replySending[item._id]
     ? "Sending..."
-    : "💬 Reply"}
+    : <><MessageSquare className="inline-block mr-2" size={18} />Reply</>}
 </button>
 
                 </div>
@@ -494,7 +495,7 @@ const handleReply = async (id) => {
   item.type !== "image" && (
     <div className="mt-4 p-4 rounded-lg border border-yellow-200 bg-yellow-50">
       <div className="font-semibold text-yellow-800">
-        📎 Media received
+        <Paperclip className="inline-block mr-2" size={18} />Media received
       </div>
 
       <div className="text-sm text-yellow-700 mt-1">

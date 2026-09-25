@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { House, CreditCard, LogOut, Megaphone, Inbox, MessageCircle, FileText, Download, ChartColumn, UtensilsCrossed } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCustomerProfile,
@@ -72,7 +73,7 @@ const CustomerTiffinPlan = () => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-200 p-8 text-center">
-          <div className="text-4xl">📊</div>
+          <ChartColumn className="text-blue-600" size={40} />
           <h1 className="mt-4 text-xl font-bold text-slate-900">
             Plan Details Unavailable
           </h1>
@@ -84,7 +85,7 @@ const CustomerTiffinPlan = () => {
             onClick={() => navigate("/customer/dashboard")}
             className="mt-6 w-full rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-3 font-bold text-white"
           >
-            🏠 Dashboard
+            <House size={18} /> Dashboard
           </button>
         </div>
       </div>
@@ -263,14 +264,14 @@ const CustomerTiffinPlan = () => {
                 onClick={() => navigate("/customer/dashboard")}
                 className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-3 font-bold text-white"
               >
-                🏠 Dashboard
+                <House size={18} /> Dashboard
               </button>
               <button
                 type="button"
                 onClick={() => navigate("/customer/payments")}
                 className="w-full rounded-xl border border-slate-300 bg-white hover:bg-slate-50 px-5 py-3 font-bold text-slate-700"
               >
-                💳 Payment History
+                <CreditCard size={18} /> Payment History
               </button>
             </div>
             <button
@@ -278,7 +279,7 @@ const CustomerTiffinPlan = () => {
               onClick={handleLogout}
               className="mt-3 w-full rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 px-5 py-3 font-bold text-red-700"
             >
-              🚪 Logout
+              <LogOut size={18} /> Logout
             </button>
           </div>
         </div>

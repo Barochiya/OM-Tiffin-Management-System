@@ -1,3 +1,4 @@
+import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import React from "react";
 import { FaExclamationTriangle } from "react-icons/fa";
 
@@ -17,7 +18,7 @@ export default function PendingBills({ data = [] }) {
 
       {data.length === 0 ? (
         <div className="border rounded-xl p-10 text-center text-gray-500">
-          🎉 No Pending Bills
+          No Pending Bills
         </div>
       ) : (
         <div className="overflow-x-auto">

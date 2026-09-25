@@ -1,3 +1,4 @@
+import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -224,7 +225,7 @@ const todayMeals =
             <div>
 
               <h1 className="text-4xl font-bold">
-                👋 Welcome Back
+                <Hand size={20} /> Welcome Back
               </h1>
 
               <p className="mt-2 text-blue-100 text-lg">
@@ -244,7 +245,7 @@ const todayMeals =
               </p>
 
               <h3 className="text-2xl font-bold text-green-300 mt-1">
-                🟢 Online
+                <CircleCheck size={18} /> Online
               </h3>
 
               <p className="text-sm text-blue-100 mt-2">
@@ -352,7 +353,7 @@ const todayMeals =
             <div>
 
               <h2 className="text-2xl font-bold text-slate-800">
-                📈 Revenue Analytics
+                <TrendingUp size={20} /> Revenue Analytics
               </h2>
 
               <p className="text-gray-500 mt-1">

@@ -3,6 +3,7 @@ import QRCode from "react-qr-code";
 import { useReactToPrint } from "react-to-print";
 import { FaUsers, FaFileInvoice, FaCalendarAlt, FaMoneyBillWave } from "react-icons/fa";
 import { FaWhatsapp } from "react-icons/fa";
+import { Wheat, Cookie, Soup, Salad, Candy, UtensilsCrossed, ReceiptText, CalendarDays, Phone, MapPin } from "lucide-react";
 import html2pdf from "html2pdf.js";
 
 import logo from "../assets/logo.png";
@@ -22,17 +23,16 @@ export default function Billing() {
 
 const getExtraItemSymbol = (itemName) => {
   const name = String(itemName || "").trim().toLowerCase();
-
   const symbols = {
-    roti: "🫓",
-    papad: "🥠",
-    curd: "🥣",
-    rice: "🍚",
-    sabji: "🥗",
-    sweet: "🍬",
+    roti: Wheat,
+    papad: Cookie,
+    curd: Soup,
+    rice: Soup,
+    sabji: Salad,
+    sweet: Candy,
   };
-
-  return symbols[name] || "🍽️";
+  const Icon = symbols[name] || UtensilsCrossed;
+  return <Icon size={18} className="inline-block align-middle mr-1" />;
 };
 
   // =====================================
@@ -593,7 +593,7 @@ setActionsCompleted(true);
 
           <h1 className="text-3xl font-bold text-slate-800">
 
-            🧾 Billing Management
+            <ReceiptText className="inline-block mr-2" size={22} />Billing Management
 
           </h1>
 
@@ -1069,7 +1069,7 @@ setActionsCompleted(true);
 <div className="mt-8">
 
   <h3 className="text-2xl font-bold text-slate-800 mb-5">
-    📅 Date-wise Meal Details
+    <CalendarDays className="inline-block mr-2" size={22} />Date-wise Meal Details
   </h3>
 
   <table className="w-full border border-gray-300 text-xs">
@@ -1607,7 +1607,7 @@ setActionsCompleted(true);
 
       <p>
 
-        📞 +91 70162 97983
+        <Phone className="inline-block mr-2" size={17} />+91 70162 97983
 
       </p>
 
@@ -1615,7 +1615,7 @@ setActionsCompleted(true);
 
       <p>
 
-        📍 Gandhinagar, Gujarat
+        <MapPin className="inline-block mr-2" size={17} />Gandhinagar, Gujarat
 
       </p>
 

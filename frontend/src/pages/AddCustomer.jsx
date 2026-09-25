@@ -1,3 +1,4 @@
+import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -349,11 +350,11 @@ export default function AddCustomer() {
                 className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="Active">
-                  🟢 Active
+                  <CircleCheck size={18} /> Active
                 </option>
 
                 <option value="Inactive">
-                  🔴 Inactive
+                  <CircleX size={18} /> Inactive
                 </option>
 
               </select>

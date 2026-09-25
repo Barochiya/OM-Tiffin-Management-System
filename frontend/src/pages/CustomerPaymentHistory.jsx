@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { House, CreditCard, LogOut, Megaphone, Inbox, MessageCircle, FileText, Download, ChartColumn, UtensilsCrossed } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCustomerPayments,
@@ -133,7 +134,7 @@ const CustomerPaymentHistory = () => {
             )}
             {payments.length === 0 ? (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-12 text-center">
-                <div className="text-4xl">💳</div>
+                <CreditCard className="text-blue-600" size={40} />
                 <h2 className="mt-4 text-lg font-bold text-slate-900">
                   No Payment History
                 </h2>
@@ -231,7 +232,7 @@ const CustomerPaymentHistory = () => {
                 onClick={() => navigate("/customer/dashboard")}
                 className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-3 font-bold text-white"
               >
-                🏠 Dashboard
+                <House size={18} /> Dashboard
               </button>
             </div>
             <button
@@ -239,7 +240,7 @@ const CustomerPaymentHistory = () => {
               onClick={handleLogout}
               className="mt-3 w-full rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 px-5 py-3 font-bold text-red-700"
             >
-              🚪 Logout
+              <LogOut size={18} /> Logout
             </button>
           </div>
         </div>

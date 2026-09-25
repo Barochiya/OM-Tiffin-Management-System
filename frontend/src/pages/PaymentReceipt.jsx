@@ -1,3 +1,4 @@
+import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import {
   useParams,
@@ -181,17 +182,17 @@ const autoSend =
 
     payment.paymentMethod === "Cash"
 
-      ? "💵 Cash"
+      ? "Cash"
 
       : payment.paymentMethod === "UPI"
 
-      ? "📱 UPI"
+      ? "UPI"
 
       : payment.paymentMethod === "Card"
 
-      ? "💳 Card"
+      ? "Card"
 
-      : "🌐 Razorpay";
+      : "Razorpay";
 
       // =======================================
 // Generate Payment Receipt PDF
@@ -356,7 +357,7 @@ const handleSendReceiptWhatsApp = async () => {
 
                   <p className="text-gray-500">
 
-                    📞 +91 7016297983
+                    <Phone size={18} /> +91 7016297983
 
                   </p>
 

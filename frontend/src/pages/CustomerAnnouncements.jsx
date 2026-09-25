@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { House, CreditCard, LogOut, Megaphone, Inbox, MessageCircle, FileText, Download, ChartColumn, UtensilsCrossed } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCustomerAnnouncements,
@@ -194,7 +195,7 @@ const CustomerAnnouncements = () => {
                     "0 7px 18px rgba(37, 99, 235, 0.25)",
                 }}
               >
-                📢
+                <Megaphone size={22} />
               </div>
               <div style={{ minWidth: 0 }}>
                 <h1
@@ -263,7 +264,7 @@ const CustomerAnnouncements = () => {
                 marginBottom: "12px",
               }}
             >
-              📢
+              <Megaphone size={22} />
             </div>
             <div
               style={{
@@ -346,7 +347,7 @@ const CustomerAnnouncements = () => {
                 fontSize: "25px",
               }}
             >
-              📭
+              <Inbox size={22} />
             </div>
             <h2
               style={{
@@ -429,7 +430,7 @@ const CustomerAnnouncements = () => {
                           fontSize: "18px",
                         }}
                       >
-                        📢
+                        <Megaphone size={22} />
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <h2
@@ -529,7 +530,7 @@ const CustomerAnnouncements = () => {
                         fontWeight: 600,
                       }}
                     >
-                      💬 WhatsApp
+                      <MessageCircle size={18} /> WhatsApp
                     </span>
                     {announcement.deliveredAt && (
                       <span
@@ -586,7 +587,7 @@ const CustomerAnnouncements = () => {
                 cursor: "pointer",
               }}
             >
-              🏠 Dashboard
+              <House size={18} /> Dashboard
             </button>
             <button
               type="button"
@@ -604,7 +605,7 @@ const CustomerAnnouncements = () => {
                 cursor: "pointer",
               }}
             >
-              💳 Payment History
+              <CreditCard size={18} /> Payment History
             </button>
             <button
               type="button"
@@ -620,7 +621,7 @@ const CustomerAnnouncements = () => {
                 cursor: "pointer",
               }}
             >
-              🚪 Logout
+              <LogOut size={18} /> Logout
             </button>
           </div>
         </section>

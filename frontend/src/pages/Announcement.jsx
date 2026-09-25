@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getCustomers } from "../services/customerService";
+import { Megaphone, Users, PartyPopper, Truck, UtensilsCrossed, WalletCards, Soup, Moon, ClipboardList, Eye, Smartphone, Send, Palmtree, Clock3 } from "lucide-react";
 
 export default function Announcement() {
   // =========================================
@@ -705,7 +706,7 @@ export default function Announcement() {
 
               <div className="min-w-0">
                 <h1 className="break-words text-2xl font-bold text-slate-800 sm:text-3xl">
-                  📢 Announcement Center
+                  <Megaphone className="inline-block mr-2" size={22} />Announcement Center
                 </h1>
 
                 <p className="mt-2 text-sm text-slate-500 sm:text-base">
@@ -717,7 +718,7 @@ export default function Announcement() {
 
               <div className="flex shrink-0 items-center gap-2 rounded-xl bg-blue-50 px-4 py-3">
                 <span className="text-xl">
-                  👥
+                  <Users size={18} />
                 </span>
 
                 <div>
@@ -761,23 +762,23 @@ export default function Announcement() {
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   >
                     <option value="custom">
-                      📢 Custom Announcement
+                      <Megaphone className="inline-block mr-2" size={18} />Custom Announcement
                     </option>
 
                     <option value="holiday">
-                      🏖️ Holiday Notice
+                      <Palmtree className="inline-block mr-2" size={18} />Holiday Notice
                     </option>
 
                     <option value="festival">
-                      🎉 Festival Wishes
+                      <PartyPopper className="inline-block mr-2" size={18} />Festival Wishes
                     </option>
 
                     <option value="delay">
-                      🚚 Delivery Delay
+                      <Truck className="inline-block mr-2" size={18} />Delivery Delay
                     </option>
 
                     <option value="menu">
-                      🍱 Today's Menu
+                      <UtensilsCrossed className="inline-block mr-2" size={18} />Today's Menu
                     </option>
                   </select>
                 </div>
@@ -823,7 +824,7 @@ export default function Announcement() {
                     className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                   >
                     <option value="all">
-                      👥 All Customers
+                      <Users className="inline-block mr-2" size={18} />All Customers
                     </option>
 
                     <option value="active">
@@ -831,19 +832,19 @@ export default function Announcement() {
                     </option>
 
                     <option value="pending">
-                      💰 Pending Payment Customers
+                      <WalletCards className="inline-block mr-2" size={18} />Pending Payment Customers
                     </option>
 
                     <option value="lunch">
-                      🍽️ Lunch Customers
+                      <UtensilsCrossed className="inline-block mr-2" size={18} />Lunch Customers
                     </option>
 
                     <option value="dinner">
-                      🌙 Dinner Customers
+                      <Moon className="inline-block mr-2" size={18} />Dinner Customers
                     </option>
 
                     <option value="both">
-                      🍱 Lunch + Dinner Customers
+                      <UtensilsCrossed className="inline-block mr-2" size={18} />Lunch + Dinner Customers
                     </option>
                   </select>
                 </div>
@@ -886,7 +887,7 @@ export default function Announcement() {
                 <div className="mb-7">
                   <div className="mb-4">
                     <h2 className="text-lg font-bold text-slate-800 sm:text-xl">
-                      📋 Quick Templates
+                      <ClipboardList className="inline-block mr-2" size={20} />Quick Templates
                     </h2>
 
                     <p className="mt-1 text-sm text-slate-500">
@@ -907,7 +908,7 @@ export default function Announcement() {
                       className="rounded-2xl border border-orange-100 bg-orange-50 p-4 text-left font-semibold text-orange-700 transition hover:bg-orange-100"
                     >
                       <div className="mb-2 text-2xl">
-                        🏖️
+                        <Palmtree size={20} />
                       </div>
 
                       <div>
@@ -930,7 +931,7 @@ export default function Announcement() {
                       className="rounded-2xl border border-purple-100 bg-purple-50 p-4 text-left font-semibold text-purple-700 transition hover:bg-purple-100"
                     >
                       <div className="mb-2 text-2xl">
-                        🎉
+                        <PartyPopper size={20} />
                       </div>
 
                       <div>
@@ -952,7 +953,7 @@ export default function Announcement() {
                       className="rounded-2xl border border-red-100 bg-red-50 p-4 text-left font-semibold text-red-700 transition hover:bg-red-100"
                     >
                       <div className="mb-2 text-2xl">
-                        🚚
+                        <Truck size={20} />
                       </div>
 
                       <div>
@@ -975,7 +976,7 @@ export default function Announcement() {
                       className="rounded-2xl border border-green-100 bg-green-50 p-4 text-left font-semibold text-green-700 transition hover:bg-green-100"
                     >
                       <div className="mb-2 text-2xl">
-                        🍱
+                        <UtensilsCrossed size={20} />
                       </div>
 
                       <div>
@@ -998,7 +999,7 @@ export default function Announcement() {
                       className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-left font-semibold text-blue-700 transition hover:bg-blue-100"
                     >
                       <div className="mb-2 text-2xl">
-                        📢
+                        <Megaphone size={20} />
                       </div>
 
                       <div>
@@ -1033,7 +1034,7 @@ export default function Announcement() {
                       <>⏳ Sending...</>
                     ) : (
                       <>
-                        📢 Send Announcement
+                        <Send className="inline-block mr-2" size={18} />Send Announcement
                       </>
                     )}
                   </button>
@@ -1045,7 +1046,7 @@ export default function Announcement() {
                     }
                     className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 text-center font-semibold text-white shadow-sm transition hover:bg-blue-700"
                   >
-                    👀 Preview
+                    <Eye className="inline-block mr-2" size={18} />Preview
                   </button>
 
                 </div>
@@ -1061,7 +1062,7 @@ export default function Announcement() {
                   <div className="flex items-center gap-3">
 
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-100 text-xl">
-                      📱
+                      <Smartphone size={18} />
                     </div>
 
                     <div className="min-w-0">
@@ -1155,7 +1156,7 @@ export default function Announcement() {
                     </div>
 
                     <div className="shrink-0 text-3xl">
-                      👥
+                      <Users size={18} />
                     </div>
 
                   </div>

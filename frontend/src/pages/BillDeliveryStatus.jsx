@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { MailCheck, Eye } from "lucide-react";
 import {
   getBillDeliveryStatus,
   retryBill,
@@ -434,7 +435,7 @@ export default function BillDeliveryStatus() {
                             {item.sentAt && (
                               <div className="flex items-start gap-2">
                                 <span className="mt-0.5 font-bold text-gray-500">
-                                  📩
+                                  <MailCheck size={20} />
                                 </span>
 
                                 <div>
@@ -473,7 +474,7 @@ export default function BillDeliveryStatus() {
                             {item.readAt && (
                               <div className="flex items-start gap-2">
                                 <span className="mt-0.5 font-bold text-blue-600">
-                                  👁️</span>
+                                  <Eye size={18} /></span>
 
                                 <div>
                                   <p className="font-semibold text-blue-600">

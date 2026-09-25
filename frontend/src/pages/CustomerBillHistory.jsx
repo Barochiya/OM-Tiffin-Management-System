@@ -1,3 +1,4 @@
+import { House, CreditCard, LogOut, Megaphone, Inbox, MessageCircle, FileText, Download, ChartColumn, UtensilsCrossed } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -233,7 +234,7 @@ const CustomerBillHistory = () => {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
-                📄 Bill History
+                <FileText size={20} /> Bill History
               </h2>
 
               <p className="text-sm text-slate-500 mt-2">
@@ -262,7 +263,7 @@ const CustomerBillHistory = () => {
         {bills.length === 0 ? (
           <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-10 text-center">
             <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-3xl">
-              📄
+              <FileText size={20} />
             </div>
 
             <h3 className="mt-5 text-lg font-bold text-slate-800">

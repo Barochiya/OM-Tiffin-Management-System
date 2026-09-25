@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { House, CreditCard, LogOut, Megaphone, Inbox, MessageCircle, FileText, Download, ChartColumn, UtensilsCrossed } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import {
@@ -381,7 +382,7 @@ const CustomerDashboard = () => {
           ) : mealHistory.length === 0 ? (
             <div className="py-14 px-5 text-center">
               <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-2xl">
-                🍱
+                <UtensilsCrossed className="text-blue-600" size={40} />
               </div>
               <p className="mt-4 font-semibold text-slate-700">
                 No meal entries found

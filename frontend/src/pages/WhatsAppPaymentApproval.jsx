@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { WalletCards, Smartphone, Clock3, Image, CreditCard, ReceiptText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import {
@@ -79,7 +80,7 @@ export default function WhatsAppPaymentApproval() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-800">
-            💰 WhatsApp Payment Approval
+            <WalletCards className="inline-block mr-2" size={22} />WhatsApp Payment Approval
           </h1>
 
           <p className="mt-2 text-slate-500">
@@ -366,12 +367,12 @@ navigate(
           </h2>
 
           <p className="mt-1 text-sm text-slate-500">
-            📱 {phone}
+            <Smartphone className="inline-block mr-1" size={16} />{phone}
           </p>
         </div>
 
         <span className="w-fit rounded-full bg-yellow-100 px-4 py-2 text-sm font-semibold text-yellow-700">
-          🟡 Pending Review
+          <Clock3 className="inline-block mr-2" size={16} />Pending Review
         </span>
       </div>
 
@@ -381,7 +382,7 @@ navigate(
         {/* Screenshot */}
         <div>
           <h3 className="mb-3 font-semibold text-slate-700">
-            📸 Payment Screenshot
+            <Image className="inline-block mr-2" size={18} />Payment Screenshot
           </h3>
 
           <div className="min-h-[250px] rounded-xl border border-slate-200 bg-slate-50 p-4">
@@ -430,7 +431,7 @@ navigate(
         {/* Payment Details */}
         <div>
           <h3 className="mb-4 font-semibold text-slate-700">
-            💳 Payment Details
+            <CreditCard className="inline-block mr-2" size={18} />Payment Details
           </h3>
 
           <div className="space-y-3">
@@ -468,7 +469,7 @@ navigate(
             {/* Pending Bills */}
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
               <p className="mb-3 font-semibold text-blue-800">
-                🧾 Pending Bills
+                <ReceiptText className="inline-block mr-2" size={18} />Pending Bills
               </p>
 
                 {review.pendingBills?.length > 0 && (

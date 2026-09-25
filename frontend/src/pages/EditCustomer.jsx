@@ -1,3 +1,4 @@
+import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -347,11 +348,11 @@ if (
                   required
                 >
                   <option value="Active">
-  🟢 Active
+  <CircleCheck size={18} /> Active
 </option>
 
 <option value="Inactive">
-  🔴 Inactive
+  <CircleX size={18} /> Inactive
 </option>
                 </select>
               </div>

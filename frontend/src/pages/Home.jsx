@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -21,7 +21,7 @@ const plans = [
   {
     title: "Daily Tiffin",
     subtitle: "Fresh meal whenever you need it",
-    price: "Starting from â‚¹90",
+    price: "Starting from ₹90",
     icon: UtensilsCrossed,
   },
   {
@@ -283,7 +283,7 @@ useEffect(() => {
             <div className="text-white">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold backdrop-blur">
                 <Star size={16} className="fill-current" />
-                Fresh â€¢ Homestyle â€¢ Reliable
+                Fresh • Homestyle • Reliable
               </div>
               <h1 className="max-w-3xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
                 Fresh &amp; Delicious
@@ -344,16 +344,16 @@ useEffect(() => {
                   </div>
                   <div className="mt-6 space-y-4">
                     {[
-                      ["ðŸ›", "Freshly Prepared Meals"],
-                      ["ðŸ¥—", "Balanced & Delicious Food"],
-                      ["ðŸ•’", "Convenient Daily Service"],
-                      ["â¤ï¸", "Made for Your Comfort"],
-                    ].map(([emoji, text]) => (
+                      [UtensilsCrossed, "Freshly Prepared Meals"],
+                      [Heart, "Balanced & Delicious Food"],
+                      [Clock3, "Convenient Daily Service"],
+                      [Heart, "Made for Your Comfort"],
+                    ].map(([Icon, text]) => (
                       <div
                         key={text}
                         className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4"
                       >
-                        <span className="text-2xl">{emoji}</span>
+                        <Icon className="shrink-0 text-blue-600" size={24} />
                         <span className="font-semibold text-slate-700">
                           {text}
                         </span>
@@ -523,7 +523,7 @@ useEffect(() => {
                                     )}
                                   </div>
                                   <div className="shrink-0 rounded-xl bg-blue-50 px-3 py-2 text-sm font-black text-blue-700">
-                                    â‚¹{Number(item.price || 0).toFixed(0)}
+â‚¹{Number(item.price || 0).toFixed(0)}
                                   </div>
                                 </div>
                                 <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
@@ -543,7 +543,7 @@ useEffect(() => {
     href="#contact"
     className="text-sm font-bold text-slate-800 hover:text-blue-600"
   >
-    Enquire Now â†’
+    Enquire Now →
   </a>
 )}
                                 </div>
@@ -604,7 +604,7 @@ useEffect(() => {
                                     )}
                                   </div>
                                   <div className="shrink-0 rounded-xl bg-blue-50 px-3 py-2 text-sm font-black text-blue-700">
-                                    â‚¹{Number(item.price || 0).toFixed(0)}
+â‚¹{Number(item.price || 0).toFixed(0)}
                                   </div>
                                 </div>
                                 <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
@@ -624,7 +624,7 @@ useEffect(() => {
     href="#contact"
     className="text-sm font-bold text-slate-800 hover:text-blue-600"
   >
-    Enquire Now â†’
+    Enquire Now →
   </a>
 )}
                                 </div>
@@ -948,7 +948,7 @@ useEffect(() => {
                       >
                         <span>{faq.question}</span>
                         <span className="shrink-0 text-xl text-blue-600">
-                          {isOpen ? "âˆ’" : "+"}
+                          {isOpen ? "−" : "+"}
                         </span>
                       </button>
                       {isOpen && (
@@ -1007,7 +1007,7 @@ useEffect(() => {
                 <MapPin size={19} className="text-blue-600" />
                 Gandhinagar
               </span>
-              <span className="hidden sm:block">â€¢</span>
+              <span className="hidden sm:block">•</span>
               <span>Contact OM Tiffin Service for plan details</span>
             </div>
             <div className="mt-8 flex justify-center">
@@ -1030,7 +1030,7 @@ useEffect(() => {
               alt="OM Tiffin Service"
               className="h-9 w-9 rounded-full object-cover"
             />
-            <span>Â© 2026 OM Tiffin Service</span>
+            <span>© 2026 OM Tiffin Service</span>
           </div>
           <div className="flex gap-5">
             {settings.customerLoginEnabled && (

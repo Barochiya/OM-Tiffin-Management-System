@@ -1,4 +1,5 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { House, CreditCard, LogOut, Megaphone, Inbox, MessageCircle, FileText, Download, ChartColumn, UtensilsCrossed } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getCustomerBillById,
@@ -123,7 +124,7 @@ const CustomerBillDetail = () => {
         </header>
         <main className="max-w-3xl mx-auto px-4 py-10">
           <div className="bg-white rounded-3xl border border-red-200 shadow-sm p-8 text-center">
-            <div className="text-4xl">📄</div>
+            <FileText className="text-blue-600" size={40} />
             <h2 className="mt-4 text-xl font-bold text-slate-900">
               Bill Not Found
             </h2>
@@ -215,7 +216,7 @@ const CustomerBillDetail = () => {
                 disabled={downloading}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-5 py-3 font-bold shadow-sm"
               >
-                <span>📥</span>
+                <Download size={20} />
                 {downloading
                   ? "Downloading..."
                   : "Download Bill"}
@@ -371,7 +372,7 @@ const CustomerBillDetail = () => {
                 disabled={downloading}
                 className="flex-1 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white px-5 py-3 font-bold"
               >
-                📥 {downloading ? "Downloading..." : "Download Bill"}
+                <Download size={18} /> {downloading ? "Downloading..." : "Download Bill"}
               </button>
             </div>
           </div>

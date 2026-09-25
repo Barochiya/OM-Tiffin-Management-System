@@ -139,7 +139,7 @@ router.post("/send", async (req, res) => {
       breakfast,
       lunch,
       dinner,
-      message: combinedAnnouncementMessage,
+      message: templateType === "custom" || templateType === "general" ? announcementBody : combinedAnnouncementMessage,
     };
 
     // ------------------------------------------

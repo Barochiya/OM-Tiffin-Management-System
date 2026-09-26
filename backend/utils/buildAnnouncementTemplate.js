@@ -132,6 +132,22 @@ const buildAnnouncementTemplate = (
     // {{1}} = Customer Name
     // {{2}} = Announcement Message
     // =========================================
+    // =========================================
+    // SERVICE UPDATE
+    // Meta: om_tiffin_service_update
+    //
+    // {{1}} = Customer Name
+    // {{2}} = Service Update Message
+    // =========================================
+    case "service":
+      return {
+        template: templates.SERVICE_UPDATE.name,
+        language: templates.SERVICE_UPDATE.language,
+        variables: [
+          customerName,
+          data.message || "",
+        ],
+      };
     case "custom":
     case "general":
       return {

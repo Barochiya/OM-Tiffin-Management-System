@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
   CheckCircle2,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import {
   getLoginIdRecipients,
+  getLoginIdDeliveryStatus,
   sendLoginIdsWhatsApp,
 } from "../services/customerLoginIdService";
 const MESSAGE_PREVIEW =
@@ -28,18 +29,40 @@ const CustomerLoginIdSender = () => {
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [sendResults, setSendResults] = useState(null);
+  const [deliveryStatuses, setDeliveryStatuses] = useState({});
   const loadCustomers = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
       setSuccessMessage("");
-      const response = await getLoginIdRecipients();
+      const [response, deliveryResponse] = await Promise.all([
+        getLoginIdRecipients(),
+        getLoginIdDeliveryStatus(),
+      ]);
       if (!response?.success) {
         throw new Error(
           response?.message || "Unable to load customer login IDs"
         );
       }
-      setCustomers(Array.isArray(response.data) ? response.data : []);
+      setCustomers(
+        Array.isArray(response.data) ? response.data : []
+      );
+      const deliveryMap = {};
+      if (deliveryResponse?.success) {
+        (
+          Array.isArray(deliveryResponse.data)
+            ? deliveryResponse.data
+            : []
+        ).forEach((delivery) => {
+          const customerId = String(
+            delivery.customer || ""
+          );
+          if (customerId) {
+            deliveryMap[customerId] = delivery;
+          }
+        });
+      }
+      setDeliveryStatuses(deliveryMap);
       setSelectedIds([]);
       setSendResults(null);
     } catch (loadError) {
@@ -102,7 +125,40 @@ const CustomerLoginIdSender = () => {
     filteredCustomers.every((customer) =>
       selectedIds.includes(String(customer.customerId))
     );
-  const toggleCustomer = (customerId) => {
+  const getDeliveryStatusMeta = (status) => {
+    switch (String(status || "").toLowerCase()) {
+      case "read":
+        return {
+          label: "Read",
+          className: "bg-green-100 text-green-700",
+        };
+      case "delivered":
+        return {
+          label: "Delivered",
+          className: "bg-emerald-100 text-emerald-700",
+        };
+      case "sent":
+        return {
+          label: "Sent",
+          className: "bg-blue-100 text-blue-700",
+        };
+      case "accepted":
+        return {
+          label: "Accepted",
+          className: "bg-amber-100 text-amber-700",
+        };
+      case "failed":
+        return {
+          label: "Failed",
+          className: "bg-red-100 text-red-700",
+        };
+      default:
+        return {
+          label: "Not Sent",
+          className: "bg-slate-100 text-slate-600",
+        };
+    }
+  };  const toggleCustomer = (customerId) => {
     const id = String(customerId);
     setSelectedIds((current) =>
       current.includes(id)
@@ -415,7 +471,7 @@ const CustomerLoginIdSender = () => {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-[850px] w-full text-left">
+                <table className="min-w-[1050px] w-full text-left">
                   <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="px-4 py-3">
@@ -440,6 +496,9 @@ const CustomerLoginIdSender = () => {
                         Status
                       </th>
                       <th className="px-4 py-3">
+  Delivery
+</th>
+<th className="px-4 py-3">
                         Ready
                       </th>
                     </tr>
@@ -500,6 +559,34 @@ const CustomerLoginIdSender = () => {
                             </span>
                           </td>
                           <td className="px-4 py-3">
+                        {(() => {
+                          const delivery =
+                            deliveryStatuses[customerId];
+                          const meta =
+                            getDeliveryStatusMeta(
+                              delivery?.whatsappStatus
+                            );
+                          return (
+                            <div className="space-y-1">
+                              <span
+                                className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${meta.className}`}
+                              >
+                                {meta.label}
+                              </span>
+                              {delivery?.failedAt &&
+                                delivery?.failureReason && (
+                                  <div
+                                    className="max-w-[220px] text-xs text-red-600"
+                                    title={delivery.failureReason}
+                                  >
+                                    {delivery.failureReason}
+                                  </div>
+                                )}
+                            </div>
+                          );
+                        })()}
+                      </td>
+                        <td className="px-4 py-3">
                             {customer.ready ? (
                               <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700">
                                 <CheckCircle2 className="h-4 w-4" />

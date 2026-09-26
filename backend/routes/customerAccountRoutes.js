@@ -1,4 +1,4 @@
-﻿const express = require("express");
+const express = require("express");
 const router = express.Router();
 const protect = require("../middleware/authMiddleware");
 const {
@@ -9,6 +9,7 @@ const {
   getCustomerUsers,
   getLoginIdRecipients,
   sendLoginIdsWhatsApp,
+  getLoginIdDeliveryStatus,
 } = require("../controllers/customerAccountController");
 router.get(
   "/login-id-recipients",
@@ -19,6 +20,10 @@ router.post(
   "/send-login-ids",
   protect,
   sendLoginIdsWhatsApp
+);router.get(
+  "/login-id-delivery-status",
+  protect,
+  getLoginIdDeliveryStatus
 );// Admin-authorized customer account provisioning
 router.post(
   "/provision",
@@ -51,5 +56,3 @@ router.get(
   getCustomerUsers
 );
 module.exports = router;
-
-

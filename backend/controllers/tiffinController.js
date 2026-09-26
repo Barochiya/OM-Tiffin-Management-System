@@ -1,8 +1,10 @@
-﻿const Price = require("../models/Price");
+const Price = require("../models/Price");
 console.log("Controller Loaded");
 
 const Tiffin = require("../models/Tiffin");
 const Bill = require("../models/Bill");
+const CustomerLoginIdDelivery = require("../models/CustomerLoginIdDelivery");
+const WHATSAPP_TEMPLATES = require("../config/whatsappTemplates");
 const { ensureBarcode } = require("./barcodeController");
 const {
     createCustomerAccount,
@@ -156,13 +158,26 @@ const createTiffin = async (req, res) => {
                 accountResult.created;
             if (
                 accountResult.created
-            ) {                const credentialsMessage =
-                    `Your OM Tiffin Customer User ID: ${accountResult.account.userId}. Tap the button below to set up your account and create your password.`;
+        ) {
+            const credentialsMessage =
+                `Your OM Tiffin Customer User ID: ${accountResult.account.userId}. Tap the button below to set up your account and create your password.`;
+
+            const loginTemplate =
+                WHATSAPP_TEMPLATES.CUSTOM_ANNOUNCEMENT;
+
+            if (!loginTemplate) {
+                throw new Error(
+                    "CUSTOM_ANNOUNCEMENT WhatsApp template is not configured"
+                );
+            }
+
+            const whatsappResponse =
                 await sendWhatsAppTemplate({
                     to: tiffin.phone,
                     templateName:
-                        "om_tiffin_custom_announcement",
-                    languageCode: "en_GB",
+                        loginTemplate.name,
+                    languageCode:
+                        loginTemplate.language,
                     components: [
                         {
                             type: "body",
@@ -181,9 +196,36 @@ const createTiffin = async (req, res) => {
                         },
                     ],
                 });
-                accountProvisioning.whatsappSent =
-                    true;
-            }
+
+            const whatsappMessageId =
+                whatsappResponse?.messages?.[0]?.id ||
+                null;
+
+            const whatsappMessageStatus =
+                whatsappResponse?.messages?.[0]?.message_status ||
+                "accepted";
+
+            await CustomerLoginIdDelivery.create({
+                customer: tiffin._id,
+                customerAccount:
+                    accountResult.account._id,
+                customerName:
+                    tiffin.customerName ||
+                    "Customer",
+                userId:
+                    accountResult.account.userId,
+                phone: tiffin.phone,
+                templateName:
+                    loginTemplate.name,
+                whatsappMessageId,
+                whatsappStatus:
+                    whatsappMessageStatus,
+                sentAt: null,
+            });
+
+            accountProvisioning.whatsappSent =
+                true;
+        }
             accountProvisioning.success =
                 true;
             console.log(
@@ -975,21 +1017,3 @@ module.exports = {
     getDashboardStats,
 
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

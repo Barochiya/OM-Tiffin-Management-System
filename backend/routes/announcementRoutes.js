@@ -139,7 +139,12 @@ router.post("/send", async (req, res) => {
       breakfast,
       lunch,
       dinner,
-      message: templateType === "custom" || templateType === "general" ? announcementBody : combinedAnnouncementMessage,
+      message:
+        templateType === "custom" ||
+        templateType === "general" ||
+        templateType === "service"
+          ? announcementBody
+          : combinedAnnouncementMessage,
     };
 
     // ------------------------------------------
@@ -198,6 +203,11 @@ router.post("/send", async (req, res) => {
             ". Service will resume on " +
             (resumeDate || "the next working day") +
             ".";
+          break;
+        case "service":
+          customerAnnouncementMessage =
+            message.trim() ||
+            "Service update from OM Tiffin Service.";
           break;
         case "festival":
           customerAnnouncementMessage =
@@ -459,6 +469,3 @@ router.get("/test", (req, res) => {
 });
 
 module.exports = router;
-
-
-

@@ -1,4 +1,4 @@
-﻿module.exports = {
+module.exports = {
   HOLIDAY: {
     name: "om_tiffin_holiday_notice",
     language: "en_GB",
@@ -33,6 +33,11 @@
     name: "om_tiffin_general_announcement",
     language: "en_GB",
     templateId: "1101264559057836",
+  },
+  SERVICE_UPDATE: {
+    name: "om_tiffin_service_update",
+    language: "en_GB",
+    templateId: "457774432500720",
   },
   MODIFICATION_APPROVAL: {
     name: "om_tiffin_modification_approval",

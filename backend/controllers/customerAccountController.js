@@ -1,4 +1,4 @@
-﻿const crypto = require("crypto");
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const {
   createCustomerAccount,
@@ -556,6 +556,32 @@ const sendLoginIdsWhatsApp = async (req, res) => {
     });
   }
 };
+const getLoginIdDeliveryStatus = async (req, res) => {
+  try {
+    const deliveries = await CustomerLoginIdDelivery.find({})
+      .sort({ createdAt: -1 })
+      .lean();
+    const latestByCustomer = new Map();
+    for (const delivery of deliveries) {
+      const customerId = String(delivery.customer);
+      if (!latestByCustomer.has(customerId)) {
+        latestByCustomer.set(customerId, delivery);
+      }
+    }
+    return res.status(200).json({
+      success: true,
+      data: Array.from(latestByCustomer.values()),
+    });
+  } catch (error) {
+    console.error("getLoginIdDeliveryStatus:", error);
+    return res.status(500).json({
+      success: false,
+      message:
+        error.message ||
+        "Unable to load customer login ID delivery status",
+    });
+  }
+};
 module.exports = {
   getLoginIdRecipients,
   sendLoginIdsWhatsApp,
@@ -564,6 +590,5 @@ module.exports = {
   setCustomerLoginEnabled,
   regenerateTemporaryPassword,
   getCustomerAccountStatuses,
+getLoginIdDeliveryStatus,
 };
-
-

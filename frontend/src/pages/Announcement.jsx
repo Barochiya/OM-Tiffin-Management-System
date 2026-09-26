@@ -1,7 +1,8 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getCustomers } from "../services/customerService";
 import {
   Megaphone,
+  Bell,
   Users,
   Send,
   Smartphone,
@@ -19,6 +20,10 @@ const ANNOUNCEMENT_TYPES = [
     icon: FileText,
   },
   {
+    value: "service",
+    label: "Service Update",
+    icon: Bell,
+  },  {
     value: "festival",
     label: "Festival Announcement",
     icon: PartyPopper,
@@ -121,7 +126,30 @@ export default function Announcement() {
         return false;
       }
     }
-    if (templateType === "festival") {
+    if (templateType === "service") {
+      if (!form.message.trim()) {
+        alert("Please enter the service update message.");
+        return false;
+      }
+    }
+    if (templateType === "service") {
+      return (
+        <div className="mb-7">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            Service Update Message
+          </label>
+          <textarea
+            rows={8}
+            value={form.message}
+            onChange={(e) =>
+              updateField("message", e.target.value)
+            }
+            placeholder="Enter service update message..."
+            className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+      );
+    }    if (templateType === "festival") {
       if (!form.festivalName.trim()) {
         alert("Please enter the festival name.");
         return false;
@@ -180,7 +208,27 @@ export default function Announcement() {
       payload.title = form.title.trim();
       payload.message = form.message.trim();
     }
-    if (templateType === "festival") {
+    if (templateType === "service") {
+      payload.message = form.message.trim();
+    }
+    if (templateType === "service") {
+      return (
+        <div className="mb-7">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            Service Update Message
+          </label>
+          <textarea
+            rows={8}
+            value={form.message}
+            onChange={(e) =>
+              updateField("message", e.target.value)
+            }
+            placeholder="Enter service update message..."
+            className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+      );
+    }    if (templateType === "festival") {
       payload.festivalName = form.festivalName.trim();
     }
     if (templateType === "holiday") {
@@ -337,7 +385,24 @@ export default function Announcement() {
         </>
       );
     }
-    if (templateType === "festival") {
+    if (templateType === "service") {
+      return (
+        <div className="mb-7">
+          <label className="mb-2 block text-sm font-semibold text-slate-700">
+            Service Update Message
+          </label>
+          <textarea
+            rows={8}
+            value={form.message}
+            onChange={(e) =>
+              updateField("message", e.target.value)
+            }
+            placeholder="Enter service update message..."
+            className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          />
+        </div>
+      );
+    }    if (templateType === "festival") {
       return (
         <div className="mb-7">
           <label className="mb-2 block text-sm font-semibold text-slate-700">

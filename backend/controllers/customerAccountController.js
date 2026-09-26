@@ -156,7 +156,11 @@ const regenerateTemporaryPassword = async (req, res) => {
     account.lockedUntil = null;
 
     await account.save();    const credentialsMessage =
-      `Your OM Tiffin Customer User ID: ${account.userId}. Tap the button below to set up your account and create your password.`;
+      `Your OM Tiffin Customer User ID: ${account.userId}. ` +
+      `This is your login detail. ` +
+      `Please set up your customer account. ` +
+      `Please click here to set up your account. ` +
+      `Click on button to set up your account.`;
 
     const template = WHATSAPP_TEMPLATES.CUSTOM_ANNOUNCEMENT;
 
@@ -459,7 +463,10 @@ const sendLoginIdsWhatsApp = async (req, res) => {
       }
       const credentialsMessage =
         `Your OM Tiffin Customer User ID: ${account.userId}. ` +
-        `Tap the button below to set up your account and create your password.`;
+        `This is your login detail. ` +
+        `Please set up your customer account. ` +
+        `Please click here to set up your account. ` +
+        `Click on button to set up your account.`;
       try {
         const template =
           WHATSAPP_TEMPLATES.CUSTOM_ANNOUNCEMENT;

@@ -18,7 +18,11 @@ import {
   sendLoginIdsWhatsApp,
 } from "../services/customerLoginIdService";
 const MESSAGE_PREVIEW =
-  "Your OM Tiffin Customer User ID: {USER_ID}. Tap the button below to set up your account and create your password.";
+  "Your OM Tiffin Customer User ID: {USER_ID}. " +
+  "This is your login detail. " +
+  "Please set up your customer account. " +
+  "Please click here to set up your account. " +
+  "Click on button to set up your account.";
 const CustomerLoginIdSender = () => {
   const [customers, setCustomers] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);

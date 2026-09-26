@@ -11,14 +11,8 @@ import {
   PartyPopper,
   Truck,
   UtensilsCrossed,
-  FileText,
 } from "lucide-react";
 const ANNOUNCEMENT_TYPES = [
-  {
-    value: "custom",
-    label: "Custom Announcement",
-    icon: FileText,
-  },
   {
     value: "service",
     label: "Service Update",
@@ -58,7 +52,7 @@ const INITIAL_FORM = {
   dinner: "",
 };
 export default function Announcement() {
-  const [templateType, setTemplateType] = useState("custom");
+  const [templateType, setTemplateType] = useState("service");
   const [form, setForm] = useState(INITIAL_FORM);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);

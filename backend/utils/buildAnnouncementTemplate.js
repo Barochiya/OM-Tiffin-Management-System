@@ -145,7 +145,10 @@ const buildAnnouncementTemplate = (
         language: templates.SERVICE_UPDATE.language,
         variables: [
           customerName,
-          data.message || "",
+          String(data.message || "")
+            .replace(/[\r\n\t]+/g, " ")
+            .replace(/ {5,}/g, " ")
+            .trim(),
         ],
       };
     case "custom":

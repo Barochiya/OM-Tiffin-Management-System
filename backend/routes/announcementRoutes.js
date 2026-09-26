@@ -48,8 +48,8 @@ router.post("/send", async (req, res) => {
       "festival",
       "delay",
       "menu",
+      "service",
     ];
-
     if (
       !allowedTemplateTypes.includes(
         templateType

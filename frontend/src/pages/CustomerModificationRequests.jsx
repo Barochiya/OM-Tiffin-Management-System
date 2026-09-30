@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   FaCheck,
   FaClock,
@@ -406,7 +406,65 @@ export default function CustomerModificationRequests() {
                 <p className="mb-1 text-sm font-semibold text-slate-700">
                   Customer Description / Reason
                 </p>
-                <div className="min-h-24 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                {Array.isArray(selectedRequest?.items) &&
+ selectedRequest.items.length > 0 && (
+  <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
+    <div className="flex items-center justify-between">
+      <h4 className="text-sm font-bold text-blue-800">
+        Selected Products
+      </h4>
+      <span className="text-xs font-semibold text-blue-600">
+        {selectedRequest.items.length} item
+        {selectedRequest.items.length !== 1 ? "s" : ""}
+      </span>
+    </div>
+    <div className="mt-3 space-y-2">
+      {selectedRequest.items.map((item, index) => (
+        <div
+          key={item.menuItem || index}
+          className="flex items-center justify-between rounded-lg bg-white px-3 py-2"
+        >
+          <div>
+            <div className="text-sm font-semibold text-slate-800">
+              {item.name || "Menu Item"}
+            </div>
+            <div className="text-xs text-slate-500">
+              Quantity: {item.quantity}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-sm font-bold text-slate-800">
+              ₹{(
+                Number(item.price || 0) *
+                Number(item.quantity || 0)
+              ).toFixed(2)}
+            </div>
+            <div className="text-[11px] text-slate-400">
+              ₹{Number(item.price || 0).toFixed(2)} / item
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div className="mt-3 flex justify-between border-t border-blue-200 pt-3">
+      <span className="text-xs font-bold text-blue-700">
+        Product Total
+      </span>
+      <span className="text-sm font-bold text-blue-800">
+        ₹{selectedRequest.items
+          .reduce(
+            (total, item) =>
+              total +
+              Number(item.price || 0) *
+              Number(item.quantity || 0),
+            0
+          )
+          .toFixed(2)}
+      </span>
+    </div>
+  </div>
+)}
+<div className="min-h-24 rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-700">
                   {selectedRequest.description || "No description provided."}
                 </div>
               </div>

@@ -29,7 +29,28 @@ const customerModificationRequestSchema = new mongoose.Schema(
       maxlength: 1000,
       default: "",
     },
-    status: {
+    items: [
+{
+menuItem: {
+type: mongoose.Schema.Types.ObjectId,
+ref: "WebsiteMenu",
+},
+name: {
+type: String,
+trim: true,
+},
+price: {
+type: Number,
+min: 0,
+},
+quantity: {
+type: Number,
+min: 1,
+default: 1,
+},
+},
+],
+status: {
       type: String,
       enum: ["PENDING", "APPROVED", "REJECTED", "COMPLETED"],
       default: "PENDING",

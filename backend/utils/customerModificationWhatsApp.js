@@ -81,8 +81,20 @@ const sendCustomerModificationApprovalNotification = async (
     MEAL_LABELS[request.meal] ||
     request.meal ||
     "N/A";
+  const itemsSummary =
+    Array.isArray(request.items) && request.items.length > 0
+      ? request.items
+          .map(
+            (item) =>
+              `${item.name || "Item"} x ${Number(item.quantity || 1)}`
+          )
+          .join(", ")
+      : "N/A";
+
   const description =
     request.description || "No description";
+
+  const descriptionForWhatsApp = `Products: ${itemsSummary} | Description: ${description}`;
   const results = [];
   for (const adminNumber of adminNumbers) {
     try {
@@ -120,7 +132,7 @@ const sendCustomerModificationApprovalNotification = async (
               },
               {
                 type: "text",
-                text: description,
+                text: descriptionForWhatsApp,
               },
             ],
           },

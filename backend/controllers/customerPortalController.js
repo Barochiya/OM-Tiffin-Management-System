@@ -1,10 +1,11 @@
-﻿const Tiffin = require("../models/Tiffin");
+const Tiffin = require("../models/Tiffin");
 const Bill = require("../models/Bill");
 const Payment = require("../models/Payment");
 const AnnouncementDelivery = require("../models/AnnouncementDelivery");
 const generateBillPdf = require("../utils/billPdfGenerator");
 const DailyEntry = require("../models/DailyEntry");
 const CustomerModificationRequest = require("../models/CustomerModificationRequest");
+const WebsiteMenu = require("../models/WebsiteMenu");
 const TiffinModificationSettings = require("../models/TiffinModificationSettings");
 const { sendCustomerModificationApprovalNotification } = require("../utils/customerModificationWhatsApp");
 const getCustomerProfile = async (req, res) => {
@@ -318,11 +319,12 @@ const getMinutesFromTime = (time) => {
 const createCustomerModificationRequest = async (req, res) => {
   try {
     const {
-      requestType,
-      requestDate,
-      meal = "ALL",
-      description = "",
-    } = req.body;
+requestType,
+requestDate,
+meal = "ALL",
+description = "",
+items = [],
+} = req.body;
     const allowedTypes = [
       "SKIP_TIFFIN",
       "EXTRA_TIFFIN",
@@ -435,7 +437,94 @@ const createCustomerModificationRequest = async (req, res) => {
       if (cutoffResponse) {
         return cutoffResponse;
       }
+    }    // ------------------------------------------------------
+    // Product validation for Extra Tiffin / Meal Modification
+    // ------------------------------------------------------
+    let normalizedItems = [];
+    if (requestType === "EXTRA_TIFFIN" || requestType === "MEAL_MODIFICATION") {
+      if (!Array.isArray(items) || items.length === 0) {
+        const error = new Error(
+          "Please select at least one menu item."
+        );
+        error.code = "MODIFICATION_ITEMS_REQUIRED";
+        throw error;
+      }
+      const cleanItems = items
+        .map((item) => ({
+          menuItem: item?.menuItem,
+          quantity: Number(item?.quantity),
+        }))
+        .filter(
+          (item) =>
+            item.menuItem &&
+            Number.isInteger(item.quantity) &&
+            item.quantity >= 1
+        );
+      if (cleanItems.length === 0) {
+        const error = new Error(
+          "Please select valid menu items and quantities."
+        );
+        error.code = "MODIFICATION_ITEMS_INVALID";
+        throw error;
+      }
+      const uniqueIds = [
+        ...new Set(
+          cleanItems.map((item) => String(item.menuItem))
+        ),
+      ];
+      const menuItems = await WebsiteMenu.find({
+        _id: { $in: uniqueIds },
+        isAvailable: true,
+      });
+      const menuMap = new Map(
+        menuItems.map((item) => [
+          String(item._id),
+          item,
+        ])
+      );
+      normalizedItems = cleanItems.map((item) => {
+        const menuItem = menuMap.get(
+          String(item.menuItem)
+        );
+        if (!menuItem) {
+          const error = new Error(
+            "One or more selected menu items are unavailable."
+          );
+          error.code = "MODIFICATION_MENU_ITEM_UNAVAILABLE";
+          throw error;
+        }
+        const appliesToMeal =
+          meal === "LUNCH"
+            ? requestType === "EXTRA_TIFFIN"
+              ? menuItem.mealType === "Lunch"
+              : ["Lunch", "Both"].includes(menuItem.mealType)
+            : meal === "DINNER"
+              ? requestType === "EXTRA_TIFFIN"
+                ? menuItem.mealType === "Dinner"
+                : ["Dinner", "Both"].includes(menuItem.mealType)
+              : meal === "BOTH"
+                ? requestType === "MEAL_MODIFICATION" &&
+                  ["Lunch", "Dinner", "Both"].includes(
+                    menuItem.mealType
+                  )
+                : false;
+        if (!appliesToMeal) {
+          const error = new Error(
+            `Menu item "${menuItem.name}" is not available for the selected meal.`
+          );
+          error.code = "MODIFICATION_MENU_MEAL_MISMATCH";
+          throw error;
+        }
+        return {
+          menuItem: menuItem._id,
+          name: menuItem.name,
+          price: Number(menuItem.price || 0),
+          quantity: item.quantity,
+        };
+      });
     }
+    // MODIFICATION_ITEMS_VALIDATED
+
     if (description.length > 1000) {
       return res.status(400).json({
         success: false,
@@ -457,7 +546,8 @@ const createCustomerModificationRequest = async (req, res) => {
     }
     const modificationRequest =
       await CustomerModificationRequest.create({
-        customer: req.customerId,
+        items: normalizedItems,
+      customer: req.customerId,
         requestType,
         requestDate: parsedDate,
         meal,
@@ -499,9 +589,7 @@ const getCustomerModificationRequests = async (req, res) => {
     const requests = await CustomerModificationRequest.find({
       customer: req.customerId,
     })
-      .select(
-        "requestType requestDate meal description status adminRemark reviewedAt createdAt updatedAt"
-      )
+      .select("requestType requestDate meal description items status adminRemark reviewedAt createdAt updatedAt")
       .sort({ requestDate: -1, createdAt: -1 })
       .lean();
     return res.status(200).json({

@@ -5,6 +5,7 @@ import {
 
 export default function AnnouncementDeliveryStatus() {
   const [data, setData] = useState([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -45,25 +46,27 @@ export default function AnnouncementDeliveryStatus() {
   // COUNTS
   // =========================================
 
-  const totalCount = data.length;
+  const displayedData = showArchived ? data : data.filter(item => !item.notificationArchived);
+  const archivedCount = data.filter(item => item.notificationArchived).length;
+  const totalCount = displayedData.length;
 
-  const sentCount = data.filter(
+  const sentCount = displayedData.filter(
     (item) => item.status === "sent"
   ).length;
 
-  const deliveredCount = data.filter(
+  const deliveredCount = displayedData.filter(
     (item) => item.status === "delivered"
   ).length;
 
-  const readCount = data.filter(
+  const readCount = displayedData.filter(
     (item) => item.status === "read"
   ).length;
 
-  const failedCount = data.filter(
+  const failedCount = displayedData.filter(
     (item) => item.status === "failed"
   ).length;
 
-  const pendingCount = data.filter(
+  const pendingCount = displayedData.filter(
     (item) => item.status === "pending"
   ).length;
 
@@ -71,7 +74,7 @@ export default function AnnouncementDeliveryStatus() {
   // FILTER + SEARCH
   // =========================================
 
-  const filteredData = data.filter((item) => {
+  const filteredData = displayedData.filter((item) => {
     const statusMatch =
       filter === "all" ||
       item.status === filter;
@@ -203,6 +206,11 @@ export default function AnnouncementDeliveryStatus() {
           </div>
         </div>
 
+        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+          <input aria-label="Search announcement deliveries" placeholder="Search customer, phone or announcement" value={searchTerm} onChange={event=>setSearchTerm(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-slate-200 px-4 py-2.5"/>
+          <select aria-label="Announcement delivery status" value={filter} onChange={event=>setFilter(event.target.value)} className="rounded-xl border border-slate-200 px-3 py-2.5"><option value="all">All ({totalCount})</option><option value="pending">Pending ({pendingCount})</option><option value="sent">Sent ({sentCount})</option><option value="delivered">Delivered ({deliveredCount})</option><option value="read">Read ({readCount})</option><option value="failed">Failed ({failedCount})</option></select>
+          {archivedCount>0 && <label className="flex items-center gap-2 text-sm text-slate-500"><input type="checkbox" checked={showArchived} onChange={event=>setShowArchived(event.target.checked)}/>Show archived test alerts ({archivedCount})</label>}
+        </div>
         {loading ? (
           <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
             <p className="text-lg font-semibold text-slate-700">

@@ -44,6 +44,7 @@ function fixture(url,method){
   if(p==='/customer-modification-admin/settings')return {success:true,data:{lunchCutoffTime:'10:30',dinnerCutoffTime:'17:00',skipTiffinEnabled:true,extraTiffinEnabled:true,mealModificationEnabled:true,otherRequestEnabled:true}};
   if(p.startsWith('/customer-modification-admin/'))return {success:true,data:[]};
   if(p.startsWith('/daily-entry'))return {success:true,data:[]};
+  if(p==='/announcement-status')return {success:true,data:[{_id:'real-announcement',customerName:'Demo Customer',title:'Real announcement fixture',status:'delivered',createdAt:'2026-10-08T10:00:00Z'},{_id:'test-announcement',customerName:'Demo Customer',title:'System Review Test',status:'failed',notificationArchived:true,createdAt:'2026-09-25T10:00:00Z'}]};
   if(p==='/bills/delivery-status'||p==='/announcement-status'||p.startsWith('/whatsapp-inbox'))return {success:true,data:[]};
   if(p==='/bills')return {success:true,data:[bill]};
   if(p.startsWith('/bills/'))return {success:true,data:bill};
@@ -125,6 +126,10 @@ async function context(viewport,authenticated=true){
     await page.waitForFunction(()=>window.__nativeMessages.some(item=>item.type==='pdf'));
     const pdf=await page.evaluate(()=>window.__nativeMessages.find(item=>item.type==='pdf'));assert.equal(pdf.name,'Audit Receipt.pdf');assert(Buffer.from(pdf.data,'base64').toString().startsWith('%PDF-1.4'));
     assert(await page.evaluate(()=>window.__nativeMessages.some(item=>item.type==='print')));
+  });
+  await check('archived test alerts stay hidden while genuine delivery history remains',async()=>{
+    await page.goto(base+'/announcement-delivery-status');await page.getByText('Real announcement fixture',{exact:true}).first().waitFor();assert.equal(await page.getByText('System Review Test',{exact:true}).count(),0);
+    await page.getByLabel('Show archived test alerts').check();await page.getByText('System Review Test',{exact:true}).first().waitFor();await page.getByLabel('Show archived test alerts').uncheck();assert.equal(await page.getByText('System Review Test',{exact:true}).count(),0);
   });
   await check('/admin bookmark enters dashboard and remains signed in during background polling',async()=>{
     await page.goto(base+'/admin');await page.waitForURL('**/dashboard');await page.waitForTimeout(10500);assert(page.url().endsWith('/dashboard'));assert.equal(await page.evaluate(()=>sessionStorage.getItem('token')),'audit-admin-token');

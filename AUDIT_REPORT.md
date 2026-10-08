@@ -55,3 +55,5 @@ Inbox groups stored messages by normalized phone number, displays contacts order
 - Camera runtime permissions, trusted-origin/main-frame bridge, canonical PDF saving through Android document picker, printing, file chooser, guarded unsaved-entry navigation, offline retry and modern back handling added.
 - APK build, 3 native tests, Android lint (0 errors) and 17 browser groups pass. Physical-device authentication/camera/document-picker checks remain pending; APK is debug signed.
 - Identified and archived 34 old System Review Test announcement alerts dated before 2026-10-08. Only notificationArchived metadata changed; no records were deleted, no delivery statuses/payments/bills changed. Rollback IDs/previous archive state are stored in the chat workspace test-notification-archive.json. Notifications exclude these archived tests while delivery history remains available.
+
+- Archived test alerts are hidden from the normal announcement delivery list; Show archived test alerts restores their history. Search and status controls use the same filtered records. This behavior and the app bridge pass the expanded 18 browser regression groups.

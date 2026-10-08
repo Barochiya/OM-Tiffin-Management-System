@@ -46,9 +46,9 @@ public class ScreenshotInstrumentation extends Instrumentation {
     }catch(Exception error){throw new RuntimeException(error);}
    });
    waitFor("Boolean(document.querySelector('input[type=password]'))");take("android-login.png");
-   evaluate("sessionStorage.setItem('token','demo-only-token');history.pushState({idx:1,key:'demo',usr:null},'','/dashboard');window.dispatchEvent(new PopStateEvent('popstate',{state:history.state}));");
-   waitFor("Boolean(document.querySelector('[aria-label=\\\"Revenue year\\\"]'))");Thread.sleep(1500);take("android-home.png");
-   evaluate("document.querySelector('a[href=\\\"/customers\\\"]').click()");waitFor("document.body.innerText.includes('Demo Customer')");Thread.sleep(500);take("android-customers.png");
+   evaluate("var demoOpen=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(method,url){arguments[1]=String(url).replace('https://om-tiffin-backend.onrender.com','https://omtiffinservices.com');return demoOpen.apply(this,arguments);};sessionStorage.setItem('token','demo-only-token');history.pushState({idx:1,key:'demo',usr:null},'','/dashboard');window.dispatchEvent(new PopStateEvent('popstate',{state:history.state}));");
+   waitFor("Boolean(document.querySelector('select[aria-label]'))");Thread.sleep(1500);take("android-home.png");
+   runOnMainSync(()->{try{Method method=MainActivity.class.getDeclaredMethod("navigate",String.class);method.setAccessible(true);method.invoke(activity,"/customers");}catch(Exception error){throw new RuntimeException(error);}});waitFor("document.body.innerText.includes('Demo Customer')");Thread.sleep(500);take("android-customers.png");
    runOnMainSync(()->{try{Method method=MainActivity.class.getDeclaredMethod("showMore");method.setAccessible(true);method.invoke(activity);}catch(Exception error){throw new RuntimeException(error);}});Thread.sleep(500);take("android-more.png");
    result.putString("stream","PASS real Android screenshots with intercepted demo data\n");finish(ActivityResult.OK,result);
   }catch(Exception error){result.putString("stream","FAIL "+error.toString());finish(ActivityResult.FAIL,result);}
@@ -63,6 +63,6 @@ public class ScreenshotInstrumentation extends Instrumentation {
   return "{\"success\":true,\"data\":[],\"accounts\":[]}";
  }
  private String evaluate(String script)throws Exception{CountDownLatch latch=new CountDownLatch(1);String[] value={""};runOnMainSync(()->web.evaluateJavascript(script,result->{value[0]=result;latch.countDown();}));if(!latch.await(5,TimeUnit.SECONDS))throw new IllegalStateException("JavaScript timed out");return value[0];}
- private void waitFor(String script)throws Exception{for(int i=0;i<60;i++){if(evaluate(script).equals("true"))return;Thread.sleep(500);}throw new IllegalStateException("Page not ready: "+script);}
+ private void waitFor(String script)throws Exception{for(int i=0;i<60;i++){if(evaluate(script).equals("true"))return;Thread.sleep(500);}take("android-failure.png");throw new IllegalStateException("Page not ready: "+evaluate("location.href + document.body.innerText"));}
  private void take(String name)throws Exception{Bitmap screenshot=getUiAutomation().takeScreenshot();File folder=new File(getTargetContext().getExternalFilesDir(null),"screenshots");folder.mkdirs();try(FileOutputStream out=new FileOutputStream(new File(folder,name))){screenshot.compress(Bitmap.CompressFormat.PNG,100,out);}screenshot.recycle();}
 }

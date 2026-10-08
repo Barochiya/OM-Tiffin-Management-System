@@ -12,12 +12,15 @@ const bill={_id:id,customer,invoiceNo:'AUDIT-1',month:10,year:2026,cycle:'1',sta
 const payment={_id:id,customer,bill,amount:125,paymentMethod:'Bank',paymentDate:'2026-10-08T02:00:00Z',status:'Success'};
 const menu={_id:id,name:'Audit Both Meal',description:'Fixture only',mealType:'Both',price:80,isAvailable:true,sortOrder:1};
 const settings={websiteEnabled:true,plansEnabled:true,menuEnabled:true,onlineOrdersEnabled:true,inquiriesEnabled:true,customerLoginEnabled:true,testimonialsEnabled:true,faqEnabled:true,contactEnabled:true,lunchEnabled:true,dinnerEnabled:true};
+const chatFixture=[{_id:'a1',phoneNumber:'9876543210',customer:{customerName:'Alice Shah'},message:'Lunch plan question',type:'text',direction:'incoming',inboxStatus:'read',createdAt:'2026-10-08T08:00:00Z'},{_id:'a2',phoneNumber:'+91 9876543210',customer:{customerName:'Alice Shah'},message:'Confirm dinner',type:'text',direction:'incoming',inboxStatus:'unread',createdAt:'2026-10-08T09:00:00Z'},{_id:'a3',phoneNumber:'919876543210',customer:{customerName:'Alice Shah'},message:'Dinner confirmed',type:'text',direction:'outgoing',inboxStatus:'read',createdAt:'2026-10-08T09:01:00Z'},{_id:'b1',phoneNumber:'9123456780',customer:{customerName:'Bob Patel'},message:'Payment query',type:'text',direction:'incoming',inboxStatus:'unread',createdAt:'2026-10-08T10:00:00Z'}];
 let server,browser,checks=0;
 const errors=[],writes=[];
 async function check(name,fn){await fn();checks++;console.log('PASS '+name);}
 function fixture(url,method){
   const p=url.pathname.replace(/^\/api/,'');
+  if(p==='/whatsapp-inbox'&&method==='GET'){assert.equal(url.searchParams.get('includeOutgoing'),'true');return {success:true,data:chatFixture};}
   if(method!=='GET'){
+    if(p.startsWith('/whatsapp-inbox/')&&p.endsWith('/reply'))return {success:true,message:'Fixture reply sent'};
     if(p==='/bills/generate')return {success:true,data:bill};
     if(p==='/admin/login')return {success:true,token:'audit-admin-token'};
     if(p==='/website-orders/public')return {success:true,data:{_id:'audit-order'}};
@@ -127,6 +130,17 @@ async function context(viewport,authenticated=true){
     await page.getByRole('button',{name:'Download PDF',exact:true}).waitFor();const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),page.getByRole('button',{name:'Download PDF',exact:true}).click()]);assert(download.suggestedFilename().endsWith('.pdf'));
     assert(writes.some(request=>request.path==='/api/bills/send-whatsapp'));
   });
+  await check('WhatsApp groups contacts, searches history, preserves drafts and replies through the existing endpoint',async()=>{
+    await page.goto(base+'/whatsapp-inbox');await page.getByRole('button',{name:/Alice Shah/}).waitFor();assert.equal(await page.locator('.wa-contact').count(),2);
+    await page.getByRole('textbox',{name:'Search conversations'}).fill('Lunch plan');assert.equal(await page.locator('.wa-contact').count(),1);await page.getByRole('textbox',{name:'Search conversations'}).fill('');
+    await page.getByRole('button',{name:/Alice Shah/}).click();assert.equal(await page.locator('.wa-bubble').count(),3);assert((await page.locator('.wa-chat').innerText()).includes('Dinner confirmed'));
+    await page.getByRole('textbox',{name:'Reply message'}).fill('Alice draft');await page.getByRole('button',{name:/Bob Patel/}).click();await page.getByRole('textbox',{name:'Reply message'}).fill('Bob draft');await page.getByRole('button',{name:/Alice Shah/}).click();assert.equal(await page.getByRole('textbox',{name:'Reply message'}).inputValue(),'Alice draft');
+    await page.getByRole('button',{name:'Mark message a2 as read',exact:true}).click();await page.getByRole('button',{name:'Mark message a2 as read',exact:true}).waitFor({state:'hidden'});
+    await page.getByRole('button',{name:'Send reply',exact:true}).click();await page.getByRole('status').filter({hasText:'WhatsApp reply sent successfully.'}).waitFor();assert(writes.some(request=>request.path==='/api/whatsapp-inbox/a2/reply'&&JSON.parse(request.body).message==='Alice draft'));
+    if(process.env.AUDIT_ARTIFACT_DIR)await page.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'whatsapp-chat-desktop.png')});
+    await page.getByRole('button',{name:'Delete message a1',exact:true}).click();await page.getByRole('alertdialog').getByRole('button',{name:'Cancel',exact:true}).click();assert.equal(await page.locator('.wa-bubble').count(),3);
+    await page.getByRole('button',{name:'Delete message a1',exact:true}).click();await page.getByRole('alertdialog').getByRole('button',{name:'Delete',exact:true}).click();await page.getByRole('button',{name:'Delete message a1',exact:true}).waitFor({state:'hidden'});
+  });
   const loginContext=await context({width:1440,height:1000},false);const loginPage=await loginContext.newPage();
   await check('unauthenticated /admin redirects to login; valid fixture login enters dashboard without native popup',async()=>{
     await loginPage.goto(base+'/admin');await loginPage.waitForURL('**/login');await loginPage.getByPlaceholder('Enter Email').waitFor();if(process.env.AUDIT_ARTIFACT_DIR)await loginPage.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'login-redesign.png'),fullPage:true});await loginPage.getByPlaceholder('Enter Email').fill('audit@example.invalid');await loginPage.getByPlaceholder('Enter Password').fill('fixture-password');await loginPage.getByRole('button',{name:'Login',exact:true}).click();await loginPage.waitForURL('**/dashboard');await loginPage.getByRole('status').filter({hasText:'You are signed in successfully.'}).waitFor();
@@ -144,6 +158,11 @@ async function context(viewport,authenticated=true){
     await check(name+' professional invoice keeps stored totals and fits the viewport',async()=>{
       await p.goto(base+'/view-bills/'+id);await p.locator('.invoice-document').waitFor();assert.equal(await p.locator('.invoice-logo').count(),1);assert((await p.locator('.invoice-payment').innerText()).includes('249'));assert((await p.evaluate(()=>document.documentElement.scrollWidth))<=viewport.width);
       if(process.env.AUDIT_ARTIFACT_DIR)await p.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'invoice-'+name+'-ui.png'),fullPage:true});
+    });
+    if(name==='mobile')await check('mobile WhatsApp conversation navigation and phone search fit viewport',async()=>{
+      await p.goto(base+'/whatsapp-inbox');await p.getByRole('button',{name:/Alice Shah/}).click();assert(await p.locator('.wa-chat').isVisible());assert(!(await p.locator('.wa-contacts').isVisible()));assert(await p.evaluate(()=>document.documentElement.scrollWidth<=390));
+      if(process.env.AUDIT_ARTIFACT_DIR)await p.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'whatsapp-chat-mobile.png')});
+      await p.getByRole('button',{name:'Back to conversations',exact:true}).click();await p.getByRole('textbox',{name:'Search conversations'}).fill('9123456780');assert.equal(await p.locator('.wa-contact').count(),1);
     });
     if(name==='mobile')await check('mobile custom dialog remains within viewport and Escape cancels',async()=>{
       await p.goto(base+'/website-menu');await p.getByRole('button',{name:'Delete',exact:true}).first().click();await p.getByRole('alertdialog').waitFor();const box=await p.getByRole('alertdialog').boundingBox();assert(box.x>=0&&box.x+box.width<=390);

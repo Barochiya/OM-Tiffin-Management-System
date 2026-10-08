@@ -6,7 +6,8 @@ import api from "./api";
 
 export const getWhatsAppInbox = async () => {
   const response = await api.get(
-    "/whatsapp-inbox"
+    "/whatsapp-inbox",
+    { params: { includeOutgoing: true } }
   );
 
   return response.data;

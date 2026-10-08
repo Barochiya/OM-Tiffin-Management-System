@@ -109,6 +109,8 @@ app.use((req, res, next) => {
 // ===============================
 
 app.get(["/", "/api", "/api/"], (req, res) => {
+  res.setHeader("X-OM-Release", "whatsapp-conversations-v1");
+  res.setHeader("X-OM-Revision", process.env.RENDER_GIT_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || "unknown");
   res.send("Welcome to OM Tiffin Management System API");
 });
 // ===============================

@@ -36,6 +36,7 @@ const Navbar = ({ setSidebarOpen }) => {
 
   const getPageInfo = () => {
     const path = location.pathname;
+    if (path === "/whatsapp-inbox") return { title: "WhatsApp Inbox", subtitle: "Customer conversations and replies" };
 
     if (path === "/dashboard") {
       return {

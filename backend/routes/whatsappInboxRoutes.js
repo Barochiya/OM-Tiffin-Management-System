@@ -202,7 +202,7 @@ router.get("/", protect, async (req, res) => {
   try {
     const messages =
       await WhatsAppMessage.find({
-        direction: "incoming",
+        ...(req.query?.includeOutgoing === "true" ? {} : { direction: "incoming" }),
       })
         .populate(
           "customer",

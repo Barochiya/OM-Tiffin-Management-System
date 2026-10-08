@@ -181,6 +181,15 @@ async function services(apiUrl) {
     const before=JSON.stringify(bill);const invoice=await backendRequire('./utils/billPdfGenerator.js')(bill,{customerName:'Audit Customer',phone:'0000000000',address:'Fixture Address'});assert.equal(JSON.stringify(bill),before);
     if(process.env.AUDIT_ARTIFACT_DIR){fs.writeFileSync(path.join(process.env.AUDIT_ARTIFACT_DIR,'audit-gujarati-receipt.pdf'),receipt);fs.writeFileSync(path.join(process.env.AUDIT_ARTIFACT_DIR,'audit-long-invoice.pdf'),invoice);}
   });
+  await check('WhatsApp full history is opt-in; default inbox remains incoming-only',async()=>{
+    const Message=backendRequire('./models/WhatsAppMessage');let query;
+    Message.find=value=>{query=value;return {populate(){return this;},sort:async()=>[]}};
+    const router=app._router.stack.find(layer=>layer.match('/api/whatsapp-inbox')&&layer.handle?.stack).handle;
+    const route=router.stack.find(layer=>layer.route?.path==='/'&&layer.route.methods.get);assert.equal(route.route.stack[0].handle,auth);
+    const handler=route.route.stack.at(-1).handle;
+    await handler({query:{}},response());assert.deepEqual(query,{direction:'incoming'});
+    await handler({query:{includeOutgoing:'true'}},response());assert.deepEqual(query,{});
+  });
   assert.equal(mongoose.connection.readyState,0);
   console.log('PASS '+checks+' regression groups; no database connection, real writes, payment calls or WhatsApp sends.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

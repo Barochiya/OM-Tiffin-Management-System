@@ -384,12 +384,12 @@ const handleSaveDailyEntry = async (entryId) => {
     (item) => item._id === entryId
   );
 
-  if (!entry) return;
+  if (!entry || savingEntryId) return;
 
   try {
     setSavingEntryId(entryId);
 
-    await saveDailyEntry({
+    const response = await saveDailyEntry({
       customer: id,
       date: entry.date,
 
@@ -420,11 +420,17 @@ const handleSaveDailyEntry = async (entryId) => {
       remark: entry.remark || "",
     });
 
-    
-
-    // Reload from backend so UI shows
-    // the actual saved data.
-    await loadDailyEntries();
+    // Update this row only; unrelated drafts and edits made during the request survive.
+    const savedEntry = response?.data;
+    if (savedEntry?._id) {
+      setDailyEntries((current) => current.map((item) => {
+        if (item._id !== entryId || String(item.customer?._id || item.customer) !== id) return item;
+        return item === entry
+          ? { ...item, ...savedEntry, isNewEntry: false }
+          : { ...savedEntry, ...item, _id: savedEntry._id, isNewEntry: false };
+      }));
+    }
+    notify(response?.message || "Daily entry saved successfully.", { type: "success" });
 
 
   } catch (error) {
@@ -1315,7 +1321,7 @@ const dailyTotal =
                     entry._id
                   )
                 }
-                disabled={isSaving}
+                disabled={Boolean(savingEntryId)}
                 className="
                   inline-flex
                   items-center
@@ -1754,7 +1760,7 @@ const dailyTotal =
                               entry._id
                             )
                           }
-                          disabled={isSaving}
+                          disabled={Boolean(savingEntryId)}
                           className="
                             w-full
                             inline-flex

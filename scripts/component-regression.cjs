@@ -93,6 +93,20 @@ async function check(name,fn){await fn();checks++;console.log('PASS '+name);}
     assert(h.calls.some(call=>call[0]==='storage'&&call[1]==='token'&&call[2]==='new-audit-token'));
     assert(h.calls.some(call=>call[0]==='navigate'&&call[1]==='/dashboard'));assert.equal(h.notices.length,1);h.dispose();
   });
+  await check('single meal-row save preserves other drafts, in-flight edits and failed-save values without reloading',async()=>{
+    let reads=0,resolveSave,rejectSave,sent;
+    const h=await harness('pages/ViewCustomer.jsx',{'../services/customerService':{getCustomerById:async()=>({data:{_id:'audit-bill',customerName:'Fixture',pricing:{breakfastPrice:30,lunchPrice:90,dinnerPrice:90}}})},'../services/dailyEntryService':{getCustomerEntries:async()=>{reads++;return {data:[]}},saveDailyEntry:payload=>{sent=payload;return new Promise((resolve,reject)=>{resolveSave=resolve;rejectSave=reject})}}});
+    h.render();await h.flush();h.render();await h.flush();
+    const a={_id:'new-a',customer:'audit-bill',date:'2026-10-01',breakfastQty:1,lunchQty:0,dinnerQty:1,extraItems:[],remark:'First',isNewEntry:true};
+    const b={_id:'new-b',customer:'audit-bill',date:'2026-10-02',breakfastQty:0,lunchQty:2,dinnerQty:3,extraItems:[{description:'Roti',amount:20}],remark:'Unsaved note',isNewEntry:true};
+    h.slots[2]=[a,b];h.render();const beforeReads=reads;
+    const save=()=>h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Save'))[0].props.onClick();
+    const pending=save();h.render();assert.equal(h.slots[3],false);assert(h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Save')).every(node=>node.props.disabled));
+    h.nodes(node=>node.type==='input'&&node.props.type==='number'&&node.props.value===1)[0].props.onChange({target:{value:'4'}});
+    resolveSave({success:true,data:{...a,_id:'stored-a',breakfastQty:1},message:'Saved'});await pending;h.render();
+    assert.equal(reads,beforeReads);assert.equal(h.slots[2][1],b);assert.equal(h.slots[2][0]._id,'stored-a');assert.equal(h.slots[2][0].breakfastQty,4);assert.equal(sent.breakfastQty,1);assert.equal(h.slots[2][0].isNewEntry,false);
+    const previous=h.slots[2];const failed=save();rejectSave(Error('Fixture save failure'));await failed;assert.equal(h.slots[2],previous);assert.equal(reads,beforeReads);h.dispose();
+  });
   await check('every static internal link in active source resolves to a defined frontend route',async()=>{
     const app=fs.readFileSync(path.join(root,'frontend/src/App.jsx'),'utf8');
     const patterns=[...app.matchAll(/path="([^"]+)"/g)].map(match=>new RegExp('^'+match[1].replace(/:[^/]+/g,'[^/]+').replace(/\*/g,'.*')+'/?$')).filter(re=>!re.source.includes('.*'));

@@ -23,3 +23,7 @@ Validation: production build passed, lint has zero errors with existing warnings
 Run npm run test:loading for performance behavior checks. The browser suite defaults to all routes; AUDIT_QUICK_REVIEW=1 selects nine representative routes for targeted visual iterations. Live production network/database latency and deployment have not been measured; no live data or external messages were changed.
 
 Final targeted browser run passed 12 groups, including actual on-demand bill PDF rendering, fixture WhatsApp submission and file download. The generated preview is retained after temporary PDF rendering so Print/Download controls remain visible; this changes UI state only and performs no additional billing writes.
+
+## Single customer meal-row save
+
+Saving one date now updates only that row from the existing save response instead of reloading the full list. Unrelated drafts (meal quantities, extras and remarks), edits made while the request is pending and failed-save values are preserved. Saves are serialized while editing remains available. Backend save logic and payload calculations are unchanged. Eight component regression groups pass, including the new multi-row draft-preservation checks; production build and lint pass.

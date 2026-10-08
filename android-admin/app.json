@@ -2,7 +2,7 @@
   "expo": {
     "name": "OM Tiffin Admin",
     "slug": "om-tiffin-admin",
-    "owner": "hemadri-life-science",
+    "owner": "om-tiffin-admin",
     "version": "0.1.0",
     "android": {
       "package": "com.omtiffin.admin"

@@ -24,6 +24,6 @@ References: [Android WebView messaging](https://developer.android.com/develop/ui
 
 ## Expo EAS internal distribution
 
-Project: https://expo.dev/accounts/hemadri-life-science/projects/om-tiffin-admin
+Project: https://expo.dev/accounts/om-tiffin-admin/projects/om-tiffin-admin
 
-Run `npx eas-cli@latest build --platform android --profile preview` from android-admin. This uses a custom EAS workflow to build the existing native Java app; no Expo Go runtime or business-logic migration is needed. The preview APK is debug-signed for test installation. The custom workflow runs native unit tests and lint before uploading the APK. The first submitted cloud build is https://expo.dev/accounts/hemadri-life-science/projects/om-tiffin-admin/builds/eb91201d-ef38-4b2c-8a32-1ee5600e3a22 (queued at submission).
+Run `npx eas-cli@latest build --platform android --profile preview` from android-admin. This uses a custom EAS workflow to build the existing native Java app; no Expo Go runtime or business-logic migration is needed. The preview APK is debug-signed for test installation. The custom workflow runs native unit tests and lint before uploading the APK. The first submitted cloud build is https://expo.dev/accounts/om-tiffin-admin/projects/om-tiffin-admin/builds/eb91201d-ef38-4b2c-8a32-1ee5600e3a22 (queued at submission).

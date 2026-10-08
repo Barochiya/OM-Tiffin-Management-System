@@ -11,6 +11,7 @@
       "eas": {
         "projectId": "5168fb80-4b6a-4496-ba4f-2c99aeeeb32b"
       }
-    }
+    },
+    "icon": "./app/src/main/res/drawable-nodpi/brand_logo.png"
   }
 }

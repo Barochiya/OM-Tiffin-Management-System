@@ -34,6 +34,8 @@ const announcementDeliverySchema =
         required: true,
       },
 
+      notificationArchived: { type: Boolean, default: false },
+
       status: {
         type: String,
 

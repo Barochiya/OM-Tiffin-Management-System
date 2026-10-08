@@ -113,6 +113,19 @@ async function context(viewport,authenticated=true){
     await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.getByRole('button',{name:'Mark all as read',exact:true}).click();await page.getByText('You are all caught up. No unread notifications.').waitFor();assert.equal((await page.getByRole('button',{name:'Notifications',exact:true}).innerText()).trim(),'');
     if(process.env.AUDIT_ARTIFACT_DIR){await page.goto(base+'/dashboard');await page.waitForLoadState('networkidle');await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'dashboard-notifications.png'),fullPage:false});}
   });
+  await check('Android app bridge observes admin routes and exports canonical PDF bytes',async()=>{
+    const java=fs.readFileSync(path.join(root,'android-admin/app/src/main/java/com/omtiffin/admin/MainActivity.java'),'utf8');
+    const source=java.match(/String script=([\s\S]*?);\r?\n        web.evaluateJavascript/)[1];
+    const script=[...source.matchAll(/"(?:\\.|[^"\\])*"/g)].map(match=>JSON.parse(match[0])).join('');
+    await page.goto(base+'/dashboard');await page.getByLabel('Revenue year').waitFor();
+    await page.evaluate(()=>{window.__nativeMessages=[];window.OMAdminNative={postMessage:value=>window.__nativeMessages.push(JSON.parse(value))};});
+    await page.evaluate(script);
+    assert.equal(await page.evaluate(()=>window.__nativeMessages.find(item=>item.type==='navigation').authenticated),true);
+    await page.evaluate(()=>{const bytes='%PDF-1.4\nFixture app download';const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));const link=document.createElement('a');link.href=url;link.download='Audit Receipt.pdf';document.body.append(link);link.click();link.remove();window.print();});
+    await page.waitForFunction(()=>window.__nativeMessages.some(item=>item.type==='pdf'));
+    const pdf=await page.evaluate(()=>window.__nativeMessages.find(item=>item.type==='pdf'));assert.equal(pdf.name,'Audit Receipt.pdf');assert(Buffer.from(pdf.data,'base64').toString().startsWith('%PDF-1.4'));
+    assert(await page.evaluate(()=>window.__nativeMessages.some(item=>item.type==='print')));
+  });
   await check('/admin bookmark enters dashboard and remains signed in during background polling',async()=>{
     await page.goto(base+'/admin');await page.waitForURL('**/dashboard');await page.waitForTimeout(10500);assert(page.url().endsWith('/dashboard'));assert.equal(await page.evaluate(()=>sessionStorage.getItem('token')),'audit-admin-token');
   });

@@ -6,7 +6,7 @@ const definitions = [
   ['payments','WhatsAppMessage',{direction:'incoming',paymentStatus:'pending_review'},'Payment screenshots awaiting review','/whatsapp-payment-approval'],
   ['messages','WhatsAppMessage',{direction:'incoming',inboxStatus:'unread',paymentStatus:{$ne:'pending_review'}},'Unread WhatsApp messages','/whatsapp-inbox'],
   ['bills','Bill',{'whatsappDelivery.status':{$in:['pending','failed']}},'Bills awaiting delivery / failed','/bill-delivery-status'],
-  ['announcements','AnnouncementDelivery',{status:{$in:['pending','failed']}},'Announcements awaiting delivery / failed','/announcement-delivery-status']
+  ['announcements','AnnouncementDelivery',{status:{$in:['pending','failed']},notificationArchived:{$ne:true}},'Announcements awaiting delivery / failed','/announcement-delivery-status']
 ];
 const models = Object.fromEntries(definitions.map(([,name])=>[name,require('../models/'+name)]));
 exports.getAdminNotifications = async (req,res) => {

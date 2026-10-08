@@ -1,0 +1,11 @@
+*
+!android-admin/
+!android-admin/**
+**/.gradle/**
+**/build/**
+**/local.properties
+**/node_modules/**
+**/*.jks
+**/*.keystore
+**/.env
+**/.env.*

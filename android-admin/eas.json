@@ -1,0 +1,16 @@
+{
+  "cli": {
+    "version": ">=16.0.0",
+    "appVersionSource": "local"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "config": "native-android.yml",
+      "android": {
+        "withoutCredentials": true,
+        "applicationArchivePath": "app/build/outputs/apk/debug/app-debug.apk"
+      }
+    }
+  }
+}

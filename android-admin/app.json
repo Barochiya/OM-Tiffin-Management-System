@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "OM Tiffin Admin",
+    "slug": "om-tiffin-admin",
+    "owner": "hemadri-life-science",
+    "version": "0.1.0",
+    "android": {
+      "package": "com.omtiffin.admin"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5168fb80-4b6a-4496-ba4f-2c99aeeeb32b"
+      }
+    }
+  }
+}

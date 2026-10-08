@@ -21,3 +21,9 @@ Output: app/build/outputs/apk/debug/app-debug.apk. The Gradle 8.11.1 wrapper dis
 Build, three native route/security tests and Android lint pass (zero errors; compatibility, translation and drawing warnings remain). Browser fixtures verify native route observation, PDF byte transfer and print callbacks. A screenshot instrumentation runner uses local frontend build assets and intercepted demo APIs; it sends no live messages or payments. Run a frontend production build first, then assembleDebugAndroidTest. Screenshots are explicitly marked as demo data. Physical-phone login, camera scanning and document-picker testing remain required before a release.
 
 References: [Android WebView messaging](https://developer.android.com/develop/ui/views/layout/webapps/native-api-access-jsbridge), [camera permission requests](https://developer.android.com/reference/android/webkit/PermissionRequest).
+
+## Expo EAS internal distribution
+
+Project: https://expo.dev/accounts/hemadri-life-science/projects/om-tiffin-admin
+
+Run `npx eas-cli@latest build --platform android --profile preview` from android-admin. This uses a custom EAS workflow to build the existing native Java app; no Expo Go runtime or business-logic migration is needed. The preview APK is debug-signed for test installation. The custom workflow runs native unit tests and lint before uploading the APK. The first submitted cloud build is https://expo.dev/accounts/hemadri-life-science/projects/om-tiffin-admin/builds/eb91201d-ef38-4b2c-8a32-1ee5600e3a22 (queued at submission).

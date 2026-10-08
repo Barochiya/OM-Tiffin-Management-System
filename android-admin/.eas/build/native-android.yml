@@ -1,0 +1,14 @@
+build:
+  name: OM Tiffin native Android APK
+  steps:
+    - eas/checkout
+    - run:
+        name: Build and validate Android application
+        command: |
+          chmod +x gradlew
+          ./gradlew assembleDebug testDebugUnitTest lintDebug --no-daemon --console=plain
+    - eas/upload_artifact:
+        name: Upload installable APK
+        inputs:
+          type: application-archive
+          path: app/build/outputs/apk/debug/app-debug.apk

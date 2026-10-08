@@ -100,12 +100,21 @@ async function check(name,fn){await fn();checks++;console.log('PASS '+name);}
     const a={_id:'new-a',customer:'audit-bill',date:'2026-10-01',breakfastQty:1,lunchQty:0,dinnerQty:1,extraItems:[],remark:'First',isNewEntry:true};
     const b={_id:'new-b',customer:'audit-bill',date:'2026-10-02',breakfastQty:0,lunchQty:2,dinnerQty:3,extraItems:[{description:'Roti',amount:20}],remark:'Unsaved note',isNewEntry:true};
     h.slots[2]=[a,b];h.render();const beforeReads=reads;
-    const save=()=>h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Save'))[0].props.onClick();
-    const pending=save();h.render();assert.equal(h.slots[3],false);assert(h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Save')).every(node=>node.props.disabled));
+    const save=()=>h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Sav'))[0].props.onClick();
+    const pending=save();h.render();assert.equal(h.slots[3],false);assert(h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Sav')).some(node=>node.props.disabled));assert(h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Sav')).some(node=>!node.props.disabled));
     h.nodes(node=>node.type==='input'&&node.props.type==='number'&&node.props.value===1)[0].props.onChange({target:{value:'4'}});
     resolveSave({success:true,data:{...a,_id:'stored-a',breakfastQty:1},message:'Saved'});await pending;h.render();
     assert.equal(reads,beforeReads);assert.equal(h.slots[2][1],b);assert.equal(h.slots[2][0]._id,'stored-a');assert.equal(h.slots[2][0].breakfastQty,4);assert.equal(sent.breakfastQty,1);assert.equal(h.slots[2][0].isNewEntry,false);
     const previous=h.slots[2];const failed=save();rejectSave(Error('Fixture save failure'));await failed;assert.equal(h.slots[2],previous);assert.equal(reads,beforeReads);h.dispose();
+  });
+  await check('different rows save concurrently, duplicate clicks are ignored and loading clears independently',async()=>{
+    const pending=[];const h=await harness('pages/ViewCustomer.jsx',{'../services/customerService':{getCustomerById:async()=>({data:{_id:'audit-bill',customerName:'Fixture',pricing:{}}})},'../services/dailyEntryService':{getCustomerEntries:async()=>({data:[]}),saveDailyEntry:payload=>new Promise((resolve,reject)=>pending.push({payload,resolve,reject}))}});
+    h.render();await h.flush();h.render();await h.flush();
+    const a={_id:'a',customer:'audit-bill',date:'2026-10-01',breakfastQty:1,lunchQty:0,dinnerQty:0,extraItems:[],remark:'A'},b={...a,_id:'b',date:'2026-10-02',dinnerQty:2,remark:'B'};
+    h.slots[2]=[a,b];h.render();const buttons=h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Sav'));
+    const first=buttons[0].props.onClick();await buttons[0].props.onClick();const second=buttons[1].props.onClick();assert.equal(pending.length,2);h.render();assert.equal(h.slots[7].size,2);
+    pending[1].resolve({data:{...b,_id:'saved-b'}});await second;h.render();assert.equal(h.slots[7].size,1);assert(h.slots[7].has('a'));assert.equal(h.slots[2][1]._id,'saved-b');assert.equal(h.slots[2][0],a);
+    pending[0].reject(Error('Fixture row A failure'));await first;h.render();assert.equal(h.slots[7].size,0);assert.equal(h.slots[2][0],a);assert.equal(h.slots[2][1].remark,'B');h.dispose();
   });
   await check('every static internal link in active source resolves to a defined frontend route',async()=>{
     const app=fs.readFileSync(path.join(root,'frontend/src/App.jsx'),'utf8');

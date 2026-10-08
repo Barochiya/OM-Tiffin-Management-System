@@ -1,5 +1,5 @@
 import { notify } from "../services/notifications";
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -48,7 +48,8 @@ const [selectedYear, setSelectedYear] = useState(
 const [selectedCycle, setSelectedCycle] = useState("2");
 
 
-const [savingEntryId, setSavingEntryId] = useState(null);
+const [savingEntryIds, setSavingEntryIds] = useState(() => new Set());
+const pendingEntrySaves = useRef(new Set());
 
   useEffect(() => {
     loadCustomer();
@@ -384,10 +385,11 @@ const handleSaveDailyEntry = async (entryId) => {
     (item) => item._id === entryId
   );
 
-  if (!entry || savingEntryId) return;
+  if (!entry || pendingEntrySaves.current.has(entryId)) return;
+  pendingEntrySaves.current.add(entryId);
 
   try {
-    setSavingEntryId(entryId);
+    setSavingEntryIds((current) => new Set(current).add(entryId));
 
     const response = await saveDailyEntry({
       customer: id,
@@ -444,7 +446,12 @@ const handleSaveDailyEntry = async (entryId) => {
         "Failed to save daily entry."
     );
   } finally {
-    setSavingEntryId(null);
+    pendingEntrySaves.current.delete(entryId);
+    setSavingEntryIds((current) => {
+      const remaining = new Set(current);
+      remaining.delete(entryId);
+      return remaining;
+    });
   }
 };
 
@@ -938,7 +945,7 @@ const handleSaveDailyEntry = async (entryId) => {
 
   {dailyEntries.map((entry) => {
     const isSaving =
-      savingEntryId === entry._id;
+      savingEntryIds.has(entry._id);
 
     const entryDate = new Date(entry.date);
 
@@ -1321,7 +1328,7 @@ const dailyTotal =
                     entry._id
                   )
                 }
-                disabled={Boolean(savingEntryId)}
+                disabled={isSaving}
                 className="
                   inline-flex
                   items-center
@@ -1383,7 +1390,7 @@ const dailyTotal =
 
             {dailyEntries.map((entry) => {
               const isSaving =
-                savingEntryId === entry._id;
+                savingEntryIds.has(entry._id);
 
               const entryDate = new Date(entry.date);
 
@@ -1760,7 +1767,7 @@ const dailyTotal =
                               entry._id
                             )
                           }
-                          disabled={Boolean(savingEntryId)}
+                          disabled={isSaving}
                           className="
                             w-full
                             inline-flex

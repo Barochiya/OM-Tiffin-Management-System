@@ -26,4 +26,6 @@ Final targeted browser run passed 12 groups, including actual on-demand bill PDF
 
 ## Single customer meal-row save
 
-Saving one date now updates only that row from the existing save response instead of reloading the full list. Unrelated drafts (meal quantities, extras and remarks), edits made while the request is pending and failed-save values are preserved. Saves are serialized while editing remains available. Backend save logic and payload calculations are unchanged. Eight component regression groups pass, including the new multi-row draft-preservation checks; production build and lint pass.
+Saving one date now updates only that row from the existing save response instead of reloading the full list. Unrelated drafts (meal quantities, extras and remarks), edits made while the request is pending and failed-save values are preserved. Rows now save independently; only the pending row has its Save button disabled. Backend save logic and payload calculations are unchanged. Eight component regression groups pass, including the new multi-row draft-preservation checks; production build and lint pass.
+
+Per-row save refinement: separate pending-row state permits rapid saves across different dates, synchronously blocks duplicate clicks on the same row, and clears only the completed request. Nine component regression groups pass, including out-of-order parallel completion, independent failures and draft preservation. Build and lint passed.

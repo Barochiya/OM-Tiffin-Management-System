@@ -1,6 +1,6 @@
 import { notify, confirmAction } from "../services/notifications";
-﻿import React, { useEffect, useMemo, useRef, useState } from "react";
-import CustomerBarcodeModal from "../components/CustomerBarcodeModal";
+﻿import React, { useEffect, useMemo, lazy, Suspense, useState } from "react";
+const CustomerBarcodeModal = lazy(() => import("../components/CustomerBarcodeModal"));
 import { Link } from "react-router-dom";
 
 import {
@@ -25,7 +25,7 @@ import {
   getCustomerAccountStatuses,
 } from "../services/customerService";
 import { sendBulkPaymentReminders } from "../services/paymentReminderService";
-import JsBarcode from "jsbarcode";
+
 
 export default function Customers() {
   const [customers, setCustomers] = useState([]);
@@ -42,24 +42,12 @@ export default function Customers() {
       })
     : null;
 
-  const barcodeRef = useRef(null);
+
   useEffect(() => {
     loadCustomerAccountStatuses();
   }, []);
 
-  useEffect(() => {
-    if (!barcodeCustomer || !barcodeRef.current) return;
-    const barcodeValue =
-      barcodeCustomer.barcode || `OMT-${barcodeCustomer._id}`;
-    JsBarcode(barcodeRef.current, barcodeValue, {
-      format: "CODE128",
-      displayValue: true,
-      fontSize: 16,
-      height: 70,
-      margin: 10,
-      width: 2,
-    });
-  }, [barcodeCustomer]);
+
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -763,7 +751,7 @@ How can we help you today?`;
       )}
     </div>
   </div>
-      {barcodeModal}
+      <Suspense fallback={<div role="status" className="fixed bottom-4 right-4 rounded-xl bg-white p-4 shadow-lg">Loading barcode…</div>}>{barcodeModal}</Suspense>
 </div>
 
 

@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import PageLoading from "../components/PageLoading";
 ﻿import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -37,7 +39,7 @@ export default function AdminLayout() {
 
   <main className="flex-1 overflow-y-auto w-full min-w-0 max-w-full p-3 sm:p-4 md:p-6">
 
-    <Outlet />
+    <Suspense fallback={<PageLoading />}><Outlet /></Suspense>
 
   </main>
 

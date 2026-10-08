@@ -29,7 +29,7 @@ const CustomerForgotPassword = lazy(() => import("./pages/CustomerForgotPassword
 const CustomerForgotUserId = lazy(() => import("./pages/CustomerForgotUserId"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CustomerLoginIdSender = lazy(() => import("./pages/CustomerLoginIdSender"));
-const Customers = lazy(() => import("./pages/Customers"));
+import Customers from "./pages/Customers";
 const Users = lazy(() => import("./pages/Users"));
 const AddCustomer = lazy(() => import("./pages/AddCustomer"));
 const EditCustomer = lazy(() => import("./pages/EditCustomer"));

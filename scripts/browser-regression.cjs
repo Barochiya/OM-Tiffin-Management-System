@@ -80,6 +80,11 @@ async function context(viewport,authenticated=true){
   server=await vite.createServer({root:path.join(root,'frontend'),server:{host:'127.0.0.1',port:5179,strictPort:true},logLevel:'error'});await server.listen();
   browser=await chromium.launch({channel:process.env.AUDIT_BROWSER_CHANNEL||'chrome',headless:true});
   const base='http://127.0.0.1:5179';
+  await check('admin sidebar and header stay visible while a page module is delayed',async()=>{
+    const ctx=await context({width:1440,height:1000}),p=await ctx.newPage();let release;const wait=new Promise(resolve=>{release=resolve});
+    await p.route('**/src/pages/PriceSettings.jsx',async route=>{await wait;await route.continue()});
+    try{await p.goto(base+'/price-settings');await p.getByRole('status',{name:'Loading page'}).waitFor();assert(await p.locator('.om-admin-shell').isVisible());assert(await p.locator('aside').isVisible());assert(await p.locator('header').isVisible());release();await p.getByRole('button',{name:/Save/}).first().waitFor();}finally{release();await ctx.close()}
+  });
   const desktop=await context({width:1440,height:1000});const page=await desktop.newPage();
   const source=fs.readFileSync(path.join(root,'frontend/src/App.jsx'),'utf8');
   const routes=[...source.matchAll(/path="([^"]+)"/g)].map(match=>match[1]).filter(p=>p!=='*'&&p!=='/login'&&p!=='/customer-login').map(p=>p.replace(/:[^/]+/g,id));

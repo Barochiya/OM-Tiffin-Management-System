@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import PageLoading from "../components/PageLoading";
 ﻿import { useEffect, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { ArrowRight, ShoppingCart } from "lucide-react";
@@ -302,7 +304,7 @@ export default function PublicWebsiteLayout() {
         </div>
       )}
       <main>
-        <Outlet />
+        <Suspense fallback={<PageLoading />}><Outlet /></Suspense>
       </main>
     </div>
   );

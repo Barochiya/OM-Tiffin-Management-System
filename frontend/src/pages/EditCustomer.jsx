@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -100,7 +101,7 @@ const [formData, setFormData] =
     } catch (error) {
       console.error("Load customer error:", error);
 
-      alert(
+      notify(
         error.response?.data?.message ||
           "❌ Failed to load customer"
       );
@@ -190,13 +191,13 @@ if (
 
       await updateCustomer(id, formData);
 
-      alert("✅ Customer Updated Successfully");
+      notify("✅ Customer Updated Successfully");
 
       navigate("/customers");
     } catch (error) {
       console.error("Update customer error:", error);
 
-      alert(
+      notify(
         error.response?.data?.message ||
           error.response?.data?.error ||
           "❌ Failed to update customer"
@@ -348,11 +349,11 @@ if (
                   required
                 >
                   <option value="Active">
-  <CircleCheck size={18} /> Active
+  Active
 </option>
 
 <option value="Inactive">
-  <CircleX size={18} /> Inactive
+  Inactive
 </option>
                 </select>
               </div>

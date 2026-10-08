@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -171,7 +172,7 @@ if (savedPayment?._id) {
 
       console.log(error);
 
-      alert(
+      notify(
 
         error.response?.data?.message ||
 

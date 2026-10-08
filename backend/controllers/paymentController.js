@@ -1,4 +1,5 @@
 const Payment = require("../models/Payment");
+const generateReceiptPdf = require("../utils/receiptPdfGenerator");
 const Bill = require("../models/Bill");
 const Tiffin = require("../models/Tiffin");
 const WhatsAppMessage = require("../models/WhatsAppMessage");
@@ -559,7 +560,6 @@ exports.sendPaymentReceiptWhatsApp = async (
 
   console.log("=== SEND WHATSAPP API CALLED ===");
 
-  console.log("Headers:", req.headers);
 
   console.log(
     "Body Length:",
@@ -677,5 +677,22 @@ exports.sendPaymentReceiptWhatsApp = async (
       message: metaMessage,
       metaError: error.meta || null,
     });
+  }
+};
+// Read-only PDF export of an existing payment; no balances are updated.
+exports.downloadPaymentReceiptPdf = async (req, res) => {
+  try {
+    const payment = await Payment.findById(req.params.id).populate("customer").populate("bill");
+    if (!payment || !payment.customer) {
+      return res.status(404).json({ success: false, message: "Payment or customer not found." });
+    }
+    const pdfBuffer = await generateReceiptPdf(payment);
+    const receiptNo = String(payment.receiptNo || payment._id).replace(/[^a-zA-Z0-9_-]/g, "_");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="OM-Tiffin-Payment-Receipt-${receiptNo}.pdf"`);
+    return res.status(200).send(pdfBuffer);
+  } catch (error) {
+    console.error("Download Receipt PDF Error:", error);
+    return res.status(500).json({ success: false, message: "Unable to generate receipt PDF." });
   }
 };

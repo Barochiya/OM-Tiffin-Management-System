@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 import { useEffect, useState } from "react";
 import { MailCheck, Eye } from "lucide-react";
 import {
@@ -30,7 +31,7 @@ export default function BillDeliveryStatus() {
     } catch (error) {
       console.error(error);
 
-      alert(
+      notify(
         error.response?.data?.message ||
           "Failed to load data."
       );
@@ -43,11 +44,11 @@ export default function BillDeliveryStatus() {
     try {
       await retryBill(billId);
 
-      alert("Bill sent successfully.");
+      notify("Bill sent successfully.");
 
       loadData();
     } catch (error) {
-      alert(
+      notify(
         error.response?.data?.message ||
           "Retry failed."
       );

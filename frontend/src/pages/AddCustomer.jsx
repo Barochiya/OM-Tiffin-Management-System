@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -133,7 +134,7 @@ export default function AddCustomer() {
 
     await createCustomer(formData);
 
-    alert("✅ Customer Added Successfully");
+    notify("✅ Customer Added Successfully");
 
     navigate("/customers");
 
@@ -141,7 +142,7 @@ export default function AddCustomer() {
 
     console.log(error);
 
-    alert(
+    notify(
       error.response?.data?.message ||
       "Failed to Add Customer"
     );
@@ -350,11 +351,11 @@ export default function AddCustomer() {
                 className="w-full border rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"
               >
                 <option value="Active">
-                  <CircleCheck size={18} /> Active
+                  Active
                 </option>
 
                 <option value="Inactive">
-                  <CircleX size={18} /> Inactive
+                  Inactive
                 </option>
 
               </select>

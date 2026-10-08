@@ -1,3 +1,4 @@
+import { confirmAction } from "../services/notifications";
 ﻿import { useEffect, useState } from "react";
 import {
   Edit,
@@ -138,7 +139,7 @@ export default function WebsiteMenu() {
     });
   };
   const handleDelete = async (id) => {
-    const confirmed = window.confirm(
+    const confirmed = await confirmAction(
       "Are you sure you want to delete this menu item?"
     );
     if (!confirmed) return;

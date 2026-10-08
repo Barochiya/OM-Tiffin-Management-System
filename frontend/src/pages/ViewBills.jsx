@@ -1,6 +1,7 @@
+import { notify } from "../services/notifications";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAllBills } from "../services/billService";
+import { getAllBills, downloadBillPdf, sendBillWhatsApp } from "../services/billService";
 import {
   FaEye,
   FaDownload,
@@ -35,7 +36,7 @@ export default function ViewBills() {
     } catch (error) {
       console.error(error);
 
-      alert(
+      notify(
         error.response?.data?.message ||
           "Failed to load bills."
       );
@@ -44,38 +45,52 @@ export default function ViewBills() {
     }
   };
 
-  const handleDownload = (billId) => {
-  window.open(
-    `/view-bills/${billId}`,
-    "_blank"
-  );
-};
+  const [busyBillId, setBusyBillId] = useState(null);
 
-const handlePrint = (billId) => {
-  const printWindow = window.open(
-    `/view-bills/${billId}`,
-    "_blank"
-  );
-
-  const checkLoaded = setInterval(() => {
-    if (
-      printWindow &&
-      printWindow.document &&
-      printWindow.document.readyState === "complete"
-    ) {
-      clearInterval(checkLoaded);
-
-      setTimeout(() => {
-        printWindow.focus();
-        printWindow.print();
-      }, 1000);
+  const handleDownload = async (billId) => {
+    if (busyBillId) return;
+    setBusyBillId(billId);
+    try {
+      const response = await downloadBillPdf(billId);
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement("a");
+      const bill = bills.find((item) => item._id === billId);
+      link.href = url;
+      link.download = `OM-Tiffin-${bill?.invoiceNo || billId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      notify(error.response?.data?.message || "Failed to download bill PDF.");
+    } finally {
+      setBusyBillId(null);
     }
-  }, 500);
-};
+  };
 
-const handleWhatsApp = (billId) => {
-  navigate(`/view-bills/${billId}`);
-};
+  const handlePrint = (billId) => {
+    const printWindow = window.open(`/view-bills/${billId}?print=true`, "_blank");
+    if (!printWindow) notify("Please allow pop-ups to print this bill.");
+  };
+
+  const handleWhatsApp = async (billId) => {
+    if (busyBillId) return;
+    setBusyBillId(billId);
+    try {
+      const response = await downloadBillPdf(billId);
+      const formData = new FormData();
+      formData.append("billId", billId);
+      formData.append("pdf", response.data, `OM-Tiffin-${billId}.pdf`);
+      const result = await sendBillWhatsApp(formData);
+      if (!result.success) throw new Error(result.message || "Failed to send bill.");
+      notify(result.message || "Bill sent on WhatsApp successfully.");
+      await loadBills();
+    } catch (error) {
+      notify(error.response?.data?.message || error.message || "Failed to send bill.");
+    } finally {
+      setBusyBillId(null);
+    }
+  };
 
   if (loading) {
     return (
@@ -239,6 +254,7 @@ const handleWhatsApp = (billId) => {
       <td className="p-4">
   <div className="grid grid-cols-2 gap-3 w-full max-w-[300px] mx-auto">
     <button
+      disabled={busyBillId !== null}
       onClick={() =>
         navigate(`/view-bills/${bill._id}`)
       }
@@ -250,6 +266,7 @@ const handleWhatsApp = (billId) => {
     </button>
 
     <button
+      disabled={busyBillId !== null}
       onClick={() =>
         handleDownload(bill._id)
       }
@@ -261,6 +278,7 @@ const handleWhatsApp = (billId) => {
     </button>
 
     <button
+      disabled={busyBillId !== null}
       onClick={() =>
         handlePrint(bill._id)
       }
@@ -272,6 +290,7 @@ const handleWhatsApp = (billId) => {
     </button>
 
     <button
+      disabled={busyBillId !== null}
       onClick={() =>
         handleWhatsApp(bill._id)
       }
@@ -356,6 +375,7 @@ const handleWhatsApp = (billId) => {
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <button
+                    disabled={busyBillId !== null}
                     onClick={() => navigate(`/view-bills/${bill._id}`)}
                     className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-3 text-sm font-semibold text-white"
                   >
@@ -363,6 +383,7 @@ const handleWhatsApp = (billId) => {
                     <span>View</span>
                   </button>
                   <button
+                    disabled={busyBillId !== null}
                     onClick={() => handleDownload(bill._id)}
                     className="flex items-center justify-center gap-2 rounded-xl bg-green-600 px-3 py-3 text-sm font-semibold text-white"
                   >
@@ -370,6 +391,7 @@ const handleWhatsApp = (billId) => {
                     <span>Download</span>
                   </button>
                   <button
+                    disabled={busyBillId !== null}
                     onClick={() => handlePrint(bill._id)}
                     className="flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-3 py-3 text-sm font-semibold text-white"
                   >
@@ -377,6 +399,7 @@ const handleWhatsApp = (billId) => {
                     <span>Print</span>
                   </button>
                   <button
+                    disabled={busyBillId !== null}
                     onClick={() => handleWhatsApp(bill._id)}
                     className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-3 text-sm font-semibold text-white"
                   >

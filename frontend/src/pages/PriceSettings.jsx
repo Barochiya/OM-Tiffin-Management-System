@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -20,7 +21,9 @@ export default function PriceSettings() {
     dinner: 90,
   });
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [pricesLoaded, setPricesLoaded] = useState(false);
+  const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
@@ -30,18 +33,24 @@ export default function PriceSettings() {
   const loadPrices = async () => {
     try {
       setLoading(true);
+      setPricesLoaded(false);
+      setError("");
 
       const res = await getPrices();
 
-      if (res.data?.data) {
+      if (res.data) {
         setPrices({
-          breakfast: res.data.data.breakfast,
-          lunch: res.data.data.lunch,
-          dinner: res.data.data.dinner,
+          breakfast: res.data.breakfast,
+          lunch: res.data.lunch,
+          dinner: res.data.dinner,
         });
+        setPricesLoaded(true);
+      } else {
+        throw new Error("Unable to load current prices.");
       }
     } catch (err) {
       console.log(err);
+      setError(err.response?.data?.message || "Unable to load current prices. Please retry before saving.");
     } finally {
       setLoading(false);
     }
@@ -80,6 +89,7 @@ export default function PriceSettings() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!pricesLoaded || loading) return;
 
     try {
       setLoading(true);
@@ -94,7 +104,7 @@ export default function PriceSettings() {
     } catch (error) {
       console.log(error);
 
-      alert(
+      notify(
         error.response?.data?.message ||
         "Failed to Update Prices"
       );
@@ -161,6 +171,13 @@ export default function PriceSettings() {
         {/* Price Form */}
         <div className="bg-white rounded-2xl shadow-lg p-5 sm:p-6 lg:p-8">
 
+          {error && (
+            <div role="alert" className="mb-5 rounded-xl bg-red-50 p-4 text-red-700">
+              {error}
+              <button type="button" onClick={loadPrices} disabled={loading} className="ml-3 font-bold underline">Retry</button>
+            </div>
+          )}
+
           <form
             onSubmit={handleSubmit}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
@@ -216,9 +233,9 @@ export default function PriceSettings() {
 
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !pricesLoaded}
                 className={`w-full py-4 rounded-xl text-white font-bold text-lg transition flex justify-center items-center gap-3 ${
-                  loading
+                  loading || !pricesLoaded
                     ? "bg-gray-500 cursor-not-allowed"
                     : saved
                     ? "bg-green-600"

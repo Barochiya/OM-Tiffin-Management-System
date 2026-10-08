@@ -108,7 +108,7 @@ app.use((req, res, next) => {
 // Home Route
 // ===============================
 
-app.get("/", (req, res) => {
+app.get(["/", "/api", "/api/"], (req, res) => {
   res.send("Welcome to OM Tiffin Management System API");
 });
 // ===============================

@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 import { useEffect, useState } from "react";
 import { WalletCards, Smartphone, Clock3, Image, CreditCard, ReceiptText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -207,7 +208,7 @@ const handleReject = async () => {
       );
     }
 
-    alert(
+    notify(
       "Payment screenshot rejected successfully."
     );
 
@@ -218,7 +219,7 @@ const handleReject = async () => {
       error
     );
 
-    alert(
+    notify(
       error.response?.data?.message ||
         error.message ||
         "Failed to reject payment."
@@ -230,12 +231,12 @@ const handleReject = async () => {
 
 const handleApprove = async () => {
   if (!selectedBill) {
-    alert("Please select a bill.");
+    notify("Please select a bill.");
     return;
   }
 
   if (!amount || Number(amount) <= 0) {
-    alert("Please enter a valid payment amount.");
+    notify("Please enter a valid payment amount.");
     return;
   }
 
@@ -245,7 +246,7 @@ const handleApprove = async () => {
     );
 
   if (!selectedBillData) {
-    alert("Selected bill not found.");
+    notify("Selected bill not found.");
     return;
   }
 
@@ -253,7 +254,7 @@ const handleApprove = async () => {
     Number(amount) >
     Number(selectedBillData.pendingAmount)
   ) {
-    alert(
+    notify(
       `Amount cannot be greater than pending amount ₹${selectedBillData.pendingAmount}.`
     );
     return;
@@ -284,7 +285,7 @@ const handleApprove = async () => {
       );
     }
 
-    alert(
+    notify(
   "Payment approved successfully. Receipt PDF is being sent on WhatsApp."
 );
 
@@ -300,7 +301,7 @@ navigate(
       error
     );
 
-    alert(
+    notify(
       error.response?.data?.message ||
         error.message ||
         "Failed to approve payment."

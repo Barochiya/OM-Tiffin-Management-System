@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -17,15 +18,15 @@ const CustomerChangePassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFirstLogin && !currentPassword) {
-      alert("Current password is required.");
+      notify("Current password is required.");
       return;
     }
     if (newPassword.length < 8) {
-      alert("New password must be at least 8 characters.");
+      notify("New password must be at least 8 characters.");
       return;
     }
     if (newPassword !== confirmPassword) {
-      alert("New password and confirm password do not match.");
+      notify("New password and confirm password do not match.");
       return;
     }
     try {
@@ -35,12 +36,12 @@ const CustomerChangePassword = () => {
         newPassword,
         confirmPassword
       );
-      alert("Password changed successfully.");
+      notify("Password changed successfully.");
       navigate("/customer/dashboard", {
         replace: true,
       });
     } catch (error) {
-      alert(
+      notify(
         error.response?.data?.message ||
           "Unable to change password."
       );

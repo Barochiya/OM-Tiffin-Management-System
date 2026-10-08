@@ -1,5 +1,7 @@
+import { notify, confirmAction } from "../services/notifications";
 import { useEffect, useMemo, useState } from "react";
 import { getCustomers } from "../services/customerService";
+import { API_BASE_URL } from "../services/apiBaseUrl";
 import {
   Megaphone,
   Bell,
@@ -70,7 +72,7 @@ export default function Announcement() {
       setCustomers(res?.data || []);
     } catch (error) {
       console.error("Failed to load customers:", error);
-      alert(
+      notify(
         error?.response?.data?.message ||
           "Failed to load customers."
       );
@@ -112,61 +114,61 @@ export default function Announcement() {
   const validateForm = () => {
     if (templateType === "custom") {
       if (!form.title.trim()) {
-        alert("Please enter the announcement title.");
+        notify("Please enter the announcement title.");
         return false;
       }
       if (!form.message.trim()) {
-        alert("Please enter the announcement message.");
+        notify("Please enter the announcement message.");
         return false;
       }
     }
     if (templateType === "service") {
       if (!form.message.trim()) {
-        alert("Please enter the service update message.");
+        notify("Please enter the service update message.");
         return false;
       }
     }
     if (templateType === "festival") {
       if (!form.festivalName.trim()) {
-        alert("Please enter the festival name.");
+        notify("Please enter the festival name.");
         return false;
       }
     }
     if (templateType === "holiday") {
       if (!form.holidayDate.trim()) {
-        alert("Please enter the holiday date.");
+        notify("Please enter the holiday date.");
         return false;
       }
       if (!form.reason.trim()) {
-        alert("Please enter the holiday reason.");
+        notify("Please enter the holiday reason.");
         return false;
       }
       if (!form.resumeDate.trim()) {
-        alert("Please enter the resume date.");
+        notify("Please enter the resume date.");
         return false;
       }
     }
     if (templateType === "delay") {
       if (!form.delayReason.trim()) {
-        alert("Please enter the delay reason.");
+        notify("Please enter the delay reason.");
         return false;
       }
       if (!form.expectedTime.trim()) {
-        alert("Please enter the expected delivery time.");
+        notify("Please enter the expected delivery time.");
         return false;
       }
     }
     if (templateType === "menu") {
       if (!form.breakfast.trim()) {
-        alert("Please enter breakfast.");
+        notify("Please enter breakfast.");
         return false;
       }
       if (!form.lunch.trim()) {
-        alert("Please enter lunch.");
+        notify("Please enter lunch.");
         return false;
       }
       if (!form.dinner.trim()) {
-        alert("Please enter dinner.");
+        notify("Please enter dinner.");
         return false;
       }
     }
@@ -215,7 +217,7 @@ export default function Announcement() {
       return;
     }
     if (customersWithPhone.length === 0) {
-      alert(
+      notify(
         "No customers with valid phone numbers were found."
       );
       return;
@@ -224,7 +226,7 @@ export default function Announcement() {
       ANNOUNCEMENT_TYPES.find(
         (item) => item.value === templateType
       );
-    const confirmed = window.confirm(
+    const confirmed = await confirmAction(
       `Send ${selectedType?.label || "announcement"} to ${customersWithPhone.length} customer(s)?`
     );
     if (!confirmed) {
@@ -236,7 +238,7 @@ export default function Announcement() {
         .map((customer) => customer._id)
         .filter(Boolean);
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/announcements/send`,
+        `${API_BASE_URL}/announcements/send`,
         {
           method: "POST",
           headers: {
@@ -278,7 +280,7 @@ export default function Announcement() {
       const total =
         data.data?.totalCustomers ||
         customerIds.length;
-      alert(
+      notify(
         `Announcement Sending Completed!\n\n` +
           `Type: ${selectedType?.label || "Announcement"}\n` +
           `Total Customers: ${total}\n` +
@@ -293,7 +295,7 @@ export default function Announcement() {
         "Announcement error:",
         error
       );
-      alert(
+      notify(
         error?.message ||
           "Something went wrong while sending announcement."
       );

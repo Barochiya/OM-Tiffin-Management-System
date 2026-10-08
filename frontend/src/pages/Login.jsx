@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 ﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { loginAdmin } from "../services/authService";
@@ -54,13 +55,13 @@ const Login = () => {
         data.token
       );
 
-      alert("✅ Login Successful");
+      notify("You are signed in successfully.", { type: "success" });
 
       navigate("/dashboard", {
         replace: true,
       });
     } catch (error) {
-      alert(
+      notify(
         error.response?.data?.message ||
           "Login failed"
       );

@@ -1,6 +1,8 @@
+import { notify } from "../services/notifications";
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import JsBarcode from "jsbarcode";
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+import { API_BASE_URL } from "../services/apiBaseUrl";
+const API_BASE = API_BASE_URL;
 const makeBarcodeValue = (customer) => {
   if (!customer) return "";
   if (customer.barcode) {
@@ -76,7 +78,7 @@ return () => {
       singleBarcodeRef.current.innerHTML = "";
       JsBarcode(
         singleBarcodeRef.current,
-        makeBarcodeValue(customer),
+        resolvedBarcode || makeBarcodeValue(customer),
         {
           format: "CODE128",
           width: 2,
@@ -90,7 +92,7 @@ return () => {
         }
       );
     }
-  }, [customer]);
+  }, [customer, resolvedBarcode]);
   useEffect(() => {
     if (printingAll && activeCustomers.length > 0) {
       const timer = setTimeout(() => {
@@ -120,7 +122,7 @@ return () => clearTimeout(timer);
       "width=900,height=700"
     );
     if (!printWindow) {
-      alert(
+      notify(
         "Please allow pop-ups to print the barcode sticker."
       );
       return;
@@ -298,14 +300,14 @@ return () => clearTimeout(timer);
   const phone = customer?.phone || "";
   const address = customer?.address || "";
   const barcodeValue = customer
-    ? makeBarcodeValue(customer)
+    ? resolvedBarcode || makeBarcodeValue(customer)
     : "";
   const handlePrintSingle = () => {
     window.print();
   };
   const handlePrintAll = async () => {
     if (!activeCustomers.length) {
-      alert("No active customers found.");
+      notify("No active customers found.");
       return;
     }
     const printWindow = window.open(
@@ -314,7 +316,7 @@ return () => clearTimeout(timer);
       "width=1200,height=900"
     );
     if (!printWindow) {
-      alert("Please allow pop-ups for barcode printing.");
+      notify("Please allow pop-ups for barcode printing.");
       return;
     }
     const escapeHtml = (value) =>

@@ -1,3 +1,4 @@
+import { confirmAction } from "../services/notifications";
 import { useEffect, useMemo, useState } from "react";
 import {
   Check,
@@ -136,7 +137,7 @@ export default function WebsiteReviews() {
     }
   };
   const handleDelete = async (id) => {
-    const confirmed = window.confirm(
+    const confirmed = await confirmAction(
       "Are you sure you want to permanently delete this review?"
     );
     if (!confirmed) return;

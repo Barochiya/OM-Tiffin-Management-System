@@ -138,3 +138,7 @@ export const approveWhatsAppPayment = async (
 
   return response.data;
 };
+
+export const downloadPaymentReceiptPdf = async (id) => {
+  return api.get(`/payments/${id}/pdf`, { responseType: "blob" });
+};

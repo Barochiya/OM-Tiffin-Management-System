@@ -13,6 +13,7 @@ const {
   getLatestBill,
   getAllBills,
   getBillById,
+  downloadBillPdf,
   sendBillWhatsApp,
   getBillDeliveryStatus,
   retryFailedBill,
@@ -69,6 +70,8 @@ router.get(
 // =======================================
 // Get Single Bill
 // =======================================
+
+router.get("/:id/pdf", protect, downloadBillPdf);
 
 router.get(
   "/:id",

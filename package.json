@@ -1,5 +1,10 @@
 {
   "dependencies": {
     "react-icons": "^5.7.0"
+  },
+  "scripts": {
+    "test:audit": "node --experimental-vm-modules scripts/audit-regression.cjs",
+    "test:flows": "node --experimental-vm-modules scripts/component-regression.cjs",
+    "test:browser": "node scripts/browser-regression.cjs"
   }
 }

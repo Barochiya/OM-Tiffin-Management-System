@@ -132,3 +132,7 @@ export const getBillById = async (id) => {
 
   return response.data;
 };
+
+export const downloadBillPdf = async (id) => {
+  return api.get(`/bills/${id}/pdf`, { responseType: "blob" });
+};

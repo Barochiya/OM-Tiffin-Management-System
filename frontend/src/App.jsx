@@ -132,6 +132,9 @@ export default function App() {
         element={<BusinessInfo />}
       />
 
+      {/* Existing /admin bookmarks open the protected dashboard. */}
+      <Route path="/admin" element={<Navigate to="/dashboard" replace />} />
+
       {/* Protected Routes */}
       <Route element={<AdminLayout />}>
         <Route

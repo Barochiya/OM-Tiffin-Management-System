@@ -1028,7 +1028,26 @@ await bill.save();
   }
 };
 
+// Download the existing invoice without regenerating or saving its bill.
+const downloadBillPdf = async (req, res) => {
+  try {
+    const bill = await Bill.findById(req.params.id).populate("customer");
+    if (!bill || !bill.customer) {
+      return res.status(404).json({ success: false, message: "Bill or customer not found." });
+    }
+    const pdfBuffer = await generateBillPdf(bill, bill.customer);
+    const invoiceName = String(bill.invoiceNo || bill._id).replace(/[^a-zA-Z0-9_-]/g, "_");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="OM-Tiffin-${invoiceName}.pdf"`);
+    return res.status(200).send(pdfBuffer);
+  } catch (error) {
+    console.error("Download Bill PDF Error:", error);
+    return res.status(500).json({ success: false, message: "Unable to generate bill PDF." });
+  }
+};
+
 module.exports = {
+  downloadBillPdf,
   generateBill,
   generateAllBills,
   getLatestBill,

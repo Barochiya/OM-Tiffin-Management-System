@@ -1,4 +1,4 @@
-﻿import { Outlet } from "react-router-dom";
+﻿import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import Sidebar from "../components/Sidebar";
@@ -9,6 +9,10 @@ export default function AdminLayout() {
     document.title = "OM Tiffin Service - Admin";
   }, []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (!sessionStorage.getItem("token")) {
+    return <Navigate to="/login" replace />;
+  }
 
   return (
     <div className="flex min-h-screen w-full min-w-0 overflow-x-hidden bg-slate-100">

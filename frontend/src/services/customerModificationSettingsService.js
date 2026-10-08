@@ -1,7 +1,7 @@
 ﻿import axios from "axios";
-const API_URL = import.meta.env.VITE_API_URL || "";
+import { API_BASE_URL } from "./apiBaseUrl";
 const modificationSettingsApi = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: API_BASE_URL,
 });
 modificationSettingsApi.interceptors.request.use((config) => {
   const token = sessionStorage.getItem("token");

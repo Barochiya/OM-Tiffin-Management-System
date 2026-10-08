@@ -1,6 +1,7 @@
 import axios from "axios";
+import { API_BASE_URL } from "./apiBaseUrl";
 const customerModificationApi = axios.create({
-  baseURL: `${(import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/+$/, "")}/api`,
+  baseURL: API_BASE_URL,
 });
 customerModificationApi.interceptors.request.use((config) => {
   const token = sessionStorage.getItem("customerToken");

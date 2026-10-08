@@ -1,3 +1,4 @@
+import { confirmAction } from "../services/notifications";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   AlertCircle,
@@ -216,7 +217,7 @@ const CustomerLoginIdSender = () => {
       );
       return;
     }
-    const confirmed = window.confirm(
+    const confirmed = await confirmAction(
       `Send Customer Login ID WhatsApp message to ${selectedReadyCustomers.length} selected customer(s)?`
     );
     if (!confirmed) {

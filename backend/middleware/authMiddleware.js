@@ -26,6 +26,13 @@ const protect = async (req, res, next) => {
           decoded.id
         ).select("-password");
 
+      if (!req.admin) {
+        return res.status(401).json({
+          success: false,
+          message: "Admin account not found",
+        });
+      }
+
       return next();
     }
 

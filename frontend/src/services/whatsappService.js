@@ -1,3 +1,4 @@
+import { notify } from "./notifications";
 export const sendReceiptWhatsApp = (payment) => {
 
   if (!payment) return;
@@ -7,7 +8,7 @@ export const sendReceiptWhatsApp = (payment) => {
 
   if (!phone) {
 
-    alert("Customer phone number not found.");
+    notify("Customer phone number not found.");
 
     return;
 
@@ -53,7 +54,7 @@ export const sendInvoiceWhatsApp = (bill) => {
 
   if (!phone) {
 
-    alert("Customer phone number not found.");
+    notify("Customer phone number not found.");
 
     return;
 

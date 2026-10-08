@@ -1,3 +1,4 @@
+import { notify, confirmAction } from "../services/notifications";
 ﻿import React, { useEffect, useMemo, useRef, useState } from "react";
 import CustomerBarcodeModal from "../components/CustomerBarcodeModal";
 import { Link } from "react-router-dom";
@@ -89,7 +90,7 @@ export default function Customers() {
       setCustomers(res.data || []);
     } catch (error) {
       console.error("Load customers error:", error);
-      alert(
+      notify(
         error.response?.data?.message ||
           "Failed to load customers"
       );
@@ -101,7 +102,7 @@ export default function Customers() {
   }, []);
 
   const handleDelete = async (id, customerName) => {
-    const confirmed = window.confirm(
+    const confirmed = await confirmAction(
       `Are you sure you want to delete "${customerName}"?\n\nThis action cannot be undone.`
     );
 
@@ -116,11 +117,11 @@ export default function Customers() {
         prev.filter((customer) => customer._id !== id)
       );
 
-      alert("Customer deleted successfully.");
+      notify("Customer deleted successfully.");
     } catch (error) {
       console.error("Delete customer error:", error);
 
-      alert(
+      notify(
         error.response?.data?.message ||
           error.response?.data?.error ||
           "Failed to delete customer."
@@ -131,7 +132,7 @@ export default function Customers() {
   };
 
   const handlePayment = async (id, customerName) => {
-    const confirmed = window.confirm(
+    const confirmed = await confirmAction(
       `Mark payment as PAID for "${customerName}"?`
     );
 
@@ -154,11 +155,11 @@ export default function Customers() {
         )
       );
 
-      alert("Payment marked as Paid.");
+      notify("Payment marked as Paid.");
     } catch (error) {
       console.error("Payment update error:", error);
 
-      alert(
+      notify(
         error.response?.data?.message ||
           "Failed to update payment."
       );
@@ -171,7 +172,7 @@ export default function Customers() {
     const phone = customer.phone?.replace(/\D/g, "");
 
     if (!phone) {
-      alert("Customer phone number not found.");
+      notify("Customer phone number not found.");
       return;
     }
 
@@ -195,11 +196,11 @@ How can we help you today?`;
   );
 
   if (pendingCustomers.length === 0) {
-    alert("No pending payment customers found.");
+    notify("No pending payment customers found.");
     return;
   }
 
-  const confirmed = window.confirm(
+  const confirmed = await confirmAction(
     `Send payment reminder to ${pendingCustomers.length} pending customer(s)?`
   );
 
@@ -211,7 +212,7 @@ How can we help you today?`;
 
     const result = response?.data || {};
 
-    alert(
+    notify(
       `Payment reminders completed.\n\n` +
         `Pending Customers: ${
           result.pendingCustomers ?? 0
@@ -226,7 +227,7 @@ How can we help you today?`;
       error
     );
 
-    alert(
+    notify(
       error.response?.data?.message ||
         error.message ||
         "Failed to send payment reminders."

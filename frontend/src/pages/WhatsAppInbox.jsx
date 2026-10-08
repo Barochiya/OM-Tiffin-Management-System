@@ -1,3 +1,4 @@
+import { notify, confirmAction } from "../services/notifications";
 import { useEffect, useState } from "react";
 import { Image, Inbox, RefreshCw, MessageSquare, Smartphone, WalletCards, Trash2, Paperclip } from "lucide-react";
 
@@ -177,7 +178,7 @@ const [replySending, setReplySending] = useState({});
 };
 
   const handleDeleteMessage = async (id) => {
-  const confirmed = window.confirm(
+  const confirmed = await confirmAction(
     "Are you sure you want to delete this WhatsApp message?"
   );
 
@@ -195,7 +196,7 @@ const [replySending, setReplySending] = useState({});
       error
     );
 
-    alert(
+    notify(
       error.response?.data?.message ||
         "Failed to delete WhatsApp message."
     );
@@ -228,7 +229,7 @@ const handleReply = async (id) => {
   const message = replyText[id]?.trim();
 
   if (!message) {
-    alert("Please enter a message.");
+    notify("Please enter a message.");
     return;
   }
 
@@ -258,7 +259,7 @@ const handleReply = async (id) => {
 
     await loadMessages();
 
-    alert(
+    notify(
       "WhatsApp reply sent successfully."
     );
   } catch (error) {
@@ -267,7 +268,7 @@ const handleReply = async (id) => {
       error
     );
 
-    alert(
+    notify(
       error.response?.data?.message ||
         error.message ||
         "Failed to send WhatsApp reply."
@@ -410,7 +411,7 @@ const handleReply = async (id) => {
       replyText[item._id]?.trim();
 
     if (!text) {
-      alert("Please enter a message.");
+      notify("Please enter a message.");
       return;
     }
 

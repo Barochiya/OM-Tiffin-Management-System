@@ -39,19 +39,19 @@ const generateBillPdf = async (bill, customer) => {
       const BOTTOM_SAFE = PAGE_HEIGHT - 48;
       const colors = {
         primary: "#1d4ed8",
-        primaryDark: "#1e40af",
-        text: "#111827",
+        primaryDark: "#0f172a",
+        text: "#0f172a",
         muted: "#6b7280",
-        border: "#d1d5db",
+        border: "#e2e8f0",
         borderLight: "#e5e7eb",
         green: "#15803d",
-        greenBg: "#f0fdf4",
-        blueBg: "#eff6ff",
+        greenBg: "#f8fafc",
+        blueBg: "#f8fafc",
         red: "#dc2626",
-        yellowBg: "#fffbeb",
-        yellowBorder: "#fcd34d",
+        yellowBg: "#f8fafc",
+        yellowBorder: "#e2e8f0",
         white: "#ffffff",
-        tableHeader: "#1d4ed8",
+        tableHeader: "#0f172a",
         tableAlt: "#f8fafc",
       };
       // =========================================================
@@ -216,7 +216,8 @@ const generateBillPdf = async (bill, customer) => {
       // HEADER
       // =========================================================
       const drawHeader = () => {
-        const startY = 36;
+        const startY = 44;
+        doc.rect(LEFT, 30, CONTENT_WIDTH, 4).fill(colors.primary);
         if (fs.existsSync(LOGO_PATH)) {
           try {
             doc.image(LOGO_PATH, LEFT, startY, {
@@ -234,7 +235,7 @@ const generateBillPdf = async (bill, customer) => {
         const headerX = LEFT + 76;
         doc
           .font("Helvetica-Bold")
-          .fontSize(22)
+          .fontSize(19)
           .fillColor(colors.primary)
           .text(
             "OM TIFFIN SERVICE",
@@ -478,7 +479,7 @@ const generateBillPdf = async (bill, customer) => {
                 x + column.width,
                 y + headerHeight
               )
-              .strokeColor("#93c5fd")
+              .strokeColor("#334155")
               .lineWidth(0.6)
               .stroke();
           }
@@ -487,7 +488,7 @@ const generateBillPdf = async (bill, customer) => {
         // Outer border.
         doc
           .rect(LEFT, y, CONTENT_WIDTH, headerHeight)
-          .strokeColor("#1e40af")
+          .strokeColor("#0f172a")
           .lineWidth(0.8)
           .stroke();
         doc.y = y + headerHeight;

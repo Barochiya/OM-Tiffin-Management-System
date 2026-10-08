@@ -1,3 +1,4 @@
+import { getBusinessDate } from "../utils/businessDate";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -23,7 +24,7 @@ export default function OrderDetails() {
     mobileNumber: "",
     email: "",
     deliveryAddress: "",
-    orderDate: new Date().toISOString().split("T")[0],
+    orderDate: getBusinessDate(),
     specialInstructions: "",
   });
   const [orderSubmitting, setOrderSubmitting] = useState(false);

@@ -1,3 +1,5 @@
+import { notify } from "../services/notifications";
+import { getBusinessDate } from "../utils/businessDate";
 import { useEffect, useState } from "react";
 
 import {
@@ -25,7 +27,7 @@ export default function DailyEntry() {
   // =========================================
 
   const [date, setDate] = useState(
-    new Date().toISOString().split("T")[0]
+    getBusinessDate()
   );
 
   const [customers, setCustomers] = useState([]);
@@ -86,7 +88,7 @@ const [search, setSearch] = useState("");
     } catch (err) {
       console.error("Daily Entry Load Error:", err);
 
-      alert(
+      notify(
         err?.response?.data?.message ||
           "Failed to load daily entries."
       );
@@ -302,7 +304,7 @@ const handleSaveCustomer = async (customerId) => {
       error
     );
 
-    alert(
+    notify(
       error?.response?.data?.message ||
         "Failed to save customer entry. Please try again."
     );
@@ -321,7 +323,7 @@ const handleSaveCustomer = async (customerId) => {
       .filter((customerId) => dirtyRows[customerId]);
 
     if (dirtyCustomerIds.length === 0) {
-      alert("No changes to save.");
+      notify("No changes to save.");
       return;
     }
 
@@ -372,7 +374,7 @@ const handleSaveCustomer = async (customerId) => {
         error
       );
 
-      alert(
+      notify(
         error?.response?.data?.message ||
           "Failed to save all entries. Please try again."
       );

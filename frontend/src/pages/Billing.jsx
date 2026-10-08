@@ -1,3 +1,4 @@
+import { notify, confirmAction } from "../services/notifications";
 import { useEffect, useState, useRef } from "react";
 import QRCode from "react-qr-code";
 import { useReactToPrint } from "react-to-print";
@@ -110,7 +111,7 @@ const [totalCustomers, setTotalCustomers] = useState(0);
 
 const handleGenerate = async () => {
   if (!customer) {
-    alert("Please Select Customer");
+    notify("Please Select Customer");
     return;
   }
 
@@ -153,13 +154,13 @@ const pdfBlob = await createBulkPdf(
 
     await sendBillWhatsApp(formData);
 
-    alert(
+    notify(
       "✅ Bill generated and sent to WhatsApp successfully."
     );
   } catch (error) {
     console.error(error);
 
-    alert(
+    notify(
       error.response?.data?.message ||
       error.message ||
       "Failed to generate bill."
@@ -174,7 +175,7 @@ const pdfBlob = await createBulkPdf(
 // =====================================
 
 const handleGenerateAllBills = async () => {
-  const confirmGenerate = window.confirm(
+  const confirmGenerate = await confirmAction(
     "Generate bills for all active customers?"
   );
 
@@ -187,7 +188,7 @@ const handleGenerateAllBills = async () => {
   );
 
   if (activeCustomers.length === 0) {
-    alert("No active customers found.");
+    notify("No active customers found.");
     return;
   }
 
@@ -244,7 +245,7 @@ await new Promise((resolve) =>
   setTimeout(resolve, 500)
 );
 
-const sendWhatsApp = window.confirm(
+const sendWhatsApp = await confirmAction(
   "All bills generated successfully.\n\nSend all bills to WhatsApp?"
 );
 
@@ -294,7 +295,7 @@ for (const currentCustomer of activeCustomers) {
   }
 }
 
-alert(
+notify(
   `WhatsApp bills sent successfully.\n\nSuccess: ${successCount}\nFailed: ${failedCount}`
 );
 
@@ -303,20 +304,20 @@ alert(
     );
 
     if (failedCustomersList.length > 0) {
-      alert(
+      notify(
         `Completed.\n\nFailed Customers:\n${failedCustomersList.join(
           "\n"
         )}`
       );
     } else {
-      alert("All bills generated successfully.");
+      notify("All bills generated successfully.");
     }
   } catch (error) {
     console.error(error);
 
     setBulkGenerating(false);
 
-    alert("Failed to generate bills.");
+    notify("Failed to generate bills.");
   }
 };
     // =====================================
@@ -478,18 +479,18 @@ const handleDownloadPdf = async () => {
   } catch (error) {
     console.error("PDF Download Error:", error);
 
-    alert("Failed to create PDF.");
+    notify("Failed to create PDF.");
   }
 };
 
 const handleSendBillWhatsApp = async () => {
   if (!bill?._id) {
-    alert("Please generate the bill first.");
+    notify("Please generate the bill first.");
     return;
   }
 
   if (!customerData?.phone) {
-    alert("Customer phone number not found.");
+    notify("Customer phone number not found.");
     return;
   }
 
@@ -516,7 +517,7 @@ const handleSendBillWhatsApp = async () => {
 
 setActionsCompleted(true);
 
-alert(
+notify(
   result?.message ||
   "Bill PDF sent successfully on WhatsApp."
 );
@@ -526,7 +527,7 @@ alert(
       error
     );
 
-    alert(
+    notify(
       error.response?.data?.message ||
       error.message ||
       "Failed to send bill on WhatsApp."
@@ -544,7 +545,7 @@ const handleWhatsAppShare = () => {
     bill?.customer?.phone;
 
   if (!phone) {
-    alert("Customer phone number not found.");
+    notify("Customer phone number not found.");
     return;
   }
 
@@ -907,6 +908,14 @@ setActionsCompleted(true);
 </div>
 
         </div>
+
+        {bill && (
+          <div className="my-5 flex flex-wrap gap-3 print:hidden">
+            <button type="button" onClick={handlePrint} disabled={generatingBill || bulkGenerating} className="rounded-xl border border-blue-200 bg-white px-5 py-3 font-bold text-blue-700 hover:bg-blue-50">Print Invoice</button>
+            <button type="button" onClick={handleDownloadPdf} disabled={generatingBill || bulkGenerating} className="rounded-xl bg-blue-700 px-5 py-3 font-bold text-white hover:bg-blue-800">Download PDF</button>
+            <button type="button" onClick={handleSendBillWhatsApp} disabled={sendingBill || generatingBill || bulkGenerating} className="rounded-xl bg-green-700 px-5 py-3 font-bold text-white hover:bg-green-800 disabled:opacity-60">{sendingBill ? "Sending..." : "Send Invoice PDF"}</button>
+          </div>
+        )}
 
         {/* Invoice */}
                 {bill && (

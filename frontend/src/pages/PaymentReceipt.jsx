@@ -1,5 +1,6 @@
+import { notify } from "../services/notifications";
 import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import {
   useParams,
   useLocation,
@@ -20,7 +21,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 
-import html2pdf from "html2pdf.js";
+
 
 
 
@@ -28,6 +29,7 @@ import logo from "../assets/logo.png";
 
 import {
   getPaymentById,
+  downloadPaymentReceiptPdf,
   sendPaymentReceiptWhatsApp,
 } from "../services/paymentService";
 
@@ -53,13 +55,8 @@ const autoSend =
   
    const autoSendStarted = useRef(false);
 
-  useEffect(() => {
-
-    loadPayment();
-
-  }, []);
-
-  const loadPayment = async () => {
+  const loadPayment = useCallback(async () => {
+    setPayment(null);
 
     try {
 
@@ -79,7 +76,15 @@ const autoSend =
 
     }
 
-  };
+  }, [id]);
+
+  useEffect(() => { loadPayment(); }, [loadPayment]);
+
+  const createReceiptPdf = useCallback(async () => {
+    if (!payment?._id) throw new Error("Payment receipt is not ready.");
+    const response = await downloadPaymentReceiptPdf(payment._id);
+    return response.data;
+  }, [payment?._id]);
 
     // =======================================
   // Automatically Send Receipt PDF
@@ -89,7 +94,8 @@ const autoSend =
    if (
   !payment ||
   !receiptRef.current ||
-  autoSendStarted.current ||
+  autoSendStarted.current === String(payment._id) ||
+  String(payment._id) !== id ||
   !autoSend
 ) {
   return;
@@ -97,7 +103,7 @@ const autoSend =
 
    const timer = setTimeout(async () => {
      try {
-       autoSendStarted.current = true;
+       autoSendStarted.current = String(payment._id);
 
        setSendingWhatsApp(true);
 
@@ -117,13 +123,14 @@ const autoSend =
         "Auto PDF Send Error:",
         error
       );
+      notify(error.response?.data?.message || "Receipt was saved, but automatic WhatsApp delivery failed. Use Send Receipt PDF to retry.", { type: "error" });
     } finally {
       setSendingWhatsApp(false);
      }
    }, 1000);
 
    return () => clearTimeout(timer);
- }, [payment]);
+ }, [payment, autoSend, createReceiptPdf, id]);
 
   if (loading) {
 
@@ -169,7 +176,7 @@ const autoSend =
 
   }
 
-  const receiptNo = payment._id
+  const receiptNo = payment.receiptNo || payment._id
   .toString()
   .slice(-6)
   .toUpperCase();
@@ -192,61 +199,26 @@ const autoSend =
 
       ? "Card"
 
-      : "Razorpay";
+      : payment.paymentMethod || "-";
 
       // =======================================
 // Generate Payment Receipt PDF
 // =======================================
 
-const getReceiptPdfOptions = () => ({
-  margin: 6,
-
-  filename: `OM-Tiffin-Payment-Receipt-${
-    receiptNo || payment?._id || "Receipt"
-  }.pdf`,
-
-  image: {
-    type: "jpeg",
-    quality: 0.96,
-  },
-
-  html2canvas: {
-  scale: 1.5,
-  useCORS: true,
-  logging: false,
-  letterRendering: true,
-},
-
-  jsPDF: {
-    unit: "mm",
-    format: "a4",
-    orientation: "portrait",
-  },
-
-  pagebreak: {
-    mode: ["css", "legacy"],
-  },
-
-  ignoreElements: (element) =>
-    element.classList?.contains("no-pdf"),
-});
-
-const createReceiptPdf = async () => {
-  if (!payment || !receiptRef.current) {
-    throw new Error(
-      "Payment receipt is not ready."
-    );
+const handleDownloadReceipt = async () => {
+  try {
+    const blob = await createReceiptPdf();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `OM-Tiffin-Payment-Receipt-${receiptNo}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    notify(error.response?.data?.message || "Unable to download receipt PDF.", { type: "error" });
   }
-
-  await new Promise((resolve) =>
-    setTimeout(resolve, 2000)
-  );
-
-  return html2pdf()
-    .set(getReceiptPdfOptions())
-    .from(receiptRef.current)
-    .toPdf()
-    .outputPdf("blob");
 };
 
 // =======================================
@@ -255,7 +227,7 @@ const createReceiptPdf = async () => {
 
 const handleSendReceiptWhatsApp = async () => {
   if (!payment?._id) {
-    alert("Payment receipt is not ready.");
+    notify("Payment receipt is not ready.");
     return;
   }
 
@@ -270,7 +242,7 @@ const handleSendReceiptWhatsApp = async () => {
         pdfBlob
       );
 
-    alert(
+    notify(
       result?.message ||
         "Payment receipt PDF sent successfully on WhatsApp."
     );
@@ -280,7 +252,7 @@ const handleSendReceiptWhatsApp = async () => {
       error
     );
 
-    alert(
+    notify(
       error.response?.data?.message ||
         error.message ||
         "Failed to send payment receipt on WhatsApp."
@@ -758,21 +730,7 @@ const handleSendReceiptWhatsApp = async () => {
 </button>
 
 <button
-  onClick={async () => {
-    try {
-      await html2pdf()
-        .set(getReceiptPdfOptions())
-        .from(receiptRef.current)
-        .save();
-    } catch (error) {
-      console.error(
-        "Receipt PDF Error:",
-        error
-      );
-
-      alert("Failed to create receipt PDF.");
-    }
-  }}
+  onClick={handleDownloadReceipt}
   className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl transition"
 >
   <FaFilePdf />

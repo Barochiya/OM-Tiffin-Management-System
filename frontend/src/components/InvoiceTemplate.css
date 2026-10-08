@@ -1,0 +1,28 @@
+/* Presentation only: invoice amounts and billing rules stay in their existing sources. */
+.invoice-document{border:1px solid #e2e8f0;border-top:6px solid #1d4ed8;border-radius:16px;color:#0f172a;font-variant-numeric:tabular-nums;box-shadow:0 16px 48px #0f172a0d}
+.invoice-document .invoice-brand{text-align:left;position:relative;padding-left:86px;min-height:85px;border-color:#e2e8f0}
+.invoice-logo{position:absolute;left:0;top:0;width:64px;height:64px;object-fit:contain}
+.invoice-document h1{font-size:clamp(22px,3vw,32px);font-weight:800;letter-spacing:-.8px;line-height:1.2;color:#0f172a}
+.invoice-brand>p{font-size:11px;letter-spacing:2px;font-weight:600;color:#64748b}
+.invoice-document h2{font-size:15px;letter-spacing:.1px;color:#334155}
+.invoice-document .bg-slate-50{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px}
+.invoice-document .bg-slate-50 p{font-size:14px;line-height:1.8;overflow-wrap:anywhere}
+.invoice-document .bg-slate-50 strong{color:#64748b;font-weight:500}
+.invoice-document .grid-cols-2>div:not(.bg-slate-50){background:#fff;border:1px solid #e2e8f0;border-radius:10px}
+.invoice-document .grid-cols-2>div>p:first-child{font-size:11px;color:#64748b;font-weight:600}
+.invoice-document .grid-cols-2>div>p:last-child{font-size:24px;color:#0f172a;margin-top:8px}
+.invoice-document thead{background:#0f172a;color:#fff}
+.invoice-document th{font-size:11px;font-weight:600;text-align:right;padding:13px 12px}
+.invoice-document td{font-size:12px;text-align:right;padding:13px 12px;border-color:#e2e8f0}
+.invoice-document th:first-child,.invoice-document td:first-child{text-align:left}
+.invoice-document tbody tr:nth-child(even){background:#f8fafc}
+.invoice-document td:last-child{font-weight:700;color:#0f172a}
+.invoice-document .invoice-payment{background:#0f172a;color:#fff;border:0}
+.invoice-document .invoice-payment h2{color:#fff}
+.invoice-document .invoice-payment strong{color:#cbd5e1}
+.invoice-payment .space-y-3>p{display:flex;justify-content:space-between;gap:16px}
+.invoice-payment .space-y-3>p:nth-child(3){padding-top:12px;border-top:1px solid #334155;font-size:18px;font-weight:700}
+.invoice-footer{display:flex;flex-direction:column;gap:5px;padding-top:24px;margin-top:24px;border-top:1px solid #e2e8f0;font-size:11px;color:#64748b}
+.invoice-footer strong{font-weight:600;color:#334155}
+@media(max-width:480px){.invoice-document .invoice-brand{padding-left:62px}.invoice-logo{width:48px;height:48px}.invoice-document h1{font-size:21px}.invoice-payment .space-y-3>p{font-size:12px}}
+@media print{.invoice-document{border:0!important;color:#0f172a;print-color-adjust:exact;-webkit-print-color-adjust:exact}.invoice-document .overflow-x-auto{overflow:visible!important}.invoice-document table{min-width:0!important;table-layout:fixed}.invoice-document th,.invoice-document td{white-space:normal!important;overflow-wrap:anywhere;font-size:9px;padding:8px 6px}.invoice-document thead{display:table-header-group}.invoice-document tr,.invoice-payment,.invoice-footer{break-inside:avoid}.invoice-document .md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.invoice-document .md\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.invoice-document .invoice-brand{margin-bottom:18px;padding-bottom:14px}}

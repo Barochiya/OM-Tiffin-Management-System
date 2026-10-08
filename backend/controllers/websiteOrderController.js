@@ -37,12 +37,12 @@ const createWebsiteOrder = async (req, res) => {
         message: "At least one menu item is required.",
       });
     }
-    const menuIds = items.map((item) => item.menuItemId);
+    const menuIds = [...new Set(items.map((item) => String(item.menuItemId)))];
     const menuItems = await WebsiteMenu.find({
       _id: { $in: menuIds },
       isAvailable: true,
     });
-    if (menuItems.length !== items.length) {
+    if (menuItems.length !== menuIds.length) {
       return res.status(400).json({
         success: false,
         message: "One or more selected menu items are unavailable.",

@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 ﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -47,7 +48,7 @@ const CustomerLogin = () => {
         });
       }
     } catch (error) {
-      alert(
+      notify(
         error.response?.data?.message ||
           "Customer login failed"
       );

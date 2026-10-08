@@ -1,3 +1,5 @@
+import { notify } from "../services/notifications";
+import { getBusinessDate } from "../utils/businessDate";
 import React, { useEffect, useRef, useState } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import {
@@ -20,9 +22,8 @@ import {
 } from "react-icons/fa";
 import { saveDailyEntry, getEntriesByDate } from "../services/dailyEntryService";
 import CustomerBarcodeModal from "../components/CustomerBarcodeModal";
-const API_BASE = (
-  import.meta.env.VITE_API_URL || "http://localhost:5000"
-).replace(/\/+$/, "") + "/api";const getDateKey = (value) => {
+import { API_BASE_URL } from "../services/apiBaseUrl";
+const API_BASE = API_BASE_URL;const getDateKey = (value) => {
   if (!value) return "";
   return new Date(value).toISOString().split("T")[0];
 };
@@ -49,7 +50,7 @@ const mealQuantitiesRef = useRef({
   const [extraItems, setExtraItems] = useState([]);
   const [remark, setRemark] = useState("");
   const [date, setDate] = useState(
-    new Date().toISOString().split("T")[0]
+    getBusinessDate()
   );
   const [scannerActive, setScannerActive] = useState(false);
   const [hardwareScannerActive, setHardwareScannerActive] = useState(false);
@@ -161,7 +162,7 @@ const [saved, setSaved] = useState(false);
       "Load active barcode customers error:",
       error
     );
-    alert(
+    notify(
       error?.message ||
         "Unable to load active customer barcodes."
     );

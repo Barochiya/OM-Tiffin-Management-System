@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 ﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -16,7 +17,7 @@ const CustomerForgotUserId = () => {
     e.preventDefault();
     const cleanPhone = phone.replace(/\D/g, "");
     if (!/^[6-9]\d{9}$/.test(cleanPhone)) {
-      alert("Please enter a valid 10-digit WhatsApp number.");
+      notify("Please enter a valid 10-digit WhatsApp number.");
       return;
     }
     try {
@@ -24,9 +25,9 @@ const CustomerForgotUserId = () => {
       await sendCustomerUserIdRecoveryOtp(cleanPhone);
       setPhone(cleanPhone);
       setStep(2);
-      alert("OTP sent to your registered WhatsApp number.");
+      notify("OTP sent to your registered WhatsApp number.");
     } catch (error) {
-      alert(
+      notify(
         error.response?.data?.message ||
           "Unable to send OTP"
       );
@@ -37,7 +38,7 @@ const CustomerForgotUserId = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     if (!/^\d{6}$/.test(otp.trim())) {
-      alert("Please enter a valid 6-digit OTP.");
+      notify("Please enter a valid 6-digit OTP.");
       return;
     }
     try {
@@ -50,7 +51,7 @@ const CustomerForgotUserId = () => {
       setUserId(data.userId || "");
       setStep(3);
     } catch (error) {
-      alert(
+      notify(
         error.response?.data?.message ||
           "OTP verification failed"
       );

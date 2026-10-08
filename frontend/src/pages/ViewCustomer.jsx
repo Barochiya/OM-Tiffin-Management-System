@@ -1,3 +1,4 @@
+import { notify } from "../services/notifications";
 ﻿import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
@@ -243,7 +244,7 @@ setDailyEntries(generatedEntries);
       error
     );
 
-    alert(
+    notify(
       error?.response?.data?.message ||
         "Failed to load daily meal entries."
     );
@@ -432,7 +433,7 @@ const handleSaveDailyEntry = async (entryId) => {
       error
     );
 
-    alert(
+    notify(
       error?.response?.data?.message ||
         "Failed to save daily entry."
     );
@@ -450,7 +451,7 @@ const handleSaveDailyEntry = async (entryId) => {
     } catch (error) {
       console.error("Load customer error:", error);
 
-      alert(
+      notify(
         error.response?.data?.message ||
           "⚠ Failed to load customer"
       );

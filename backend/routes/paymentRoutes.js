@@ -63,6 +63,8 @@ router.post(
   paymentController.approveWhatsAppPayment
 );
 
+router.get("/:id/pdf", protect, paymentController.downloadPaymentReceiptPdf);
+
 // Get Single Payment
 router.get(
   "/:id",

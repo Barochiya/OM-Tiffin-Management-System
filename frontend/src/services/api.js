@@ -1,13 +1,8 @@
 ﻿import axios from "axios";
+import { API_BASE_URL } from "./apiBaseUrl";
 
-const API_URL =
-  import.meta.env.VITE_API_URL ||
-  "http://localhost:5000";
-const NORMALIZED_API_URL = API_URL.replace(/\/+$/, "");
 const api = axios.create({
-  baseURL: NORMALIZED_API_URL.endsWith("/api")
-    ? NORMALIZED_API_URL
-    : `${NORMALIZED_API_URL}/api`,
+  baseURL: API_BASE_URL,
 });
 
 // ==============================
@@ -37,7 +32,15 @@ api.interceptors.response.use(
   (response) => response,
 
   (error) => {
-    if (error.response?.status === 401) {
+    const currentToken = sessionStorage.getItem("token");
+    const requestAuthorization = error.config?.headers?.get?.("Authorization") || error.config?.headers?.Authorization;
+    // An older in-flight request must not clear a newly authenticated session.
+    if (
+      error.response?.status === 401 &&
+      currentToken &&
+      requestAuthorization === `Bearer ${currentToken}` &&
+      error.config?.url !== "/admin/login"
+    ) {
       sessionStorage.removeItem("token");
 
       window.location.href =

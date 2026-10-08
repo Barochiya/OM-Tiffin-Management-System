@@ -71,7 +71,9 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
+    <div className="om-auth-shell min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
+      <div className="om-auth-intro hidden lg:block"><span>OM TIFFIN SERVICE</span><h2>Your service.
+One clear workspace.</h2><p>Customers, meals, billing and payments — organised in one place.</p><div className="om-auth-intro-rule" /><small>ADMIN WORKSPACE</small></div>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
         <div className="flex justify-center">
           <img

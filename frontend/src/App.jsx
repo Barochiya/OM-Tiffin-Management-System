@@ -1,56 +1,58 @@
+import { lazy, Suspense } from "react";
+import PageLoading from "./components/PageLoading";
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import AdminLayout from "./layouts/AdminLayout";
-import Home from "./pages/Home";
-import About from "./pages/About";
-import Plans from "./pages/Plans";
-import Menu from "./pages/Menu";
-import HowItWorks from "./pages/HowItWorks";
-import Contact from "./pages/Contact";
-import Cart from "./pages/Cart";
-import OrderDetails from "./pages/OrderDetails";
+const Home = lazy(() => import("./pages/Home"));
+const About = lazy(() => import("./pages/About"));
+const Plans = lazy(() => import("./pages/Plans"));
+const Menu = lazy(() => import("./pages/Menu"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Cart = lazy(() => import("./pages/Cart"));
+const OrderDetails = lazy(() => import("./pages/OrderDetails"));
 import CustomerLayout from "./layouts/CustomerLayout";
 import PublicWebsiteLayout from "./layouts/PublicWebsiteLayout";
 
-import Login from "./pages/Login";
-import CustomerLogin from "./pages/CustomerLogin";
-import CustomerAccountSetup from "./pages/CustomerAccountSetup";
-import CustomerDashboard from "./pages/CustomerDashboard";
-import CustomerProfile from "./pages/CustomerProfile";
-import CustomerBillHistory from "./pages/CustomerBillHistory";
-import CustomerBillDetail from "./pages/CustomerBillDetail";
-import CustomerPaymentHistory from "./pages/CustomerPaymentHistory";
-import CustomerTiffinPlan from "./pages/CustomerTiffinPlan";
-import CustomerAnnouncements from "./pages/CustomerAnnouncements";
-import CustomerChangePassword from "./pages/CustomerChangePassword";
-import CustomerForgotPassword from "./pages/CustomerForgotPassword";
-import CustomerForgotUserId from "./pages/CustomerForgotUserId";
-import Dashboard from "./pages/Dashboard";
-import CustomerLoginIdSender from "./pages/CustomerLoginIdSender";
-import Customers from "./pages/Customers";
-import Users from "./pages/Users";
-import AddCustomer from "./pages/AddCustomer";
-import EditCustomer from "./pages/EditCustomer";
-import ViewCustomer from "./pages/ViewCustomer";
-import DailyEntry from "./pages/DailyEntry";
-import BarcodeEntry from "./pages/BarcodeEntry";
-import PriceSettings from "./pages/PriceSettings";
-import Billing from "./pages/Billing";
-import Payments from "./pages/Payments";
-import ViewBills from "./pages/ViewBills";
-import SingleBill from "./pages/SingleBill";
-import PaymentReceipt from "./pages/PaymentReceipt";
-import Announcement from "./pages/Announcement";
-import WhatsAppInbox from "./pages/WhatsAppInbox";
-import WhatsAppPaymentApproval from "./pages/WhatsAppPaymentApproval";
-import AnnouncementDeliveryStatus from "./pages/AnnouncementDeliveryStatus";
-import BillDeliveryStatus from "./pages/BillDeliveryStatus";
-import CustomerModificationRequests from "./pages/CustomerModificationRequests";
-import CustomerModificationSettings from "./pages/CustomerModificationSettings";
-import BusinessInfo from "./pages/BusinessInfo";
-import WebsiteSettings from "./pages/WebsiteSettings";
-import WebsiteReviews from "./pages/WebsiteReviews";
-import WebsiteMenu from "./pages/WebsiteMenu";
+const Login = lazy(() => import("./pages/Login"));
+const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
+const CustomerAccountSetup = lazy(() => import("./pages/CustomerAccountSetup"));
+const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
+const CustomerProfile = lazy(() => import("./pages/CustomerProfile"));
+const CustomerBillHistory = lazy(() => import("./pages/CustomerBillHistory"));
+const CustomerBillDetail = lazy(() => import("./pages/CustomerBillDetail"));
+const CustomerPaymentHistory = lazy(() => import("./pages/CustomerPaymentHistory"));
+const CustomerTiffinPlan = lazy(() => import("./pages/CustomerTiffinPlan"));
+const CustomerAnnouncements = lazy(() => import("./pages/CustomerAnnouncements"));
+const CustomerChangePassword = lazy(() => import("./pages/CustomerChangePassword"));
+const CustomerForgotPassword = lazy(() => import("./pages/CustomerForgotPassword"));
+const CustomerForgotUserId = lazy(() => import("./pages/CustomerForgotUserId"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const CustomerLoginIdSender = lazy(() => import("./pages/CustomerLoginIdSender"));
+const Customers = lazy(() => import("./pages/Customers"));
+const Users = lazy(() => import("./pages/Users"));
+const AddCustomer = lazy(() => import("./pages/AddCustomer"));
+const EditCustomer = lazy(() => import("./pages/EditCustomer"));
+const ViewCustomer = lazy(() => import("./pages/ViewCustomer"));
+const DailyEntry = lazy(() => import("./pages/DailyEntry"));
+const BarcodeEntry = lazy(() => import("./pages/BarcodeEntry"));
+const PriceSettings = lazy(() => import("./pages/PriceSettings"));
+const Billing = lazy(() => import("./pages/Billing"));
+const Payments = lazy(() => import("./pages/Payments"));
+const ViewBills = lazy(() => import("./pages/ViewBills"));
+const SingleBill = lazy(() => import("./pages/SingleBill"));
+const PaymentReceipt = lazy(() => import("./pages/PaymentReceipt"));
+const Announcement = lazy(() => import("./pages/Announcement"));
+const WhatsAppInbox = lazy(() => import("./pages/WhatsAppInbox"));
+const WhatsAppPaymentApproval = lazy(() => import("./pages/WhatsAppPaymentApproval"));
+const AnnouncementDeliveryStatus = lazy(() => import("./pages/AnnouncementDeliveryStatus"));
+const BillDeliveryStatus = lazy(() => import("./pages/BillDeliveryStatus"));
+const CustomerModificationRequests = lazy(() => import("./pages/CustomerModificationRequests"));
+const CustomerModificationSettings = lazy(() => import("./pages/CustomerModificationSettings"));
+const BusinessInfo = lazy(() => import("./pages/BusinessInfo"));
+const WebsiteSettings = lazy(() => import("./pages/WebsiteSettings"));
+const WebsiteReviews = lazy(() => import("./pages/WebsiteReviews"));
+const WebsiteMenu = lazy(() => import("./pages/WebsiteMenu"));
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
 import { CartProvider } from "./context/CartContext";
@@ -58,7 +60,7 @@ import { CartProvider } from "./context/CartContext";
 export default function App() {
   return (
     <CartProvider>
-      <Routes>
+      <Suspense fallback={<PageLoading />}><Routes>
       
             {/* Public Website */}
       <Route element={<PublicWebsiteLayout />}>
@@ -363,7 +365,7 @@ export default function App() {
         }
       />
       </Route>
-      </Routes>
+      </Routes></Suspense>
     </CartProvider>
   );
 }

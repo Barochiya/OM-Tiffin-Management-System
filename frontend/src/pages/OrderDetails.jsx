@@ -130,7 +130,7 @@ export default function OrderDetails() {
   };
   if (settingsLoading) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="om-checkout-shell min-h-screen bg-slate-50">
         <div className="flex min-h-screen items-center justify-center">
           <div className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 shadow-sm">
             <Loader2
@@ -150,7 +150,7 @@ export default function OrderDetails() {
   }
   if (!cartItems.length && !orderMessage) {
     return (
-      <div className="min-h-screen bg-slate-50">
+      <div className="om-checkout-shell min-h-screen bg-slate-50">
         <div className="mx-auto flex min-h-screen max-w-3xl items-center justify-center px-4 py-12">
           <div className="w-full rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
             <ShoppingCart
@@ -176,7 +176,7 @@ export default function OrderDetails() {
     );
   }
   return (
-    <div className="min-h-screen bg-slate-50 py-10">
+    <div className="om-checkout-shell min-h-screen bg-slate-50 py-10">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <Link

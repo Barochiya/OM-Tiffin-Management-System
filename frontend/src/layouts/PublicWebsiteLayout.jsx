@@ -72,7 +72,7 @@ export default function PublicWebsiteLayout() {
   }
   const closeMobileMenu = () => setMobileMenuOpen(false);
   return (
-    <div className="min-h-screen bg-white text-slate-800">
+    <div className="om-website-shell min-h-screen bg-white text-slate-800">
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <button

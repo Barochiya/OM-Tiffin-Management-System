@@ -18,6 +18,7 @@ async function check(name,fn){await fn();checks++;console.log('PASS '+name);}
 function fixture(url,method){
   const p=url.pathname.replace(/^\/api/,'');
   if(method!=='GET'){
+    if(p==='/bills/generate')return {success:true,data:bill};
     if(p==='/admin/login')return {success:true,token:'audit-admin-token'};
     if(p==='/website-orders/public')return {success:true,data:{_id:'audit-order'}};
     return {success:true,message:'Fixture action completed.',data:payment};
@@ -82,10 +83,18 @@ async function context(viewport,authenticated=true){
   const desktop=await context({width:1440,height:1000});const page=await desktop.newPage();
   const source=fs.readFileSync(path.join(root,'frontend/src/App.jsx'),'utf8');
   const routes=[...source.matchAll(/path="([^"]+)"/g)].map(match=>match[1]).filter(p=>p!=='*'&&p!=='/login'&&p!=='/customer-login').map(p=>p.replace(/:[^/]+/g,id));
+  if(process.env.AUDIT_QUICK_REVIEW)routes.splice(0,routes.length,'/dashboard','/customers','/customer/dashboard','/','/menu','/customer-forgot-password','/customer-forgot-user-id','/customer-account-setup','/payments');
   await check('all '+routes.length+' defined website/admin/customer routes render in desktop Chrome',async()=>{
     for(const route of routes){await page.goto(base+route);await page.waitForLoadState('networkidle');assert(!await page.getByText('404 - Page Not Found',{exact:true}).count(),'404 '+route);assert((await page.locator('#root').innerText()).trim().length,'Blank route '+route);}
     assert.deepEqual(errors,[]);
+    if(process.env.AUDIT_ARTIFACT_DIR){for(const [name,route] of [['admin-dashboard','/dashboard'],['admin-customers','/customers'],['customer-dashboard','/customer/dashboard'],['public-home','/'],['public-menu','/menu']]){await page.goto(base+route);await page.waitForLoadState('networkidle');await page.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,name+'-redesign.png'),fullPage:true});}}
   });
+  const mobileAudit=await context({width:390,height:844});const mobilePage=await mobileAudit.newPage();
+  await check('all '+routes.length+' defined routes render on mobile without document overflow',async()=>{
+    for(const route of routes){await mobilePage.goto(base+route);await mobilePage.waitForLoadState('networkidle');assert(!await mobilePage.getByText('404 - Page Not Found',{exact:true}).count());assert((await mobilePage.locator('#root').innerText()).trim().length);assert(await mobilePage.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'Mobile document overflow '+route);}
+  });
+  if(process.env.AUDIT_ARTIFACT_DIR){await mobilePage.goto(base+'/customer/dashboard');await mobilePage.waitForLoadState('networkidle');await mobilePage.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'customer-mobile-redesign.png'),fullPage:true});}
+  await mobileAudit.close();
   await check('/admin bookmark enters dashboard and remains signed in during background polling',async()=>{
     await page.goto(base+'/admin');await page.waitForURL('**/dashboard');await page.waitForTimeout(10500);assert(page.url().endsWith('/dashboard'));assert.equal(await page.evaluate(()=>sessionStorage.getItem('token')),'audit-admin-token');
   });
@@ -108,9 +117,14 @@ async function context(viewport,authenticated=true){
       const invalidLogin=sessionStorage.getItem('token');api.defaults.adapter=original;return {stale,invalidLogin};
     });assert.equal(result.stale,'new-token');assert.equal(result.invalidLogin,'new-token');assert(page.url().endsWith('/dashboard'));
   });
+  await check('billing loads its PDF renderer on demand and preserves fixture generation/send/download flow',async()=>{
+    await page.goto(base+'/billing');await page.locator('select').first().selectOption(id);await page.getByRole('button',{name:'Generate Bill',exact:true}).click();await page.getByRole('status').filter({hasText:'Bill generated and sent to WhatsApp successfully.'}).waitFor({timeout:30000});
+    await page.getByRole('button',{name:'Download PDF',exact:true}).waitFor();const [download]=await Promise.all([page.waitForEvent('download',{timeout:60000}),page.getByRole('button',{name:'Download PDF',exact:true}).click()]);assert(download.suggestedFilename().endsWith('.pdf'));
+    assert(writes.some(request=>request.path==='/api/bills/send-whatsapp'));
+  });
   const loginContext=await context({width:1440,height:1000},false);const loginPage=await loginContext.newPage();
   await check('unauthenticated /admin redirects to login; valid fixture login enters dashboard without native popup',async()=>{
-    await loginPage.goto(base+'/admin');await loginPage.waitForURL('**/login');await loginPage.getByPlaceholder('Enter Email').fill('audit@example.invalid');await loginPage.getByPlaceholder('Enter Password').fill('fixture-password');await loginPage.getByRole('button',{name:'Login',exact:true}).click();await loginPage.waitForURL('**/dashboard');await loginPage.getByRole('status').filter({hasText:'You are signed in successfully.'}).waitFor();
+    await loginPage.goto(base+'/admin');await loginPage.waitForURL('**/login');await loginPage.getByPlaceholder('Enter Email').waitFor();if(process.env.AUDIT_ARTIFACT_DIR)await loginPage.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'login-redesign.png'),fullPage:true});await loginPage.getByPlaceholder('Enter Email').fill('audit@example.invalid');await loginPage.getByPlaceholder('Enter Password').fill('fixture-password');await loginPage.getByRole('button',{name:'Login',exact:true}).click();await loginPage.waitForURL('**/dashboard');await loginPage.getByRole('status').filter({hasText:'You are signed in successfully.'}).waitFor();
   });
   for(const [name,viewport] of [['desktop',{width:1440,height:1000}],['mobile',{width:390,height:844}]]){
     const ctx=await context(viewport);const p=await ctx.newPage();

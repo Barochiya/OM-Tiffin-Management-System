@@ -1,0 +1,81 @@
+/* OM Tiffin visual system. Scoped to application shells; financial documents retain their own print styles. */
+:root{--om-ink:#17243b;--om-muted:#66758d;--om-accent:#2457db;--om-line:#e2e8f1;--om-canvas:#f3f6fb;--om-radius:16px}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+:where(.om-admin-shell,.om-customer-shell,.om-website-shell,.om-auth-shell,.om-checkout-shell){color:var(--om-ink)}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell){background:var(--om-canvas)}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(.bg-slate-100,.bg-slate-50){background-color:var(--om-canvas)}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(h1,h2,h3){letter-spacing:-.025em}
+:where(.om-admin-shell,.om-customer-shell) :where(h1){font-size:clamp(24px,2.5vw,34px);line-height:1.2}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(.bg-white.rounded-3xl,.bg-white.rounded-2xl,.bg-white.rounded-xl){border:1px solid var(--om-line);border-radius:var(--om-radius);box-shadow:0 4px 18px #17243b05}
+:where(.om-admin-shell,.om-customer-shell) :where(.shadow-xl,.shadow-lg){box-shadow:0 6px 24px #17243b08}
+:where(.om-admin-shell,.om-customer-shell) :where(.bg-gradient-to-r.text-white,.bg-gradient-to-br.text-white):not(.invoice-document){background-image:linear-gradient(120deg,#152c52,#2457db);border-radius:20px}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell,.om-auth-shell) :where(input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea){border-color:#d8e0eb;border-radius:10px;min-height:44px;font-size:14px;box-shadow:0 1px 2px #17243b03;transition:border-color .15s,box-shadow .15s}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell,.om-auth-shell) :where(input,select,textarea):focus-visible{outline:2px solid #2457db;outline-offset:2px;box-shadow:0 0 0 4px #2457db14}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell,.om-auth-shell,.om-website-shell) :where(button,a):focus-visible{outline:3px solid #60a5fa;outline-offset:3px}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell,.om-auth-shell) :where(button){font-weight:600;transition:background-color .15s,box-shadow .15s;cursor:pointer}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell,.om-auth-shell) :where(button):disabled{cursor:not-allowed;opacity:.55}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell,.om-auth-shell) :where(.bg-blue-600,.bg-blue-700){background-color:var(--om-accent)}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(table){font-size:13px;font-variant-numeric:tabular-nums}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(thead){background:#edf2f9;color:#53627a}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(th){font-size:11px;letter-spacing:.04em;font-weight:700;padding-top:15px;padding-bottom:15px}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(td){border-color:#edf1f6;padding-top:14px;padding-bottom:14px}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(tbody tr){transition:background .12s}
+:where(.om-admin-shell,.om-customer-shell,.om-checkout-shell) :where(tbody tr):hover{background:#f6f9ff}
+.om-admin-shell>aside{background:#12243e!important;background-image:none!important;box-shadow:8px 0 28px #12243e0b!important}
+.om-admin-shell>aside>div:first-child{border-color:#ffffff12;padding:24px 20px}
+.om-admin-shell>aside h1{font-size:16px;letter-spacing:.01em;line-height:1.35}
+.om-admin-shell>aside img{width:48px;height:48px;box-shadow:none}
+.om-admin-shell>aside nav{margin-top:16px;padding:0 12px 24px}
+.om-admin-shell>aside nav a{font-size:13px;line-height:1.4;border-radius:9px;padding:11px 13px;color:#c3d0e3;transition:background .15s,color .15s}
+.om-admin-shell>aside nav a:hover{background:#ffffff0d;color:#fff}
+.om-admin-shell>aside nav a.bg-white{background:#2457db;color:white;box-shadow:0 4px 14px #0002}
+.om-admin-shell>aside nav a svg{color:inherit;opacity:.85}
+.om-admin-shell header{border-bottom:1px solid var(--om-line);box-shadow:0 2px 8px #17243b04;background:#fffffffa}
+.om-admin-shell main{scrollbar-gutter:stable}
+.om-customer-shell aside{border-color:var(--om-line);box-shadow:4px 0 24px #17243b06}
+.om-customer-shell aside a{border-radius:10px;font-size:13px}
+.om-customer-shell aside a[aria-current=page]{background:#2457db;color:#fff;box-shadow:0 4px 12px #2457db20}
+.om-customer-shell aside a[aria-current=page] svg{color:white}
+.om-auth-shell{background:radial-gradient(ellipse at 20% 25%,#315bb044,transparent 45%),radial-gradient(ellipse at 80% 80%,#0b867e22,transparent 40%),#101f37!important;padding-top:40px;padding-bottom:40px;position:relative}
+.om-auth-shell>div:not(.om-auth-intro){border:1px solid #ffffff33;border-radius:22px;box-shadow:0 24px 80px #0004;padding:32px}
+.om-auth-shell img{width:76px;height:76px;border:1px solid #e2e8f0;box-shadow:none}
+.om-auth-shell h1{font-size:25px;letter-spacing:-.6px;color:#17243b}
+.om-auth-shell label{font-size:13px;font-weight:600}
+.om-auth-shell form{margin-top:28px}
+.om-auth-shell button[type=submit]{min-height:48px;border-radius:10px;background:#2457db;color:#fff;box-shadow:0 4px 12px #2457db22}
+.om-auth-shell a{font-size:13px}
+.om-website-shell>header{border-color:#e2e8f0;background:#ffffffed;box-shadow:0 4px 24px #17243b05}
+.om-website-shell nav a{font-size:13px;letter-spacing:.01em}
+.om-website-shell :where(h1,h2,h3){letter-spacing:-.035em}
+.om-website-shell :where(.rounded-3xl){border-radius:22px}
+.om-website-shell :where(.shadow-xl,.shadow-2xl){box-shadow:0 16px 48px #17243b12}
+.om-website-shell :where(.bg-blue-600,.bg-blue-700){background-color:var(--om-accent)}
+.om-website-shell :where(.om-card-hover){border-color:#e2e8f0;box-shadow:0 6px 24px #17243b06}
+.om-website-shell :where(section){scroll-margin-top:96px}
+.om-page-loading{padding:32px;max-width:1280px;margin:0 auto;width:100%;min-height:60vh;color:#66758d}
+.om-loading-heading{display:grid;gap:12px;margin-bottom:28px}.om-loading-heading span{width:240px;height:24px}.om-loading-heading span:last-child{width:160px;height:12px}
+.om-loading-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:28px}.om-loading-grid>div{height:140px;border-radius:16px}.om-loading-table{display:grid;gap:16px;background:white;border:1px solid #e2e8f0;border-radius:16px;padding:24px}.om-loading-table span{height:20px}
+.om-page-loading :where(span,.om-loading-grid>div){background:linear-gradient(90deg,#e7edf5,#f5f7fb,#e7edf5);background-size:200% 100%;border-radius:6px;animation:om-shimmer 1.8s infinite}
+.om-page-loading p{font-size:13px;margin-top:20px}@keyframes om-shimmer{to{background-position:-200% 0}}
+@media(max-width:640px){.om-admin-shell main{padding:12px}.om-admin-shell main>div>div.mx-auto{padding-left:4px;padding-right:4px}.om-auth-shell>div:not(.om-auth-intro){padding:24px}.om-loading-grid{grid-template-columns:1fr}.om-loading-grid>div{height:80px}.om-page-loading{padding:20px}.om-website-shell nav{gap:16px}}
+@media(prefers-reduced-motion:reduce){.om-page-loading :where(span,.om-loading-grid>div){animation:none}*{scroll-behavior:auto!important}}
+@media print{.om-page-loading{display:none}.om-admin-shell,.om-customer-shell{background:white}.om-admin-shell :where(.invoice-document) :where(thead){background:#0f172a;color:white}.om-admin-shell :where(.invoice-document) :where(th,.invoice-document td){padding-top:8px;padding-bottom:8px}}
+
+/* Customer welcome stays light for readable account details. */
+.om-customer-shell section.bg-gradient-to-br.from-white{background:linear-gradient(120deg,#fff,#f4f8ff);border-radius:20px}
+.om-customer-shell header.bg-gradient-to-r{border-radius:0;background:linear-gradient(110deg,#12243e,#2457db)}
+.om-website-shell :where(.bg-gradient-to-br.from-blue-700,.bg-gradient-to-r.from-blue-700){background-image:linear-gradient(120deg,#132b50,#2457db 72%,#3673d9)}
+.om-admin-shell .receipt{border:1px solid #e2e8f1;border-radius:18px;box-shadow:0 12px 36px #17243b0a}
+.om-admin-shell .receipt>div.h-3{height:5px;background:#2457db;border-radius:0}
+.om-admin-shell .receipt h1:not(.opacity-\[0\.03\]),.om-admin-shell .receipt h2{letter-spacing:-.025em}
+.om-admin-shell .receipt :where(.bg-green-50,.bg-purple-50,.bg-orange-50,.bg-blue-50){background:#f8fafc;border:1px solid #e2e8f0}
+@media print{.om-admin-shell .receipt{border:0;box-shadow:none;border-radius:0}}
+
+.om-auth-shell{gap:80px}
+.om-auth-intro{width:440px;color:#fff;padding:20px}
+.om-auth-intro>span{font-size:11px;font-weight:700;letter-spacing:3px;color:#9db8f7}
+.om-auth-intro h2{white-space:pre-line;font-size:48px;line-height:1.12;font-weight:750;letter-spacing:-1.8px;margin:24px 0;color:#fff}
+.om-auth-intro p{font-size:16px;line-height:1.8;color:#aabbd3;max-width:360px}
+.om-auth-intro-rule{height:1px;background:#ffffff22;width:72px;margin:32px 0 20px}
+.om-auth-intro small{font-size:10px;letter-spacing:2px;color:#89a4c9}
+@media(min-width:1024px){.om-auth-shell>div:not(.om-auth-intro){flex-shrink:0}}

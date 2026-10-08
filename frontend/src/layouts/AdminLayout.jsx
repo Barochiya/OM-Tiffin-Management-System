@@ -15,7 +15,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex min-h-screen w-full min-w-0 overflow-x-hidden bg-slate-100">
+    <div className="om-admin-shell flex min-h-screen w-full min-w-0 overflow-x-hidden bg-slate-100">
 
       {/* Sidebar */}
       <Sidebar

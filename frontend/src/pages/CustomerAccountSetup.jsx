@@ -162,7 +162,9 @@ const CustomerAccountSetup = () => {
     setMessage("");
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
+    <div className="om-auth-shell min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
+      <div className="om-auth-intro hidden lg:block"><span>OM TIFFIN SERVICE</span><h2>Good food.
+Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and stay connected with OM Tiffin Service.</p><div className="om-auth-intro-rule" /><small>CUSTOMER PORTAL</small></div>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
         <div className="text-center">
           <h1 className="text-3xl font-extrabold text-blue-700">

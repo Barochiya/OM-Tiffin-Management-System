@@ -6,7 +6,7 @@ const CustomerLayout = () => {
     document.title = "OM Tiffin Service - Customer Dashboard";
   }, []);
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
+    <div className="om-customer-shell min-h-screen bg-slate-50 text-slate-800">
       <CustomerSidebar />
       <div className="lg:pl-[270px] min-h-screen">
         <Outlet />

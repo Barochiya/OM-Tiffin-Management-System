@@ -5,7 +5,7 @@ import { useReactToPrint } from "react-to-print";
 import { FaUsers, FaFileInvoice, FaCalendarAlt, FaMoneyBillWave } from "react-icons/fa";
 import { FaWhatsapp } from "react-icons/fa";
 import { Wheat, Cookie, Soup, Salad, Candy, UtensilsCrossed, ReceiptText, CalendarDays, Phone, MapPin } from "lucide-react";
-import html2pdf from "html2pdf.js";
+const loadPdfRenderer = () => import("html2pdf.js").then(module => module.default);
 
 import logo from "../assets/logo.png";
 
@@ -138,6 +138,9 @@ await new Promise((resolve) =>
 const pdfBlob = await createBulkPdf(
   generatedBill
 );
+
+// Preserve the generated preview after the temporary PDF render.
+setBill(generatedBill);
 
     const formData = new FormData();
 
@@ -437,6 +440,7 @@ const createBillPdf = async () => {
     throw new Error("Generate a bill before creating the PDF.");
   }
 
+  const html2pdf = await loadPdfRenderer();
   return html2pdf()
     .set(getPdfOptions())
     .from(billRef.current)
@@ -453,6 +457,7 @@ const createBulkPdf = async (customerBill) => {
     setTimeout(resolve, 1000)
   );
 
+  const html2pdf = await loadPdfRenderer();
   const pdfBlob = await html2pdf()
     .set({
       ...getPdfOptions(),
@@ -469,6 +474,7 @@ const createBulkPdf = async (customerBill) => {
 
 const handleDownloadPdf = async () => {
   try {
+    const html2pdf = await loadPdfRenderer();
     await html2pdf()
       .set(getPdfOptions())
       .from(billRef.current)

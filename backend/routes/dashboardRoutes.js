@@ -5,6 +5,9 @@ const {
   getDashboard,
 } = require("../controllers/dashboardController");
 
-router.get("/", getDashboard);
+const protect = require('../middleware/authMiddleware');
+const { getAdminNotifications } = require('../controllers/adminNotificationsController');
+router.get('/notifications', protect, getAdminNotifications);
+router.get('/', protect, getDashboard);
 
 module.exports = router;

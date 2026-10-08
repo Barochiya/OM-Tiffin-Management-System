@@ -1,4 +1,5 @@
 import React from "react";
+import GrowthBadge from "./GrowthBadge";
 
 export default function DashboardCard({
   title,
@@ -72,11 +73,7 @@ export default function DashboardCard({
             </p>
           )}
 
-          {growth && (
-            <div className="inline-flex items-center mt-4 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-              ↑ {growth}
-            </div>
-          )}
+          <GrowthBadge growth={growth} />
 
         </div>
 

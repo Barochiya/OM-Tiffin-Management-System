@@ -5,10 +5,10 @@ import api from "./api";
 // ======================================
 
 export const getDashboardAnalytics =
-  async () => {
+  async (filters = {}) => {
     try {
       const response = await api.get(
-        "/dashboard"
+        "/dashboard", { params: filters }
       );
 
       return response.data;

@@ -1,5 +1,5 @@
-import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Hand, CircleCheck, TrendingUp } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaMoneyBillWave,
@@ -11,6 +11,7 @@ import {
   FaBullhorn,
 } from "react-icons/fa";
 
+import GrowthBadge from "../components/GrowthBadge";
 import DashboardCard from "../components/DashboardCard";
 import RevenueChart from "../components/RevenueChart";
 import RecentPayments from "../components/RecentPayments";
@@ -26,6 +27,9 @@ export default function Dashboard() {
   // STATES
   // ======================================
 
+  const [year, setYear] = useState('all');
+  const [month, setMonth] = useState('all');
+  const requestVersion = useRef(0);
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -34,17 +38,20 @@ export default function Dashboard() {
   // LOAD DASHBOARD
   // ======================================
 
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
+    const version = ++requestVersion.current;
     try {
       setLoading(true);
 
       const response =
-        await getDashboardAnalytics();
+        await getDashboardAnalytics({ year, month });
+      if(version !== requestVersion.current) return;
 
       setDashboard(response);
 
       setError("");
     } catch (err) {
+      if(version !== requestVersion.current) return;
       console.error(
         "Dashboard Error:",
         err
@@ -54,18 +61,19 @@ export default function Dashboard() {
         "Unable to load dashboard."
       );
     } finally {
-      setLoading(false);
+      if(version === requestVersion.current) setLoading(false);
     }
-  };
+  }, [year, month]);
 
   useEffect(() => {
     loadDashboard();
-  }, []);
+  }, [loadDashboard]);
+  useEffect(() => { const version = requestVersion; return () => { version.current++; }; }, []);
     // ======================================
   // LOADING
   // ======================================
 
-  if (loading) {
+  if (loading && !dashboard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
         <div className="bg-white rounded-3xl shadow-xl p-10 text-center">
@@ -89,7 +97,7 @@ export default function Dashboard() {
   // ERROR
   // ======================================
 
-  if (error) {
+  if (error && !dashboard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100">
 
@@ -156,8 +164,8 @@ const todayMeals =
     color: "text-green-600",
     bg: "bg-green-100",
     icon: <FaMoneyBillWave />,
-    subtitle: "Overall Collection",
-    growth: "+12%",
+    subtitle: dashboard?.period?.label || "All time",
+    growth: dashboard?.growth?.revenue,
   },
 
   {
@@ -167,7 +175,7 @@ const todayMeals =
     bg: "bg-blue-100",
     icon: <FaUsers />,
     subtitle: "Currently Active",
-    growth: "+5%",
+    growth: dashboard?.growth?.active,
   },
 
   {
@@ -177,7 +185,7 @@ const todayMeals =
     bg: "bg-red-100",
     icon: <FaClock />,
     subtitle: "Outstanding Payments",
-    growth: "-2%",
+    growth: dashboard?.growth?.pending,
   },
 
   {
@@ -187,7 +195,7 @@ const todayMeals =
     bg: "bg-purple-100",
     icon: <FaUsers />,
     subtitle: "Registered Customers",
-    growth: "+8%",
+    growth: dashboard?.growth?.customers,
   },
 
   {
@@ -197,7 +205,7 @@ const todayMeals =
   bg: "bg-emerald-100",
   icon: <FaMoneyBillWave />,
   subtitle: "Today's Received Amount",
-  growth: "+18%",
+  growth: dashboard?.growth?.collection,
 },
 
 {
@@ -206,8 +214,8 @@ const todayMeals =
   color: "text-orange-600",
   bg: "bg-orange-100",
   icon: <FaUtensils />,
-  subtitle: "Meals Delivered Today",
-  growth: "+9%",
+  subtitle: "Meals Recorded Today",
+  growth: dashboard?.growth?.meals,
 },
 ];
 
@@ -263,6 +271,15 @@ const todayMeals =
 
         </div>
 
+{/* Reporting controls */}
+<section aria-label="Revenue filters" className="mb-6 flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-white p-5">
+  <div className="mr-auto"><h2 className="font-bold text-slate-900">Revenue reporting</h2><p className="mt-1 text-sm text-slate-500">Successful payments · India time · current customer counts and balances</p></div>
+  <label className="text-sm font-semibold text-slate-600">Year<select aria-label="Revenue year" className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-2.5" value={year} onChange={event=>{setYear(event.target.value);setMonth('all');}}><option value="all">All time</option>{(dashboard?.availableYears || [new Date().getFullYear()]).map(value=><option key={value} value={value}>{value}</option>)}</select></label>
+  <label className="text-sm font-semibold text-slate-600">Month<select aria-label="Revenue month" disabled={year==='all'} className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-2.5 disabled:opacity-50" value={month} onChange={event=>setMonth(event.target.value)}><option value="all">Whole year</option>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((name,index)=><option key={name} value={index+1}>{name}</option>)}</select></label>
+  <button type="button" disabled={loading} onClick={loadDashboard} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{loading?'Updating…':'Refresh'}</button>
+  {error && <p role="alert" className="w-full text-sm text-red-600">{error} Showing the last loaded report.</p>}
+  {loading && <p role="status" className="w-full text-sm text-slate-500">Updating report…</p>}
+</section>
 {/* KPI Cards */}
 
 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
@@ -357,16 +374,16 @@ const todayMeals =
               </h2>
 
               <p className="text-gray-500 mt-1">
-                Monthly Revenue Overview
+                Monthly revenue · {dashboard?.period?.chartYear || new Date().getFullYear()}
               </p>
 
             </div>
 
           </div>
 
-          <RevenueChart
-            data={revenueChart}
-          />
+          <RevenueChart data={revenueChart} />
+          <p className="mt-3 text-xs text-slate-500">Growth compares each calendar month with the previous month. The current month is partial; future months have no comparison.</p>
+          <div className="mt-5 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-slate-200 text-slate-500"><th className="py-3">Month</th><th className="py-3">Collection</th><th className="py-3">Monthly growth</th></tr></thead><tbody>{revenueChart.map(row=><tr key={row.month} className="border-b border-slate-100"><td className="py-3 font-medium">{row.month}</td><td>₹{row.revenue.toLocaleString('en-IN')}</td><td className="pb-3"><GrowthBadge growth={row.growth}/></td></tr>)}</tbody></table></div>
 
         </div>
 

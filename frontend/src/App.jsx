@@ -52,6 +52,7 @@ const CustomerModificationSettings = lazy(() => import("./pages/CustomerModifica
 const BusinessInfo = lazy(() => import("./pages/BusinessInfo"));
 const WebsiteSettings = lazy(() => import("./pages/WebsiteSettings"));
 const WebsiteReviews = lazy(() => import("./pages/WebsiteReviews"));
+const WebsiteOrders = lazy(() => import("./pages/WebsiteOrders"));
 const WebsiteMenu = lazy(() => import("./pages/WebsiteMenu"));
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
@@ -323,6 +324,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/website-orders" element={<ProtectedRoute><WebsiteOrders /></ProtectedRoute>} />
       <Route
         path="/website-reviews"
         element={

@@ -315,7 +315,8 @@ const closeSidebar = () => {
         <FaStar className="text-yellow-300" />
         Reviews
       </Link>
-            <Link
+            <Link to="/website-orders" onClick={closeSidebar} className={`flex items-center gap-3 px-4 py-3 rounded-lg ${location.pathname === "/website-orders" ? "bg-white text-blue-700 font-semibold" : "hover:bg-blue-600"}`}><FaTruck />Website Orders</Link>
+        <Link
         to="/website-settings"
         onClick={closeSidebar}
         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${

@@ -49,7 +49,8 @@ function fixture(url,method){
   if(p==='/payments')return [payment];
   if(p.startsWith('/payments/pending/')||p.startsWith('/payments/customer/'))return [bill];
   if(p.startsWith('/payments/'))return payment;
-  if(p==='/dashboard')return {stats:{totalCustomers:1,activeCustomers:1,totalRevenue:125,pendingAmount:124,todayCollection:125,todayMeals:2},revenueChart:[],recentPayments:[],pendingBills:[],topCustomers:[]};
+  if(p==='/dashboard/notifications')return {total:3,categories:[{id:'orders',title:'Website orders awaiting confirmation',count:2,path:'/website-orders'},{id:'reviews',title:'Reviews awaiting approval',count:1,path:'/website-reviews'}],unavailable:[],updatedAt:new Date().toISOString()};
+  if(p==='/dashboard')return {period:{label:url.searchParams.get('month')==='10'?'Oct 2026':url.searchParams.get('year')==='2026'?'2026':'All time',chartYear:2026},availableYears:[2026,2025],growth:{revenue:url.searchParams.get('year')==='all' || !url.searchParams.get('year') ? {percent:null,label:'All-time successful collections'} : {percent:-25,label:'vs previous month'},active:{percent:100,share:true,label:'of registered customers'}},stats:{totalCustomers:1,activeCustomers:1,totalRevenue:125,totalPending:124},todayCollection:125,todayMeals:2,revenueChart:[],recentPayments:[],pendingBills:[],topCustomers:[]};
   if(p.startsWith('/barcodes'))return {success:true,barcode:customer.barcode,customer,items:[{customer,barcode:customer.barcode}]};
   if(p.startsWith('/website-orders'))return {success:true,data:[]};
   throw Error('Missing API fixture: '+method+' '+p);
@@ -103,6 +104,13 @@ async function context(viewport,authenticated=true){
   });
   if(process.env.AUDIT_ARTIFACT_DIR){await mobilePage.goto(base+'/customer/dashboard');await mobilePage.waitForLoadState('networkidle');await mobilePage.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'customer-mobile-redesign.png'),fullPage:true});}
   await mobileAudit.close();
+  await check('dashboard period filters and actionable notification navigation',async()=>{
+    await page.goto(base+'/dashboard');await page.getByLabel('Revenue year').selectOption('2026');await page.getByLabel('Revenue month').selectOption('10');await page.getByText('Oct 2026',{exact:true}).waitFor();
+    assert.equal(await page.getByText('+12%',{exact:true}).count(),0);
+    await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.getByRole('button',{name:'2 Website orders awaiting confirmation'}).click();await page.waitForURL('**/website-orders');await page.getByRole('heading',{name:'Website orders',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.keyboard.press('Escape');assert.equal(await page.getByLabel('Action notifications').count(),0);
+    if(process.env.AUDIT_ARTIFACT_DIR){await page.goto(base+'/dashboard');await page.waitForLoadState('networkidle');await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'dashboard-notifications.png'),fullPage:false});}
+  });
   await check('/admin bookmark enters dashboard and remains signed in during background polling',async()=>{
     await page.goto(base+'/admin');await page.waitForURL('**/dashboard');await page.waitForTimeout(10500);assert(page.url().endsWith('/dashboard'));assert.equal(await page.evaluate(()=>sessionStorage.getItem('token')),'audit-admin-token');
   });

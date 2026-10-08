@@ -14,12 +14,13 @@ const menu={_id:id,name:'Audit Both Meal',description:'Fixture only',mealType:'B
 const settings={websiteEnabled:true,plansEnabled:true,menuEnabled:true,onlineOrdersEnabled:true,inquiriesEnabled:true,customerLoginEnabled:true,testimonialsEnabled:true,faqEnabled:true,contactEnabled:true,lunchEnabled:true,dinnerEnabled:true};
 const chatFixture=[{_id:'a1',phoneNumber:'9876543210',customer:{customerName:'Alice Shah'},message:'Lunch plan question',type:'text',direction:'incoming',inboxStatus:'read',createdAt:'2026-10-08T08:00:00Z'},{_id:'a2',phoneNumber:'+91 9876543210',customer:{customerName:'Alice Shah'},message:'Confirm dinner',type:'text',direction:'incoming',inboxStatus:'unread',createdAt:'2026-10-08T09:00:00Z'},{_id:'a3',phoneNumber:'919876543210',customer:{customerName:'Alice Shah'},message:'Dinner confirmed',type:'text',direction:'outgoing',inboxStatus:'read',createdAt:'2026-10-08T09:01:00Z'},{_id:'b1',phoneNumber:'9123456780',customer:{customerName:'Bob Patel'},message:'Payment query',type:'text',direction:'incoming',inboxStatus:'unread',createdAt:'2026-10-08T10:00:00Z'}];
 let server,browser,checks=0;
-const errors=[],writes=[];
+const errors=[],writes=[],notificationReadCategories=new Set();
 async function check(name,fn){await fn();checks++;console.log('PASS '+name);}
 function fixture(url,method){
   const p=url.pathname.replace(/^\/api/,'');
   if(p==='/whatsapp-inbox'&&method==='GET'){assert.equal(url.searchParams.get('includeOutgoing'),'true');return {success:true,data:chatFixture};}
   if(method!=='GET'){
+    if(p==='/dashboard/notifications/read')return {success:true};
     if(p.startsWith('/whatsapp-inbox/')&&p.endsWith('/reply'))return {success:true,message:'Fixture reply sent'};
     if(p==='/bills/generate')return {success:true,data:bill};
     if(p==='/admin/login')return {success:true,token:'audit-admin-token'};
@@ -107,8 +108,9 @@ async function context(viewport,authenticated=true){
   await check('dashboard period filters and actionable notification navigation',async()=>{
     await page.goto(base+'/dashboard');await page.getByLabel('Revenue year').selectOption('2026');await page.getByLabel('Revenue month').selectOption('10');await page.getByText('Oct 2026',{exact:true}).waitFor();
     assert.equal(await page.getByText('+12%',{exact:true}).count(),0);
-    await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.getByRole('button',{name:'2 Website orders awaiting confirmation'}).click();await page.waitForURL('**/website-orders');await page.getByRole('heading',{name:'Website orders',exact:true}).waitFor();
+    await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.getByRole('button',{name:'2 Website orders awaiting confirmation'}).click();assert(writes.some(item=>item.path==='/api/dashboard/notifications/read' && JSON.parse(item.body.toString()).category==='orders'));await page.waitForURL('**/website-orders');assert.equal((await page.getByRole('button',{name:'Notifications',exact:true}).innerText()).trim(),'1');await page.getByRole('heading',{name:'Website orders',exact:true}).waitFor();
     await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.keyboard.press('Escape');assert.equal(await page.getByLabel('Action notifications').count(),0);
+    await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.getByRole('button',{name:'Mark all as read',exact:true}).click();await page.getByText('You are all caught up. No unread notifications.').waitFor();assert.equal((await page.getByRole('button',{name:'Notifications',exact:true}).innerText()).trim(),'');
     if(process.env.AUDIT_ARTIFACT_DIR){await page.goto(base+'/dashboard');await page.waitForLoadState('networkidle');await page.getByRole('button',{name:'Notifications',exact:true}).click();await page.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'dashboard-notifications.png'),fullPage:false});}
   });
   await check('/admin bookmark enters dashboard and remains signed in during background polling',async()=>{

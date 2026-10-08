@@ -35,9 +35,13 @@ const res=()=>({code:200,status(code){this.code=code;return this;},json(body){th
  result=res();await controller.getDashboard({query:{}},result);assert.equal(result.body.stats.totalRevenue,600);
  result=res();await controller.getDashboard({query:{year:'bad'}},result);assert.equal(result.code,400);
  const filters={};for(const name of ['WebsiteOrder','WebsiteReview','CustomerModificationRequest','WhatsAppMessage','AnnouncementDelivery'])model(name,{countDocuments:async filter=>{filters[name]||=[];filters[name].push(filter);if(name==='WebsiteReview')throw Error('Fixture unavailable');return 2;}});
- const notifications=require('../backend/controllers/adminNotificationsController');result=res();await notifications.getAdminNotifications({},result);
+ const readStates=[],readWrites=[];model('AdminNotificationState',{find:()=>({lean:async()=>readStates}),updateOne:async(filter,update,options)=>{readWrites.push({filter,update,options});return {acknowledged:true};}});
+ const notifications=require('../backend/controllers/adminNotificationsController');result=res();await notifications.getAdminNotifications({admin:{_id:'fixture-admin'}},result);
  assert.equal(result.body.total,12);assert.deepEqual(result.body.unavailable,['reviews']);
  assert.deepEqual(filters.WhatsAppMessage[1].paymentStatus,{$ne:'pending_review'});
+ result=res();await notifications.markNotificationsRead({admin:{_id:'fixture-admin'},body:{category:'all',readThrough:now.toISOString()}},result);assert.equal(result.body.success,true);assert.equal(readWrites.length,7);assert(readWrites.every(item=>item.filter.admin==='fixture-admin' && item.options.upsert && +item.update.$max.readThrough===+now));
+ readStates.push({category:'orders',readThrough:now});result=res();await notifications.getAdminNotifications({admin:{_id:'fixture-admin'}},result);assert.deepEqual(filters.WebsiteOrder.at(-1).$and[1],{updatedAt:{$gt:now}});
+ result=res();await notifications.markNotificationsRead({body:{category:'invalid'}},result);assert.equal(result.code,400);
  const routes=require('../backend/routes/dashboardRoutes').stack.filter(layer=>layer.route);assert(routes.every(layer=>layer.route.stack.length===2));
  console.log('PASS IST year/month boundaries, leap year, real positive/negative growth, zero baselines, successful payments only, year separation, current customer share, invalid filters, protected notifications, partial errors and no double-counted payment messages. No DB connection or writes.');
 })().catch(error=>{console.error(error);process.exitCode=1;});

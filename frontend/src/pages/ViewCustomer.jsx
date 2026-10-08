@@ -273,6 +273,7 @@ const handleDailyEntryChange = (
       entry._id === entryId
         ? {
             ...entry,
+            isDirty: true,
             [field]:
               field === "remark"
                 ? value
@@ -315,6 +316,7 @@ const handleDailyExtraItemChange = (
 
       return {
         ...entry,
+            isDirty: true,
         extraItems,
       };
     })
@@ -331,6 +333,7 @@ const handleAddDailyExtraItem = (entryId) => {
       entry._id === entryId
         ? {
             ...entry,
+            isDirty: true,
             extraItems: [
               ...(Array.isArray(entry.extraItems)
                 ? entry.extraItems
@@ -370,6 +373,7 @@ const handleRemoveDailyExtraItem = (
 
       return {
         ...entry,
+            isDirty: true,
         extraItems,
       };
     })
@@ -428,8 +432,8 @@ const handleSaveDailyEntry = async (entryId) => {
       setDailyEntries((current) => current.map((item) => {
         if (item._id !== entryId || String(item.customer?._id || item.customer) !== id) return item;
         return item === entry
-          ? { ...item, ...savedEntry, isNewEntry: false }
-          : { ...savedEntry, ...item, _id: savedEntry._id, isNewEntry: false };
+          ? { ...item, ...savedEntry, isNewEntry: false, isDirty: false }
+          : { ...savedEntry, ...item, _id: savedEntry._id, isNewEntry: false, isDirty: true };
       }));
     }
     notify(response?.message || "Daily entry saved successfully.", { type: "success" });
@@ -1321,7 +1325,8 @@ const dailyTotal =
               gap-2
             ">
 
-              <button
+              <span role="status" aria-live="polite" className={isSaving ? "text-xs font-semibold text-blue-600" : entry.isDirty || entry.isNewEntry ? "text-xs font-semibold text-amber-700" : "text-xs font-semibold text-green-700"}>{isSaving ? "Saving…" : entry.isDirty || entry.isNewEntry ? "Unsaved" : "Saved"}</span>
+<button
                 type="button"
                 onClick={() =>
                   handleSaveDailyEntry(
@@ -1760,7 +1765,8 @@ const dailyTotal =
                     <>
                       <div className="grid grid-cols-2 gap-2">
 
-                        <button
+                        <span role="status" aria-live="polite" className={isSaving ? "text-xs font-semibold text-blue-600" : entry.isDirty || entry.isNewEntry ? "text-xs font-semibold text-amber-700" : "text-xs font-semibold text-green-700"}>{isSaving ? "Saving…" : entry.isDirty || entry.isNewEntry ? "Unsaved" : "Saved"}</span>
+<button
                           type="button"
                           onClick={() =>
                             handleSaveDailyEntry(

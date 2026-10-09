@@ -1,6 +1,6 @@
 {
-  "versionName": "0.4.1",
-  "versionCode": 7,
-  "apkUrl": "https://expo.dev/artifacts/eas/b_8i2d5MoepUNl7HMxzKA2G-xg7-5oVSejn3jM4xXlU.apk",
-  "notes": "Adds Check for updates in More. Includes delivery tracking and meal-entry verification."
+  "versionName": "0.5.0",
+  "apkUrl": "https://expo.dev/artifacts/eas/KwNagwElzzvzB40oZ6pUgn8i3OlQFm7NzjaW9nerNGs.apk",
+  "notes": "Delivery shift dashboard, status filters and contact actions. Improved phone unlock across app reopening.",
+  "versionCode": 8
 }

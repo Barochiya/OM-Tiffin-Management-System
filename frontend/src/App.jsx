@@ -12,8 +12,8 @@ const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Cart = lazy(() => import("./pages/Cart"));
 const OrderDetails = lazy(() => import("./pages/OrderDetails"));
-import CustomerLayout from "./layouts/CustomerLayout";
-import PublicWebsiteLayout from "./layouts/PublicWebsiteLayout";
+const CustomerLayout = lazy(() => import("./layouts/CustomerLayout"));
+const PublicWebsiteLayout = lazy(() => import("./layouts/PublicWebsiteLayout"));
 
 const Login = lazy(() => import("./pages/Login"));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
@@ -30,7 +30,7 @@ const CustomerForgotPassword = lazy(() => import("./pages/CustomerForgotPassword
 const CustomerForgotUserId = lazy(() => import("./pages/CustomerForgotUserId"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CustomerLoginIdSender = lazy(() => import("./pages/CustomerLoginIdSender"));
-import Customers from "./pages/Customers";
+const Customers = lazy(() => import("./pages/Customers"));
 const Users = lazy(() => import("./pages/Users"));
 const AddCustomer = lazy(() => import("./pages/AddCustomer"));
 const EditCustomer = lazy(() => import("./pages/EditCustomer"));

@@ -8,7 +8,7 @@ export const getDashboardAnalytics =
   async (filters = {}) => {
     try {
       const response = await api.get(
-        "/dashboard", { params: filters }
+        "/dashboard", { params: filters, timeout: 20000 }
       );
 
       return response.data;

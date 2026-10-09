@@ -1,5 +1,5 @@
 import { Hand, CircleCheck, TrendingUp } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   FaMoneyBillWave,
@@ -13,7 +13,7 @@ import {
 
 import GrowthBadge from "../components/GrowthBadge";
 import DashboardCard from "../components/DashboardCard";
-import RevenueChart from "../components/RevenueChart";
+const RevenueChart = lazy(() => import("../components/RevenueChart"));
 import RecentPayments from "../components/RecentPayments";
 import PendingBills from "../components/PendingBills";
 import TopCustomers from "../components/TopCustomers";
@@ -58,7 +58,7 @@ export default function Dashboard() {
       );
 
       setError(
-        "Unable to load dashboard."
+        err.code === "ECONNABORTED" ? "Unable to load dashboard. The server is taking longer than usual. Your tools are still available; tap Retry." : "Unable to load dashboard."
       );
     } finally {
       if(version === requestVersion.current) setLoading(false);
@@ -381,7 +381,7 @@ const todayMeals =
 
           </div>
 
-          <RevenueChart data={revenueChart} />
+          <Suspense fallback={<div role="status" className="h-64 rounded-xl bg-slate-50 p-5 text-slate-500">Loading chart...</div>}><RevenueChart data={revenueChart} /></Suspense>
           <p className="mt-3 text-xs text-slate-500">Growth compares each calendar month with the previous month. The current month is partial; future months have no comparison.</p>
           <div className="mt-5 overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b border-slate-200 text-slate-500"><th className="py-3">Month</th><th className="py-3">Collection</th><th className="py-3">Monthly growth</th></tr></thead><tbody>{revenueChart.map(row=><tr key={row.month} className="border-b border-slate-100"><td className="py-3 font-medium">{row.month}</td><td>₹{row.revenue.toLocaleString('en-IN')}</td><td className="pb-3"><GrowthBadge growth={row.growth}/></td></tr>)}</tbody></table></div>
 

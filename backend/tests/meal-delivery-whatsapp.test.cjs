@@ -1,0 +1,20 @@
+const assert=require('node:assert/strict');
+const root=require('node:path').resolve(__dirname,'..');
+let calls=[],response={messages:[{id:'demo-id'}]},failure;
+const sender=require.resolve(root+'/utils/whatsappSender');require.cache[sender]={id:sender,filename:sender,loaded:true,exports:{sendWhatsAppTemplate:async data=>{calls.push(data);if(failure)throw failure;return response;}}};
+const adapter=require(root+'/utils/mealDeliveryWhatsApp');
+const customer={customerName:'Demo Customer',phone:'0000000000'};
+const notice=status=>adapter.sendDeliveryNotice(customer,{status,meal:'Dinner',date:'2026-10-09'});
+(async()=>{
+ delete process.env.WHATSAPP_DELIVERY_ENABLED;delete process.env.WHATSAPP_DELIVERY_LANGUAGE;delete process.env.WHATSAPP_DELIVERY_TEMPLATE;delete process.env.WHATSAPP_DISPATCH_TEMPLATE;
+ assert.equal(adapter.configured(),false);assert.equal((await notice('Delivered')).status,'not_configured');assert.equal(calls.length,0);
+ process.env.WHATSAPP_DELIVERY_ENABLED='true';delete process.env.WHATSAPP_ACCESS_TOKEN;delete process.env.WHATSAPP_PHONE_NUMBER_ID;assert.equal(adapter.configured(),false);
+ process.env.WHATSAPP_ACCESS_TOKEN='fake';process.env.WHATSAPP_PHONE_NUMBER_ID='fake';assert.equal(adapter.configured(),true);
+ assert.equal((await notice('Out for delivery')).status,'accepted');assert.equal(calls[0].templateName,'om_tiffin_out_for_delivery');assert.equal(calls[0].languageCode,'en_GB');assert.deepEqual(calls[0].components[0].parameters.map(p=>p.text),['Demo Customer','Dinner','09/10/2026']);
+ await notice('Delivered');assert.equal(calls[1].templateName,'om_tiffin_delivered');
+ failure=Object.assign(new Error('demo'),{meta:{code:132001}});assert.equal((await notice('Delivered')).status,'failed');
+ failure=new Error('timeout');assert.equal((await notice('Delivered')).status,'unknown');failure=null;response={};assert.equal((await notice('Delivered')).status,'unknown');
+ const before=calls.length;await notice('Pending');assert.equal(calls.length,before);
+ process.env.WHATSAPP_DELIVERY_ENABLED='false';await notice('Delivered');assert.equal(calls.length,before);
+ console.log('PASS WhatsApp adapter: safe default, credential checks, both template names, en_GB, parameter order/date, provider errors/timeout/acknowledgement. Mock sender only; no messages sent.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -88,3 +88,8 @@ More > Check for updates fetches https://www.omtiffinservices.com/admin-app-rele
 For each future release: increase Android versionCode/versionName, pass Gradle tests/lint, build EAS, download and verify the artifact, then update frontend/public/admin-app-release.json with the verified artifact URL and publish the frontend. Do not advertise unfinished builds or reuse an old versionCode.
 
 Current EAS previews use ephemeral debug signing. APK downloads work, but installing over a previous preview can fail because certificates differ. A persistent private signing key is still required for seamless future upgrades; do not commit a signing key into Git or the public release manifest.
+
+## 0.5.0 delivery and repeat phone unlock
+Delivery desk now shows Lunch/Dinner shifts, full-shift progress, status filters, customer address/call links, and dispatch/handover timestamps. No GPS tracking, ETA calculation or automatic delivery marking is implied.
+Modern WebViews restore an Android-authenticated token at document start before React routing. Older WebViews keep the existing fallback. Late restore callbacks are cancelled when the activity backgrounds. Temporary Android authentication/read errors retain the encrypted session for retry; explicit logout, expired tokens or invalidated keys still require account login.
+Test: Gradle assembleDebug, testDebugUnitTest and lintDebug passed. SessionInstrumentation on Android 15 emulator passed real phone PIN + Android Keystore enrollment and three cold Activity reopen cycles with fixture web/token; temporary emulator PIN was removed afterwards. Real phone fingerprint/face testing remains outstanding. Android permits only supported strong biometric modalities or device credentials.

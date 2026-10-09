@@ -75,6 +75,7 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
     private Dialog toolsDialog;
     private boolean locked=false, enrollmentOffered=false, promptOnResume=false, hasWebSession=false;
     private String observedToken="", pendingRestore=null;
+    private androidx.webkit.ScriptHandler restoreScript; private int restorationGeneration;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -129,8 +130,16 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
             @Override public void onPageFinished(WebView view,String url){
                 startupHandler.removeCallbacks(startupTimeout);startupCover.setVisibility(View.GONE);progress.setVisibility(View.GONE);
                 if(!AdminRoutes.trustedOrigin(url))return;
-                if(pendingRestore!=null){String token=pendingRestore;pendingRestore=null;
-                    web.evaluateJavascript("sessionStorage.setItem('token',"+JSONObject.quote(token)+")",result->{hasWebSession=true;setDeviceLocked(false);web.loadUrl(AdminRoutes.ORIGIN+"/dashboard");});
+                if(restoreScript!=null && pendingRestore!=null){
+                    final int attempt=restorationGeneration;String expected=pendingRestore;restoreScript.remove();restoreScript=null;
+                    web.evaluateJavascript("sessionStorage.getItem('token')",result->{
+                        if(attempt!=restorationGeneration)return;pendingRestore=null;
+                        if(JSONObject.quote(expected).equals(result)){hasWebSession=true;setDeviceLocked(false);installAppHooks();}
+                        else{toast("The saved session was rejected. Please sign in again.");usePasswordLogin();}
+                    });return;
+                }
+                if(pendingRestore!=null){final int attempt=restorationGeneration;String token=pendingRestore;pendingRestore=null;
+                    web.evaluateJavascript("sessionStorage.setItem('token',"+JSONObject.quote(token)+")",result->{if(attempt!=restorationGeneration)return;hasWebSession=true;setDeviceLocked(false);web.loadUrl(AdminRoutes.ORIGIN+"/dashboard");});
                 }else installAppHooks();
             }
             @Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError error){if(request.isForMainFrame())showConnectionError("Unable to connect ("+error.getErrorCode()+"). Check your internet connection and try again.");}
@@ -282,6 +291,7 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
     }
     private void setDeviceLocked(boolean value){if(value&&toolsDialog!=null)toolsDialog.dismiss();locked=value;deviceLock.setVisibility(value?View.VISIBLE:View.GONE);web.setVisibility(value?View.INVISIBLE:View.VISIBLE);updateNavigation();}
     private void observeSession(String token){
+        if(token.isEmpty() && pendingRestore!=null)return;
         if(token.isEmpty()){hasWebSession=false;observedToken="";secureSession.clear();enrollmentOffered=false;authenticated=false;updateNavigation();return;}
         if(token.equals(observedToken))return;
         if(secureSession.enabled()&&!observedToken.isEmpty())secureSession.clear();
@@ -309,12 +319,22 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
         deviceUnlock.authenticate(()->{
             try{
                 String token=secureSession.read();observedToken=token;enrollmentOffered=true;
-                if(!hasWebSession||web.getUrl()==null||web.getUrl().equals("about:blank")){pendingRestore=token;web.loadUrl(AdminRoutes.ORIGIN+"/login");}
+                if(!hasWebSession||web.getUrl()==null||web.getUrl().equals("about:blank")){
+                    restorationGeneration++;pendingRestore=token;
+                    if(WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)){
+                        if(restoreScript!=null)restoreScript.remove();
+                        restoreScript=WebViewCompat.addDocumentStartJavaScript(web,"if(window===window.top){sessionStorage.setItem('token',"+JSONObject.quote(token)+");}",new HashSet<>(Arrays.asList(AdminRoutes.ORIGIN,"https://omtiffinservices.com")));
+                        web.loadUrl(AdminRoutes.ORIGIN+"/dashboard");
+                    }else web.loadUrl(AdminRoutes.ORIGIN+"/login");
+                }
                 else web.evaluateJavascript("sessionStorage.getItem('token')",value->{if(JSONObject.quote(token).equals(value)){setDeviceLocked(false);web.evaluateJavascript("window.dispatchEvent(new Event('focus'))",null);}else{toast("Your session ended. Please sign in again.");usePasswordLogin();}});
-            }catch(Exception error){toast("Your saved session expired or your screen lock changed. Please sign in again.");usePasswordLogin();}
+            }catch(android.security.keystore.UserNotAuthenticatedException error){toast("Phone authentication needs to be repeated. Tap Unlock with phone.");}
+            catch(android.security.keystore.KeyPermanentlyInvalidatedException | IllegalArgumentException | IllegalStateException error){toast("Your saved session expired or your screen lock changed. Please sign in again.");usePasswordLogin();}
+            catch(Exception error){toast("Phone unlock could not read the saved session. Try again or choose account login.");}
         },()->{if(!isFinishing())toast("Still locked. Try again or use your account password.");});
     }
-    private void usePasswordLogin(){
+    private void usePasswordLogin(){restorationGeneration++;
+        if(restoreScript!=null){restoreScript.remove();restoreScript=null;}
         secureSession.clear();hasWebSession=false;observedToken="";pendingRestore=null;enrollmentOffered=false;authenticated=false;promptOnResume=false;
         // Keep the lock cover visible until the old WebView session has been removed.
         if(AdminRoutes.trustedOrigin(web.getUrl()))web.evaluateJavascript("sessionStorage.removeItem('token')",result->{setDeviceLocked(false);web.loadUrl(AdminRoutes.ORIGIN+"/login");});
@@ -326,18 +346,18 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
         files.execute(()->{try{byte[] bytes=Base64.decode(data,Base64.DEFAULT);if(bytes.length<5||!new String(bytes,0,5,StandardCharsets.US_ASCII).equals("%PDF-"))throw new IllegalArgumentException();runOnUiThread(()->{pendingPdf=bytes;String filename=name.replaceAll("[\\\\/:*?\"<>|]","_");if(!filename.toLowerCase(Locale.ROOT).endsWith(".pdf"))filename+=".pdf";Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("application/pdf");intent.putExtra(Intent.EXTRA_TITLE,filename.substring(0,Math.min(filename.length(),120)));try{startActivityForResult(intent,13);}catch(Exception error){pendingPdf=null;pdfBusy=false;toast("No document saver is available.");}});}catch(Exception error){runOnUiThread(()->{pdfBusy=false;toast("Only valid PDF receipts and bills can be saved.");});}});
     }
     private void openExternal(Uri uri){String scheme=uri.getScheme();if(!Arrays.asList("https","tel","mailto","whatsapp").contains(scheme)){toast("This link cannot be opened in the admin app.");return;}try{startActivity(new Intent(Intent.ACTION_VIEW,uri));}catch(Exception ignored){toast("No app can open this link.");}}
-    private void back(){if(locked){finish();return;}guardDrafts(()->{if(web.canGoBack())web.goBack();else finish();});}
+    private void back(){if(locked){finish();return;}guardDrafts(()->{if(currentPath.equals("/dashboard")||currentPath.equals("/login"))finish();else if(web.canGoBack())web.goBack();else finish();});}
     @Override public void onBackPressed(){back();}
     @Override public void onRequestPermissionsResult(int request,String[] permissions,int[] results){super.onRequestPermissionsResult(request,permissions,results);if(request==11&&cameraRequest!=null){if(results.length>0&&results[0]==PackageManager.PERMISSION_GRANTED)cameraRequest.grant(new String[]{PermissionRequest.RESOURCE_VIDEO_CAPTURE});else cameraRequest.deny();cameraRequest=null;}}
     @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(deviceUnlock.result(request,result))return;if(request==12&&fileChooser!=null){fileChooser.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileChooser=null;}if(request==13){byte[] bytes=pendingPdf;pendingPdf=null;pdfBusy=false;if(result==RESULT_OK&&data!=null&&data.getData()!=null&&bytes!=null){Uri target=data.getData();files.execute(()->{try(OutputStream stream=getContentResolver().openOutputStream(target)){if(stream==null)throw new IllegalStateException();stream.write(bytes);runOnUiThread(()->toast("PDF saved successfully."));}catch(Exception error){runOnUiThread(()->toast("PDF could not be saved. Please retry."));}});}}}
     @Override protected void onSaveInstanceState(Bundle state){super.onSaveInstanceState(state);}
     @Override protected void onResume(){super.onResume();if(web!=null){web.onResume();if(!locked)web.evaluateJavascript("window.dispatchEvent(new Event('focus'))",null);if(locked&&promptOnResume){promptOnResume=false;web.post(this::unlockRememberedSession);}}}
     @Override protected void onStop(){
-        if(secureSession!=null&&secureSession.enabled()&&!deviceUnlock.busy()&&fileChooser==null&&pendingPdf==null){pendingRestore=null;setDeviceLocked(true);promptOnResume=true;}
+        if(secureSession!=null&&secureSession.enabled()&&!deviceUnlock.busy()&&fileChooser==null&&pendingPdf==null){restorationGeneration++;if(restoreScript!=null){restoreScript.remove();restoreScript=null;}if(pendingRestore!=null)web.stopLoading();pendingRestore=null;setDeviceLocked(true);promptOnResume=true;}
         super.onStop();
     }
     @Override protected void onPause(){if(web!=null)web.onPause();super.onPause();}
-    @Override protected void onDestroy(){startupHandler.removeCallbacks(startupTimeout);deviceUnlock.destroy();observedToken="";pendingRestore=null;if(fileChooser!=null)fileChooser.onReceiveValue(null);if(cameraRequest!=null)cameraRequest.deny();pendingPdf=null;web.destroy();files.shutdown();super.onDestroy();}
+    @Override protected void onDestroy(){if(restoreScript!=null)restoreScript.remove();startupHandler.removeCallbacks(startupTimeout);deviceUnlock.destroy();observedToken="";pendingRestore=null;if(fileChooser!=null)fileChooser.onReceiveValue(null);if(cameraRequest!=null)cameraRequest.deny();pendingPdf=null;web.destroy();files.shutdown();super.onDestroy();}
     private int dp(float value){return Math.round(value*getResources().getDisplayMetrics().density);}
     private GradientDrawable rounded(int color,int radius){GradientDrawable shape=new GradientDrawable();shape.setColor(color);shape.setCornerRadius(dp(radius));return shape;}
     private void toast(String message){Toast.makeText(this,message,Toast.LENGTH_SHORT).show();}

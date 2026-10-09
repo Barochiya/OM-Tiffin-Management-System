@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { notify } from "../services/notifications";
 import { getBusinessDate } from "../utils/businessDate";
 import React, { useEffect, useRef, useState } from "react";
@@ -988,7 +989,8 @@ const [saved, setSaved] = useState(false);
   };
   return (
     <div className="p-4 md:p-6">
-      <div className="mb-6">
+      {window.OMAdminNative && <Link to="/meal-deliveries" className="inline-block bg-emerald-800 text-white rounded-lg px-4 py-3 mb-4">Tiffin delivery status</Link>}
+        <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
           Barcode Entry
         </h1>

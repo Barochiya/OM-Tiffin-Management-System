@@ -52,6 +52,15 @@ const saveDailyEntry = async (req, res) => {
       });
     }
 
+    // App clients request delivery verification; historic website workflows remain compatible.
+    if(req.body.deliveryCheck === true){
+      const {dateKey,missingMeals}=require('../utils/deliveryPolicy');
+      const MealDelivery=require('../models/MealDelivery');
+      const key=dateKey(date);
+      const records=await MealDelivery.find({customer,date:key}).lean();
+      const missing=missingMeals(req.body,records);
+      if(missing.length && req.body.confirmUndelivered !== true)return res.status(409).json({success:false,code:'DELIVERY_NOT_CONFIRMED',missingMeals:missing,message:`${missing.join(' / ')} tiffin has not been marked Delivered. Verify before saving.`});
+    }
     const normalizedDate = normalizeDate(date);
 
     // =======================================

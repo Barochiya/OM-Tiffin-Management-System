@@ -1,4 +1,5 @@
 import api from "./api";
+import {confirmAction} from "./notifications";
 
 // Get Customers
 export const getCustomersForEntry = async () => {
@@ -21,9 +22,10 @@ export const getCustomersForEntry = async () => {
 export const saveDailyEntry = async (entryData) => {
   const token = sessionStorage.getItem("token");
 
-  const response = await api.post(
+  let response;
+  try{response = await api.post(
     "/daily-entry",
-    entryData,
+    (window.OMAdminNative || document.body.dataset.omNative === 'true') ? {...entryData,deliveryCheck:true} : entryData,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -31,6 +33,12 @@ export const saveDailyEntry = async (entryData) => {
     }
   );
 
+  }catch(error){
+    if(error.response?.data?.code!=='DELIVERY_NOT_CONFIRMED')throw error;
+    const proceed=await confirmAction(error.response.data.message+' Save the entry anyway?',{confirmLabel:'Save anyway'});
+    if(!proceed)throw new Error('Entry not saved. Verify tiffin delivery first.');
+    response=await api.post('/daily-entry',{...entryData,deliveryCheck:true,confirmUndelivered:true});
+  }
   return response.data;
 };
 

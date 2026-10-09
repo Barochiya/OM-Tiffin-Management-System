@@ -138,6 +138,7 @@ app.use("/api/prices", priceRoutes);
 
 // Daily Entry
 app.use("/api/daily-entry", dailyEntryRoutes);
+app.use("/api/meal-deliveries", require("./routes/mealDeliveryRoutes"));
 
 // Monthly Bills
 app.use("/api/bills", billRoutes);

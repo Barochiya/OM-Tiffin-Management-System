@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { notify } from "../services/notifications";
 import { getBusinessDate } from "../utils/businessDate";
 import { useEffect, useState } from "react";
@@ -458,6 +459,7 @@ const filteredCustomers = customers.filter(
             PAGE HEADER
         ===================================== */}
 
+        {window.OMAdminNative && <Link to="/meal-deliveries" className="inline-block bg-emerald-800 text-white rounded-lg px-4 py-3 mb-4">Tiffin delivery status</Link>}
         <div className="mb-7">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 

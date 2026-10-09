@@ -1,3 +1,4 @@
+
 import { lazy, Suspense } from "react";
 import PageLoading from "./components/PageLoading";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -34,6 +35,7 @@ const Users = lazy(() => import("./pages/Users"));
 const AddCustomer = lazy(() => import("./pages/AddCustomer"));
 const EditCustomer = lazy(() => import("./pages/EditCustomer"));
 const ViewCustomer = lazy(() => import("./pages/ViewCustomer"));
+const MealDeliveries = lazy(() => import("./pages/MealDeliveries"));
 const DailyEntry = lazy(() => import("./pages/DailyEntry"));
 const BarcodeEntry = lazy(() => import("./pages/BarcodeEntry"));
 const PriceSettings = lazy(() => import("./pages/PriceSettings"));
@@ -192,6 +194,7 @@ export default function App() {
           }
         />
 
+        <Route path="/meal-deliveries" element={<ProtectedRoute><MealDeliveries /></ProtectedRoute>} />
         <Route
           path="/daily-entry"
           element={

@@ -1,6 +1,6 @@
 {
-  "versionName": "0.5.0",
-  "apkUrl": "https://expo.dev/artifacts/eas/KwNagwElzzvzB40oZ6pUgn8i3OlQFm7NzjaW9nerNGs.apk",
-  "notes": "Delivery shift dashboard, status filters and contact actions. Improved phone unlock across app reopening.",
-  "versionCode": 8
+  "versionCode": 9,
+  "versionName": "0.6.0",
+  "apkUrl": "https://expo.dev/artifacts/eas/_DEfovtbPj_7TxCF2Pt3YyPI307Gy_WWTkI28VdH23E.apk",
+  "notes": "Customer delivery pins, compact delivery cards, swipe to dispatch and deliver, refreshed WhatsApp inbox and update panel. If Android rejects the update, uninstall the previous preview app and install this APK, then sign in again."
 }

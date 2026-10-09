@@ -81,3 +81,10 @@ APK: https://expo.dev/artifacts/eas/N4dJDyxh1QODdDEMkSZ8bCJgZn7TJ39Pa0Q2vXHGfRc.
 Downloaded artifact manifest/assets/authentication classes verified.
 SHA256: ff7e0546fbad3d5e14c0e4c0b2c3feb5652ac3650ffc05a4578d893ed75f52e8
 Signer differs from 0.3.0, so direct update is incompatible; preview reinstall requires login and phone unlock enrollment again. Phone-specific startup root cause remains unconfirmed; local equivalent 0.3.1 login and offline reconnect were verified in Android emulator.
+
+## In-app update publishing
+More > Check for updates fetches https://www.omtiffinservices.com/admin-app-release.json with a 10-second network timeout. Metadata must contain versionCode, versionName, apkUrl, and optional notes. Only HTTPS Expo APK artifact URLs are accepted. The app compares Android versionCode and uses Android Download Manager; installation requires the user's Android confirmation.
+
+For each future release: increase Android versionCode/versionName, pass Gradle tests/lint, build EAS, download and verify the artifact, then update frontend/public/admin-app-release.json with the verified artifact URL and publish the frontend. Do not advertise unfinished builds or reuse an old versionCode.
+
+Current EAS previews use ephemeral debug signing. APK downloads work, but installing over a previous preview can fail because certificates differ. A persistent private signing key is still required for seamless future upgrades; do not commit a signing key into Git or the public release manifest.

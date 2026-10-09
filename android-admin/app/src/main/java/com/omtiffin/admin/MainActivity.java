@@ -236,7 +236,40 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
         TextView refresh=new TextView(this);refresh.setText("Refresh page");refresh.setGravity(Gravity.CENTER);refresh.setTextColor(BLUE);refresh.setTextSize(14);refresh.setMinHeight(dp(48));actions.addView(refresh,new LinearLayout.LayoutParams(0,-2,1));refresh.setOnClickListener(view->{dialog.dismiss();guardDrafts(web::reload);});
         TextView logout=new TextView(this);logout.setText("Sign out");logout.setGravity(Gravity.CENTER);logout.setTextColor(0xffa14c3c);logout.setTextSize(14);logout.setMinHeight(dp(48));actions.addView(logout,new LinearLayout.LayoutParams(0,-2,1));logout.setOnClickListener(view->{new AlertDialog.Builder(this).setTitle("Sign out?").setMessage("Leave your admin workspace?").setNegativeButton("Stay",(d,w)->{}).setPositiveButton("Sign out",(d,w)->{dialog.dismiss();guardDrafts(()->web.evaluateJavascript("document.querySelector('button[aria-label=\"Sign out\"]')?.click()",null));}).show();});
         TextView deviceSetting=new TextView(this);deviceSetting.setText(secureSession.enabled()?"Phone unlock is on - Turn off":"Enable fingerprint / phone PIN unlock");deviceSetting.setTextSize(13);deviceSetting.setTextColor(BLUE);deviceSetting.setGravity(Gravity.CENTER);deviceSetting.setMinHeight(dp(48));panel.addView(deviceSetting);deviceSetting.setOnClickListener(view->{dialog.dismiss();if(secureSession.enabled()){secureSession.clear();enrollmentOffered=true;toast("Phone unlock turned off.");}else enableDeviceUnlock();});
+        TextView updates=new TextView(this);updates.setText("Check for updates");updates.setTextSize(14);updates.setTextColor(BLUE);updates.setGravity(Gravity.CENTER);updates.setMinHeight(dp(48));panel.addView(updates);updates.setOnClickListener(view->{dialog.dismiss();checkForAppUpdate();});
         dialog.setContentView(panel);android.view.Window window=dialog.getWindow();if(window!=null){window.setBackgroundDrawableResource(android.R.color.transparent);window.setGravity(Gravity.BOTTOM);window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);}dialog.show();if(window!=null)window.setLayout(-1,-2);
+    }
+    private boolean checkingUpdate=false;
+    private void checkForAppUpdate(){
+        if(checkingUpdate)return;checkingUpdate=true;toast("Checking for updates...");
+        files.execute(()->{
+            java.net.HttpURLConnection connection=null;
+            try{
+                connection=(java.net.HttpURLConnection)new java.net.URL(AdminRoutes.ORIGIN+"/admin-app-release.json").openConnection();
+                connection.setConnectTimeout(10000);connection.setReadTimeout(10000);connection.setInstanceFollowRedirects(false);connection.setRequestProperty("Cache-Control","no-cache");
+                if(connection.getResponseCode()!=200)throw new java.io.IOException("Update service unavailable");
+                java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();
+                try(java.io.InputStream input=connection.getInputStream()){byte[] buffer=new byte[2048];int n;while((n=input.read(buffer))!=-1){if(bytes.size()+n>16384)throw new java.io.IOException("Invalid update metadata");bytes.write(buffer,0,n);}}
+                JSONObject release=new JSONObject(bytes.toString("UTF-8"));
+                UpdateRelease update=UpdateRelease.parse(release);
+                android.content.pm.PackageInfo info=getPackageManager().getPackageInfo(getPackageName(),0);
+                long installed=Build.VERSION.SDK_INT>=28?info.getLongVersionCode():info.versionCode;
+                runOnUiThread(()->{checkingUpdate=false;if(isFinishing()||isDestroyed()||locked)return;
+                    if(update.code<=installed){new AlertDialog.Builder(this).setTitle("App is up to date").setMessage("Installed version: "+info.versionName).setPositiveButton("OK",null).show();return;}
+                    new AlertDialog.Builder(this).setTitle("Update available: "+update.version).setMessage(update.notes+"\n\nDownload the APK, then open it to install. Android will ask you to confirm installation.").setNegativeButton("Later",null).setPositiveButton("Download APK",(d,w)->downloadAppUpdate(update)).show();
+                });
+            }catch(Exception error){runOnUiThread(()->{checkingUpdate=false;if(!isFinishing()&&!isDestroyed()&&!locked)toast("Could not check for updates. Please try again.");});}
+            finally{if(connection!=null)connection.disconnect();}
+        });
+    }
+    private void downloadAppUpdate(UpdateRelease update){
+        try{
+            android.app.DownloadManager manager=(android.app.DownloadManager)getSystemService(DOWNLOAD_SERVICE);
+            android.app.DownloadManager.Request request=new android.app.DownloadManager.Request(Uri.parse(update.url));
+            request.setTitle("OM Tiffin Admin "+update.version);request.setDescription("App update APK");request.setMimeType("application/vnd.android.package-archive");request.setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+            request.setDestinationInExternalFilesDir(this,android.os.Environment.DIRECTORY_DOWNLOADS,"OM-Tiffin-Admin-"+update.code+".apk");manager.enqueue(request);
+            toast("Update download started. Open the completed download to install.");
+        }catch(Exception error){openExternal(Uri.parse(update.url));}
     }
     private void buildDeviceLock(){
         deviceLock=new LinearLayout(this);deviceLock.setOrientation(LinearLayout.VERTICAL);deviceLock.setGravity(Gravity.CENTER);deviceLock.setPadding(dp(28),dp(28),dp(28),dp(28));deviceLock.setBackgroundColor(0xfff5f6f1);

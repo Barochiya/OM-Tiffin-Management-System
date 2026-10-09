@@ -1,6 +1,6 @@
 {
-  "versionCode": 9,
-  "versionName": "0.6.0",
-  "apkUrl": "https://expo.dev/artifacts/eas/_DEfovtbPj_7TxCF2Pt3YyPI307Gy_WWTkI28VdH23E.apk",
-  "notes": "Customer delivery pins, compact delivery cards, swipe to dispatch and deliver, refreshed WhatsApp inbox and update panel. If Android rejects the update, uninstall the previous preview app and install this APK, then sign in again."
+  "versionCode": 10,
+  "versionName": "0.6.1",
+  "apkUrl": "https://expo.dev/artifacts/eas/UWVLDt35nwlyLzbRP-bnSyEHeAbJ5chx2nZoRc8Fyzc.apk",
+  "notes": "Fixed touchscreen delivery swipe, compact delivery cards and redesigned tools menu. Android WebView touchscreen tests passed. Uninstall the previous preview app before installing, then sign in and enable phone unlock again."
 }

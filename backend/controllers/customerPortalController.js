@@ -11,7 +11,7 @@ const { sendCustomerModificationApprovalNotification } = require("../utils/custo
 const getCustomerProfile = async (req, res) => {
   try {
     const customer = await Tiffin.findById(req.customerId).select(
-      "customerName phone address mealType status barcode pricing createdAt updatedAt"
+      "customerName phone address deliveryLocation mealType status barcode pricing createdAt updatedAt"
     );
     if (!customer) {
       return res.status(404).json({
@@ -39,6 +39,14 @@ const updateCustomerProfile = async (req, res) => {
       address,
     } = req.body || {};
     const updates = {};
+    if (Object.prototype.hasOwnProperty.call(req.body || {}, 'deliveryLocation')) {
+      const pin = req.body.deliveryLocation;
+      if (pin === null) updates.deliveryLocation = null;
+      else {
+        if (!pin || typeof pin !== 'object' || typeof pin.latitude !== 'number' || !Number.isFinite(pin.latitude) || Math.abs(pin.latitude)>90 || typeof pin.longitude !== 'number' || !Number.isFinite(pin.longitude) || Math.abs(pin.longitude)>180 || (pin.accuracy !== undefined && (typeof pin.accuracy !== 'number' || !Number.isFinite(pin.accuracy) || pin.accuracy<0))) return res.status(400).json({success:false,message:'Please provide valid map coordinates.'});
+        updates.deliveryLocation = {latitude:pin.latitude,longitude:pin.longitude,updatedAt:new Date(),...(pin.accuracy !== undefined ? {accuracy:pin.accuracy} : {})};
+      }
+    }
     if (customerName !== undefined) {
       const normalizedName = String(customerName).trim();
       if (!normalizedName) {
@@ -95,7 +103,7 @@ const updateCustomerProfile = async (req, res) => {
         runValidators: true,
       }
     ).select(
-      "customerName phone address mealType status barcode pricing createdAt updatedAt"
+      "customerName phone address deliveryLocation mealType status barcode pricing createdAt updatedAt"
     );
     if (!customer) {
       return res.status(404).json({

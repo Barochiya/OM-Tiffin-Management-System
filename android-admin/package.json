@@ -1,6 +1,6 @@
 {
   "name": "om-tiffin-admin",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Native Android admin app built through Expo EAS",
   "scripts": {

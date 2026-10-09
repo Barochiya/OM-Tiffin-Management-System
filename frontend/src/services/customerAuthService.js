@@ -47,6 +47,7 @@ export const updateCustomerProfile = async ({
   customerName,
   phone,
   address,
+  deliveryLocation,
 }) => {
   const response = await customerApi.put(
     "/customer-portal/profile",
@@ -54,6 +55,7 @@ export const updateCustomerProfile = async ({
       customerName,
       phone,
       address,
+      deliveryLocation,
     }
   );
   return response.data;

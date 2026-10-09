@@ -16,6 +16,7 @@ import {
   updateCustomerProfile,
   logoutCustomer,
 } from "../services/customerAuthService";
+import CustomerLocationCard from "../customer/components/CustomerLocationCard";
 const CustomerProfile = () => {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState(null);
@@ -379,6 +380,7 @@ const CustomerProfile = () => {
             </section>
           </div>
         </form>
+        <CustomerLocationCard customer={customer} onSaved={setCustomer}/>
       </div>
     </div>
   );

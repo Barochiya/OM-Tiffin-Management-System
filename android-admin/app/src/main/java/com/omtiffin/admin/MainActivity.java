@@ -235,7 +235,7 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
         Runnable render=()->{list.removeAllViews();String query=search.getText().toString().trim().toLowerCase(Locale.ROOT);String previous="";int count=0;
             for(String[] item:items){if(!(item[0]+" "+item[1]).toLowerCase(Locale.ROOT).contains(query))continue;count++;
                 if(!previous.equals(item[0])){TextView heading=new TextView(this);heading.setText(item[0].toUpperCase(Locale.ROOT));heading.setTextSize(10);heading.setTypeface(null,android.graphics.Typeface.BOLD);heading.setTextColor(MUTED);heading.setPadding(dp(4),dp(22),0,dp(10));list.addView(heading);previous=item[0];}
-                TextView button=new TextView(this);button.setText(item[1]);button.setTextSize(15);button.setTextColor(INK);button.setPadding(dp(14),dp(16),dp(14),dp(16));button.setMinHeight(dp(52));button.setBackground(rounded(Color.WHITE,12));button.setClickable(true);button.setFocusable(true);LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2);params.bottomMargin=dp(6);list.addView(button,params);
+                TextView button=new TextView(this);button.setText(item[1]+"   ›");button.setTextSize(15);button.setTextColor(INK);button.setPadding(dp(14),dp(16),dp(14),dp(16));button.setMinHeight(dp(52));button.setBackground(rounded(Color.WHITE,12));button.setClickable(true);button.setFocusable(true);LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2);params.bottomMargin=dp(6);list.addView(button,params);
                 button.setOnClickListener(view->{dialog.dismiss();navigate(item[2],item[2].equals("/dashboard")?"reports":"home");});
             }
             if(count==0){TextView empty=new TextView(this);empty.setText("No matching tools. Try another name.");empty.setTextColor(MUTED);empty.setPadding(0,dp(24),0,dp(24));list.addView(empty);}
@@ -264,12 +264,22 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
                 android.content.pm.PackageInfo info=getPackageManager().getPackageInfo(getPackageName(),0);
                 long installed=Build.VERSION.SDK_INT>=28?info.getLongVersionCode():info.versionCode;
                 runOnUiThread(()->{checkingUpdate=false;if(isFinishing()||isDestroyed()||locked)return;
-                    if(update.code<=installed){new AlertDialog.Builder(this).setTitle("App is up to date").setMessage("Installed version: "+info.versionName).setPositiveButton("OK",null).show();return;}
-                    new AlertDialog.Builder(this).setTitle("Update available: "+update.version).setMessage(update.notes+"\n\nDownload the APK, then open it to install. Android will ask you to confirm installation.").setNegativeButton("Later",null).setPositiveButton("Download APK",(d,w)->downloadAppUpdate(update)).show();
+                    showUpdatePanel(update,info.versionName,update.code>installed);
                 });
             }catch(Exception error){runOnUiThread(()->{checkingUpdate=false;if(!isFinishing()&&!isDestroyed()&&!locked)toast("Could not check for updates. Please try again.");});}
             finally{if(connection!=null)connection.disconnect();}
         });
+    }
+    private void showUpdatePanel(UpdateRelease update,String installed,boolean available){
+        Dialog dialog=new Dialog(this);toolsDialog=dialog;
+        LinearLayout panel=new LinearLayout(this);panel.setOrientation(LinearLayout.VERTICAL);panel.setPadding(dp(24),dp(28),dp(24),dp(20));panel.setBackground(rounded(0xfff5f6f1,24));
+        TextView brand=new TextView(this);brand.setText("OM TIFFIN  /  APP UPDATES");brand.setTextColor(BLUE);brand.setTextSize(11);brand.setTypeface(null,android.graphics.Typeface.BOLD);panel.addView(brand);
+        TextView title=new TextView(this);title.setText(available?"A better workspace awaits":"You're up to date");title.setTextSize(26);title.setTextColor(INK);title.setTypeface(null,android.graphics.Typeface.BOLD);title.setPadding(0,dp(18),0,dp(12));panel.addView(title);
+        TextView version=new TextView(this);version.setText(available?"Installed "+installed+"   /   New "+update.version:"Current version "+installed);version.setTextColor(BLUE);version.setTextSize(14);version.setPadding(dp(14),dp(12),dp(14),dp(12));version.setBackground(rounded(0xffe3eddf,12));panel.addView(version);
+        TextView notes=new TextView(this);notes.setText(available?update.notes+"\n\nDownload, then open the APK to install. Android will ask for confirmation.":"Your app has the latest available release.");notes.setTextColor(MUTED);notes.setTextSize(15);notes.setPadding(0,dp(20),0,dp(22));ScrollView scroll=new ScrollView(this);scroll.addView(notes);panel.addView(scroll,new LinearLayout.LayoutParams(-1,-2));
+        Button primary=new Button(this);primary.setAllCaps(false);primary.setText(available?"Download update":"Done");primary.setTextColor(Color.WHITE);primary.setBackground(rounded(BLUE,14));panel.addView(primary,new LinearLayout.LayoutParams(-1,dp(54)));primary.setOnClickListener(v->{dialog.dismiss();if(available)downloadAppUpdate(update);});
+        if(available){Button later=new Button(this);later.setAllCaps(false);later.setText("Maybe later");later.setTextColor(BLUE);later.setBackgroundColor(Color.TRANSPARENT);panel.addView(later,new LinearLayout.LayoutParams(-1,dp(48)));later.setOnClickListener(v->dialog.dismiss());}
+        dialog.setContentView(panel);android.view.Window window=dialog.getWindow();if(window!=null){window.setBackgroundDrawableResource(android.R.color.transparent);window.setLayout(-1,-2);window.setGravity(Gravity.BOTTOM);}dialog.show();if(window!=null)window.setLayout(-1,-2);
     }
     private void downloadAppUpdate(UpdateRelease update){
         try{

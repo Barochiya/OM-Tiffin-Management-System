@@ -3,14 +3,14 @@ import {getCustomersForEntry} from '../services/dailyEntryService';
 import {getDeliveries,markDelivery,currentDeliveryMeal} from '../services/mealDeliveryService';
 import {getBusinessDate} from '../utils/businessDate';
 import './meal-deliveries.css';
-import {confirmAction} from '../services/notifications';
+import SwipeDelivery from './SwipeDelivery';
 export default function MealDeliveries(){
  const [date,setDate]=useState(getBusinessDate);const [meal,setMeal]=useState(currentDeliveryMeal);
  const [customers,setCustomers]=useState([]),[records,setRecords]=useState([]),[search,setSearch]=useState('');
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[ready,setReady]=useState(false);const [filter,setFilter]=useState('All');
  useEffect(()=>{let live=true;setLoading(true);setError('');Promise.all([getCustomersForEntry(),getDeliveries(date)]).then(([c,d])=>{if(live){setCustomers(c.data||[]);setRecords(d.data||[]);setReady(d.whatsappConfigured===true);}}).catch(e=>{if(live)setError(e.response?.data?.message||'Delivery service is unavailable. Please retry.');}).finally(()=>{if(live)setLoading(false);});return()=>{live=false;};},[date]);
  async function mark(customer,status){
-  if(busy||!await confirmAction(`${customer.customerName}: mark ${meal} as ${status}?`))return;
+  if(busy)return;
   setBusy(customer._id);setError('');
   try{const result=await markDelivery({customer:customer._id,date,meal,status});setRecords(prev=>[...prev.filter(r=>!(r.customer===customer._id&&r.meal===meal)),result.data]);}
   catch(e){setError(e.response?.data?.message||'Could not confirm the update. Refresh delivery status before retrying.');}
@@ -38,9 +38,9 @@ export default function MealDeliveries(){
  {loading?<p role="status" className="delivery-empty">Loading your delivery list...</p>:error?null:<div className="delivery-list">{visible.map((c,index)=>{const r=records.find(r=>r.customer===c._id&&r.meal===meal);const status=r?.status||'Pending';return <article key={c._id} className={'delivery-card '+(status==='Delivered'?'is-delivered':'')}>
  <div className="delivery-card-top"><span className="delivery-stop">{String(index+1).padStart(2,'0')}</span><div><h2>{c.customerName}</h2><span className="delivery-code">{c.barcode||'Customer'} · {meal}</span></div><span className={'delivery-badge status-'+status.split(' ')[0].toLowerCase()}>{status==='Out for delivery'?'On the way':status}</span></div>
  {c.address&&<p className="delivery-address">{c.address}</p>}
- <div className="delivery-contact">{c.phone&&<a href={'tel:'+c.phone}>Call customer</a>}{c.address&&<a href={'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(c.address)} target="_blank" rel="noreferrer">Open address</a>}</div>
+ <div className="delivery-contact">{c.phone&&<a href={'tel:'+c.phone}>Call customer</a>}{(c.deliveryLocation||c.address)&&<a href={'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(c.deliveryLocation?c.deliveryLocation.latitude+','+c.deliveryLocation.longitude:c.address)} target="_blank" rel="noreferrer">{c.deliveryLocation?'Open saved pin':'Open address'}</a>}</div>
  <div className="delivery-timeline"><span className={status!=='Pending'?'done':''}>Dispatched{r?.dispatchedAt&&<small>{new Date(r.dispatchedAt).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'})}</small>}</span><span className={status==='Delivered'?'done':''}>Delivered{r?.deliveredAt&&<small>{new Date(r.deliveredAt).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'})}</small>}</span></div>
- {status!=='Delivered'?<button className="delivery-primary" disabled={!!busy||date!==getBusinessDate()} onClick={()=>mark(c,status==='Pending'?'Out for delivery':'Delivered')}>{busy===c._id?'Saving...':status==='Pending'?'Mark Out for delivery':'Mark Delivered'}</button>:<p className="delivery-success">Handover confirmed</p>}
+ {status!=='Delivered'?<SwipeDelivery key={status} disabled={!!busy||date!==getBusinessDate()} onComplete={()=>mark(c,status==='Pending'?'Out for delivery':'Delivered')} label={busy===c._id?'Saving...':status==='Pending'?'Swipe: Out for delivery':'Swipe: Delivered'}/>:<p className="delivery-success">Handover confirmed</p>}
  {r?.notification?.status&&status==='Delivered'&&<p className="delivery-message">WhatsApp: {r.notification.status==='not_configured'?'not configured':r.notification.status==='accepted'?'accepted by provider':r.notification.status}</p>}
  </article>;})}{!visible.length&&<div className="delivery-empty"><strong>{filter==='Delivered'?'No completed deliveries yet':'No stops in this list'}</strong><p>Change the meal, date or status filter.</p></div>}</div>}
  <p className="delivery-footer">{ready?'WhatsApp connection is enabled.':'WhatsApp delivery notices will be enabled after template setup.'}</p>

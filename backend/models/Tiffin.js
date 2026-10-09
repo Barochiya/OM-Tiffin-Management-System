@@ -29,6 +29,10 @@ const tiffinSchema = new mongoose.Schema(
 }
 },
 
+    deliveryLocation: {
+      type: new mongoose.Schema({latitude:{type:Number,required:true,min:-90,max:90},longitude:{type:Number,required:true,min:-180,max:180},accuracy:{type:Number,min:0},updatedAt:Date},{_id:false}),
+      default: undefined,
+    },
     address: {
         type: String,
         required: true,

@@ -988,7 +988,7 @@ const [saved, setSaved] = useState(false);
     setCameraError("");
   };
   return (
-    <div className="p-4 md:p-6">
+    <div className="scanner-page p-4 md:p-6">
       {window.OMAdminNative && <Link to="/meal-deliveries" className="inline-block bg-emerald-800 text-white rounded-lg px-4 py-3 mb-4">Tiffin delivery status</Link>}
         <div className="mb-6">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
@@ -1238,29 +1238,13 @@ const [saved, setSaved] = useState(false);
             CUSTOMER + ENTRY
         ========================================= */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+          <div className="scanner-utilities"><div><strong>Customer barcode labels</strong><p>Preview and print active customer stickers</p></div><button type="button" onClick={loadActiveBarcodeCustomers} disabled={loadingAllBarcodes}>{loadingAllBarcodes?'Loading labels...':'View / print barcodes'}</button></div>
           <div className="flex items-center gap-3 mb-5">
             <div className="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center">
               <FaUser className="text-green-600 text-xl" />
             </div>
             <div>
               <h2 className="font-bold text-lg">
-                      {/* PRINT ALL ACTIVE CUSTOMER BARCODES */}
-      <div className="mt-5">
-        <button
-          type="button"
-          onClick={loadActiveBarcodeCustomers}
-          disabled={loadingAllBarcodes}
-          className="w-full py-3 rounded-xl border-2 border-blue-600 text-blue-700 hover:bg-blue-50 font-bold flex items-center justify-center gap-2 disabled:opacity-60"
-        >
-          <FaBarcode />
-          {loadingAllBarcodes
-            ? "Loading Active Customer Barcodes..."
-            : "Print All Active Customer Barcodes"}
-        </button>
-        <p className="text-xs text-slate-400 text-center mt-2">
-          Print all active customer barcode stickers in one print job.
-        </p>
-      </div>
 Customer Details
               </h2>
               <p className="text-sm text-slate-500">

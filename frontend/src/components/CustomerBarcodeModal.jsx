@@ -775,7 +775,7 @@ return (
           }
         `}
       </style>
-      <div className="barcode-modal-overlay">
+      <div className="barcode-modal-overlay" role="dialog" aria-modal="true" aria-label={isAllMode ? "Customer barcode stickers" : "Customer barcode sticker"}>
         <div className="barcode-modal">
           <div className="barcode-modal-header">
             <div>

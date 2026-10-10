@@ -220,7 +220,7 @@ const todayMeals =
 ];
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="dashboard-page min-h-screen bg-slate-100">
 
       <div className="max-w-7xl mx-auto px-6 py-8">
 
@@ -282,7 +282,7 @@ const todayMeals =
 </section>
 {/* KPI Cards */}
 
-<div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
+<div className="dashboard-kpis grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-6">
 
   {cards.map((card) => (
     <DashboardCard
@@ -389,7 +389,7 @@ const todayMeals =
 
         {/* Bottom Widgets */}
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
+        <div className="dashboard-widgets grid grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
 
           {/* Recent Payments */}
 

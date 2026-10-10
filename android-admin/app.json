@@ -3,10 +3,10 @@
     "name": "OM Tiffin Admin",
     "slug": "om-tiffin-admin",
     "owner": "om-tiffin-admin",
-    "version": "0.6.1",
+    "version": "0.7.0",
     "android": {
       "package": "com.omtiffin.admin",
-      "versionCode": 10
+      "versionCode": 11
     },
     "extra": {
       "eas": {

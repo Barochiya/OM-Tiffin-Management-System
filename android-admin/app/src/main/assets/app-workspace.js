@@ -26,7 +26,7 @@
   home.innerHTML = `
     <header class="app-home-header">
       <div class="app-brand-row"><span class="app-wordmark">OM <b>TIFFIN</b><small>ADMIN WORKSPACE</small></span><div class="app-header-actions"><button class="app-header-icon" data-action="notifications" aria-label="Notifications">${icon('bell')}</button><button class="app-header-icon" data-action="more" aria-label="Open all tools">${icon('more')}</button></div></div>
-      <p class="app-date"></p><h1>Let's make today<br>run smoothly.</h1>
+      <p class="app-date"></p><h1>Your daily workspace</h1>
       <div class="app-header-footer"><span>Meals. Customers. Collections.</span><button class="app-header-icon" data-action="refresh" aria-label="Refresh home">${icon('refresh')}</button></div>
     </header>
     <main class="app-home-content">
@@ -36,7 +36,7 @@
         <button class="app-metric" data-path="/payments"><span class="app-metric-icon">${icon('payment')}</span><span class="app-metric-label">Collected today</span><strong data-stat="Today's Collection">—</strong><span class="app-metric-footer">View payments ${icon('arrow')}</span></button>
       </div>
       <p class="app-data-status" role="status"></p>
-      <button class="app-scan-button" data-path="/barcode-entry"><span class="app-scan-icon">${icon('scan')}</span><span><strong>Scan a tiffin</strong><small>Open camera & record a meal</small></span>${icon('arrow')}</button>
+      <button class="app-scan-button" data-path="/barcode-entry"><span class="app-scan-icon">${icon('scan')}</span><span><strong>Scan a tiffin</strong><small>Barcode scan · Record a meal</small></span>${icon('arrow')}</button>
       <div class="app-section-heading"><h2>Your daily tools</h2><button class="app-text-button" data-action="more">See all ${icon('arrow')}</button></div>
       <div class="app-tool-grid">
         ${[

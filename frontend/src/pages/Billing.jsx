@@ -368,6 +368,13 @@ const getPdfOptions = () => ({
   },
 
   html2canvas: {
+    // Export using the desktop layout, regardless of the phone's viewport.
+    x: 0,
+    y: 0,
+    windowWidth: 1280,
+    windowHeight: 1800,
+    scrollX: 0,
+    scrollY: 0,
     scale: 1,
 
     useCORS: true,
@@ -375,6 +382,14 @@ const getPdfOptions = () => ({
     logging: false,
 
     onclone: (clonedDocument) => {
+      // Native screen styles must not change the invoice sent to customers.
+      clonedDocument.body.removeAttribute("data-om-native");
+      clonedDocument.body.removeAttribute("data-om-app-path");
+      clonedDocument.body.classList.remove("om-app-home-visible");
+      const exportContainer = clonedDocument.querySelector(".html2pdf__container");
+      if (exportContainer) {
+        Object.assign(exportContainer.style, {left:"0", right:"auto", top:"0", margin:"0"});
+      }
       const clonedBill = clonedDocument.querySelector(
         '[data-pdf-bill="true"]'
       );

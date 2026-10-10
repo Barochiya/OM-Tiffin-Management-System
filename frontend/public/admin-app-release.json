@@ -1,6 +1,6 @@
 {
-  "versionCode": 10,
-  "versionName": "0.6.1",
-  "apkUrl": "https://expo.dev/artifacts/eas/UWVLDt35nwlyLzbRP-bnSyEHeAbJ5chx2nZoRc8Fyzc.apk",
-  "notes": "Fixed touchscreen delivery swipe, compact delivery cards and redesigned tools menu. Android WebView touchscreen tests passed. Uninstall the previous preview app before installing, then sign in and enable phone unlock again."
+  "versionCode": 11,
+  "versionName": "0.7.0",
+  "apkUrl": "https://expo.dev/artifacts/eas/lPLP4QwXxP0SWyl3twcCYMTHt4XJ26aP8jizOF3FpnU.apk",
+  "notes": "Improved mobile reports, readable customer names and amounts, single-column barcode preview, and a compact home workspace. Uninstall the previous preview app before installing, then sign in and enable phone unlock again."
 }

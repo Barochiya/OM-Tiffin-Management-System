@@ -16,3 +16,16 @@ body[data-om-native] .om-admin-shell .scanner-page{padding:0!important;min-width
 }
 @media(prefers-reduced-motion:reduce){.om-admin-shell *{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 }
+
+/* Keep the 44px touch target separate from the switch track. */
+@media screen {
+.website-settings-page button.settings-switch{position:relative;display:flex;align-items:center;justify-content:center;width:52px!important;min-width:52px!important;height:44px!important;min-height:44px!important;padding:0!important;border:0!important;border-radius:10px!important;background:transparent!important;flex-shrink:0;cursor:pointer}
+.settings-switch .settings-switch-track{display:block;position:relative;width:48px;height:28px;border-radius:999px;background:#8b9993;transition:background .18s}
+.settings-switch[aria-checked="true"] .settings-switch-track{background:#176b52}
+.settings-switch .settings-switch-thumb{position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:white;box-shadow:0 1px 3px #102c3330;transform:translateX(0);transition:transform .18s}
+.settings-switch[aria-checked="true"] .settings-switch-thumb{transform:translateX(20px)}
+.settings-switch:focus-visible{outline:3px solid #65a58e!important;outline-offset:2px}
+.settings-switch:disabled{opacity:.55;cursor:wait}
+.settings-save-bar{padding:16px 0 8px;border-top:1px solid #dce5d9}
+@media(max-width:640px){.settings-save-bar>button{width:100%}}
+}

@@ -126,21 +126,15 @@ const WebsiteSettings = () => {
         <button
           type="button"
           onClick={() => handleToggle(field)}
-          aria-label={`${title} ${settings[field] ? "enabled" : "disabled"}`}
-          aria-pressed={settings[field]}
-          className={`relative h-8 w-14 shrink-0 overflow-hidden rounded-full border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300 ${
-            settings[field]
-              ? "border-blue-600 bg-blue-600"
-              : "border-slate-300 bg-slate-300"
-          }`}
+          role="switch"
+          aria-label={title}
+          aria-checked={Boolean(settings[field])}
+          disabled={saving}
+          className="settings-switch"
         >
-          <span
-            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-md transition-all duration-200 ${
-              settings[field]
-                ? "right-1"
-                : "left-1"
-            }`}
-          />
+          <span className="settings-switch-track" aria-hidden="true">
+            <span className="settings-switch-thumb" />
+          </span>
         </button>
         <span
           className={`min-w-[38px] text-right text-xs font-bold ${
@@ -167,7 +161,7 @@ const WebsiteSettings = () => {
     );
   }
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
+    <div className="website-settings-page mx-auto w-full max-w-7xl space-y-6">
       {/* Header */}
       <div className="rounded-2xl bg-gradient-to-r from-blue-700 to-blue-900 p-5 text-white shadow-lg sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -360,7 +354,7 @@ const WebsiteSettings = () => {
         </div>
       </section>
       {/* Save */}
-      <div className="sticky bottom-3 z-10 flex justify-end">
+      <div className="settings-save-bar flex justify-end">
         <button
           type="button"
           onClick={handleSave}

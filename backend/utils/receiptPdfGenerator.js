@@ -10,6 +10,8 @@ const money = (value) => `Rs. ${Number(value || 0).toFixed(2)}`;
 
 // A single server-rendered A4 layout is used by every device and delivery action.
 module.exports = async function generateReceiptPdf(payment) {
+  const design = await require('./documentDesign').load('receipt');
+  if (design.enabled) return require('./customDocumentPdf')('receipt', payment, payment.customer, design);
   const receiptNo = payment.receiptNo || String(payment._id).slice(-6).toUpperCase();
   const customer = payment.customer || {};
   const bill = payment.bill || {};

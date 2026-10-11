@@ -17,6 +17,8 @@ const safe = (value, fallback = "-") => {
   return String(value);
 };
 const generateBillPdf = async (bill, customer) => {
+  const design = await require('./documentDesign').load('bill');
+  if (design.enabled) return require('./customDocumentPdf')('bill', bill, customer, design);
   return new Promise(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({

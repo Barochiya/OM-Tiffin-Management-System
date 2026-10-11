@@ -181,6 +181,7 @@ app.get(
   "/api/barcodes/customers/active",
   barcodeController.getAllCustomerBarcodes
 );
+app.use("/api/document-design", require("./routes/documentDesignRoutes"));
 app.use(notFound);
 
 // ===============================

@@ -2,6 +2,7 @@ const PDFDocument=require('pdfkit'),QRCode=require('qrcode'),fs=require('fs'),pa
 const logo=path.join(__dirname,'../../frontend/src/assets/logo.png');
 const money=v=>'Rs. '+Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
 module.exports=async(type,data,customer,design)=>{
+ if(type==='receipt')return require('./receiptCardPdf')(data,customer,design);
  const qr=design.showQr?await QRCode.toBuffer(type==='bill'?`upi://pay?pa=${encodeURIComponent(design.upiId)}&pn=${encodeURIComponent(design.businessName)}&am=${Number(data.pendingAmount||0)}`:JSON.stringify({receipt:data.receiptNo,invoice:data.bill?.invoiceNo,amount:data.amount}),{width:180,margin:1}):null;
  return new Promise((resolve,reject)=>{
  const doc=new PDFDocument({size:'A4',margin:40,bufferPages:true}),chunks=[];doc.on('data',c=>chunks.push(c));doc.on('error',reject);doc.on('end',()=>resolve(Buffer.concat(chunks)));
@@ -46,6 +47,7 @@ module.exports=async(type,data,customer,design)=>{
  if(qr){room(115);doc.image(qr,40,doc.y,{width:85});text(type==='bill'?'Scan to pay':'Receipt verification',138,doc.y+28,400,10);doc.y+=110;}
  if(design.terms){room(85);doc.y=text(design.terms,40,doc.y,515,9)+15;}
  if(design.footer){room(65);line(doc.y);doc.y=text(design.footer,40,doc.y+12,515,10,false,design.text,'center');}
+ {room(115);const sy=doc.y+18;if(design.signatureImage)doc.image(require('./signatureImage').decode(design.signatureImage),385,sy,{fit:[170,50],align:'center',valign:'center'});doc.moveTo(385,sy+57).lineTo(555,sy+57).strokeColor('#94a3b8').stroke();text('Authorized Signature',385,sy+66,170,10,true,design.text,'center');doc.y=sy+90;}
  const range=doc.bufferedPageRange();for(let i=0;i<range.count;i++){doc.switchToPage(i);text(`${i+1} / ${range.count}`,40,790,515,8,false,'#68756e','right');}
  doc.end();
  }catch(e){doc.destroy();reject(e);}

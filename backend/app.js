@@ -75,6 +75,7 @@ app.use(
   })
 );
 
+app.use('/api/document-design', express.json({limit:'800kb'}));
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));

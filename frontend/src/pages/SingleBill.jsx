@@ -1,3 +1,4 @@
+import {printWithSavedDesign} from "../services/documentPrintService";
 import InvoiceTemplate from "../components/InvoiceTemplate";
 import { notify } from "../services/notifications";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -45,7 +46,7 @@ export default function SingleBill() {
         if (cancelled) return;
         printedBillId.current = id;
         window.focus();
-        window.print();
+        printWithSavedDesign("bill", id, () => window.print());
       }, 250);
     });
     return () => { cancelled = true; clearTimeout(timer); };

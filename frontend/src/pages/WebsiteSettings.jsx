@@ -1,3 +1,4 @@
+import {Link} from "react-router-dom";
 ﻿import { useEffect, useState } from "react";
 import {
   FaGlobe,
@@ -195,6 +196,7 @@ const WebsiteSettings = () => {
           {error}
         </div>
       )}
+      <Link to="/document-design" className="block rounded-xl bg-white border border-slate-200 p-4 font-semibold text-emerald-800">Bill &amp; Receipt Design →</Link>
       {/* Website */}
       <section className="space-y-3">
         <div>

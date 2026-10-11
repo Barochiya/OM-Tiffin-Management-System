@@ -1,3 +1,4 @@
+import {printWithSavedDesign} from "../services/documentPrintService";
 import { notify } from "../services/notifications";
 import { Hand, CircleCheck, CircleX, TrendingUp, IndianRupee, Utensils, Moon, Save, Lightbulb, CreditCard, Smartphone, Globe, Phone, PartyPopper } from "lucide-react";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -722,7 +723,7 @@ const handleSendReceiptWhatsApp = async () => {
             <div className="no-pdf flex flex-wrap justify-center gap-4 px-10 pb-10 print:hidden">
 
             <button
-  onClick={() => window.print()}
+  onClick={() => printWithSavedDesign("receipt", payment._id, () => window.print())}
   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl transition"
 >
   <FaPrint />

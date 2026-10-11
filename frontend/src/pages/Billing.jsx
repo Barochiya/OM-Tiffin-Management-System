@@ -1,3 +1,5 @@
+import {printWithSavedDesign} from "../services/documentPrintService";
+import api from "../services/api";
 import { notify, confirmAction } from "../services/notifications";
 import { useEffect, useState, useRef } from "react";
 import QRCode from "react-qr-code";
@@ -14,6 +16,7 @@ import {
   generateBill,
   sendBillWhatsApp,
   sendAllBillsWhatsApp,
+  downloadBillPdf,
 } from "../services/billService";
 
 export default function Billing() {
@@ -74,10 +77,12 @@ const [totalCustomers, setTotalCustomers] = useState(0);
   // PRINT
   // =====================================
 
-  const handlePrint = useReactToPrint({
+  const handleLegacyPrint = useReactToPrint({
     contentRef: billRef,
     documentTitle: `Bill-${month}-${year}`,
   });
+
+  const handlePrint = () => printWithSavedDesign("bill", bill?._id, handleLegacyPrint);
 
   // =====================================
   // LOAD CUSTOMERS
@@ -450,11 +455,18 @@ const getPdfOptions = () => ({
 },
 });
 
+const customBillPdf = async (id) => {
+  const settings = await api.get('/document-design');
+  if (settings.data.data.bill.enabled) return (await downloadBillPdf(id)).data;
+  return null;
+};
 const createBillPdf = async () => {
   if (!bill || !billRef.current) {
     throw new Error("Generate a bill before creating the PDF.");
   }
 
+  const custom = await customBillPdf(bill._id);
+  if (custom) return custom;
   const html2pdf = await loadPdfRenderer();
   return html2pdf()
     .set(getPdfOptions())
@@ -464,6 +476,8 @@ const createBillPdf = async () => {
 };
 
 const createBulkPdf = async (customerBill) => {
+  const custom = await customBillPdf(customerBill._id);
+  if (custom) return custom;
   const oldBill = bill;
 
   setBill(customerBill);
@@ -489,11 +503,11 @@ const createBulkPdf = async (customerBill) => {
 
 const handleDownloadPdf = async () => {
   try {
-    const html2pdf = await loadPdfRenderer();
-    await html2pdf()
-      .set(getPdfOptions())
-      .from(billRef.current)
-      .save();
+    const blob = await createBillPdf();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url; link.download = `OM-Tiffin-${bill.invoiceNo}.pdf`;
+    document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
 
     setActionsCompleted(true);
 

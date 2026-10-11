@@ -328,6 +328,7 @@ const closeSidebar = () => {
         <FaCog className="text-yellow-300" />
         Website Settings
       </Link>
+      <Link to="/document-design" onClick={closeSidebar} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-600"><FaCog />Bill &amp; Receipt Design</Link>
       </nav>
 
       {/* Footer */}

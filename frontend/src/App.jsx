@@ -39,6 +39,7 @@ const MealDeliveries = lazy(() => import("./pages/MealDeliveries"));
 const DailyEntry = lazy(() => import("./pages/DailyEntry"));
 const BarcodeEntry = lazy(() => import("./pages/BarcodeEntry"));
 const PriceSettings = lazy(() => import("./pages/PriceSettings"));
+const DocumentDesign = lazy(() => import("./pages/DocumentDesign"));
 const Billing = lazy(() => import("./pages/Billing"));
 const Payments = lazy(() => import("./pages/Payments"));
 const ViewBills = lazy(() => import("./pages/ViewBills"));
@@ -327,6 +328,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/document-design" element={<ProtectedRoute><DocumentDesign /></ProtectedRoute>} />
       <Route path="/website-orders" element={<ProtectedRoute><WebsiteOrders /></ProtectedRoute>} />
       <Route
         path="/website-reviews"

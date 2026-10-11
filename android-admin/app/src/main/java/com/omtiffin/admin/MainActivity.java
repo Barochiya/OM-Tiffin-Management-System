@@ -230,7 +230,7 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
           {"Money & reports","Payments","/payments"},{"Money & reports","Payment approvals","/whatsapp-payment-approval"},{"Money & reports","Generate bills","/billing"},{"Money & reports","View bills","/view-bills"},{"Money & reports","Revenue reports","/dashboard"},{"Money & reports","Bill delivery","/bill-delivery-status"},
           {"Communication","WhatsApp inbox","/whatsapp-inbox"},{"Communication","Announcements","/announcement"},{"Communication","Announcement delivery","/announcement-delivery-status"},{"Communication","Customer login IDs","/customer-login-id-sender"},
           {"Website","Website orders","/website-orders"},{"Website","Website menu","/website-menu"},{"Website","Website reviews","/website-reviews"},{"Website","Website settings","/website-settings"},
-          {"Settings","Price settings","/price-settings"},{"Settings","Users","/users"},{"Settings","Tiffin request settings","/customer-modification-settings"},{"Settings","Business information","/business-info"}
+          {"Settings","Bill & Receipt Design","/document-design"},{"Settings","Price settings","/price-settings"},{"Settings","Users","/users"},{"Settings","Tiffin request settings","/customer-modification-settings"},{"Settings","Business information","/business-info"}
         };
         Runnable render=()->{list.removeAllViews();String query=search.getText().toString().trim().toLowerCase(Locale.ROOT);String previous="";int count=0;
             for(String[] item:items){if(!(item[0]+" "+item[1]).toLowerCase(Locale.ROOT).contains(query))continue;count++;

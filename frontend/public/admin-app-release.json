@@ -1,6 +1,6 @@
 {
-  "versionCode": 11,
-  "versionName": "0.7.0",
-  "apkUrl": "https://expo.dev/artifacts/eas/lPLP4QwXxP0SWyl3twcCYMTHt4XJ26aP8jizOF3FpnU.apk",
-  "notes": "Improved mobile reports, readable customer names and amounts, single-column barcode preview, and a compact home workspace. Uninstall the previous preview app before installing, then sign in and enable phone unlock again."
+  "versionCode": 12,
+  "versionName": "0.8.0",
+  "apkUrl": "https://expo.dev/artifacts/eas/AWJ0_toxVd5OT6NWQzpogzS5mPnpvuD9YaY2Sdq5nbQ.apk",
+  "notes": "Bill & Receipt Design settings with separate colours, fonts, logo position and PDF preview. Improved mobile switches and consistent bill/receipt PDFs. Uninstall the previous preview app before installing, then sign in and enable phone unlock again."
 }

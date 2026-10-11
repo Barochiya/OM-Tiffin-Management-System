@@ -11,3 +11,5 @@
 !.eas/
 !.eas/build/
 !.eas/build/**
+
+/.signing/

@@ -1,5 +1,5 @@
 {
-  "enabled": false,
+  "enabled": true,
   "language": "en_GB",
   "dispatchTemplate": "om_tiffin_out_for_delivery",
   "deliveredTemplate": "om_tiffin_delivered"

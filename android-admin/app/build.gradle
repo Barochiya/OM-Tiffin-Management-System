@@ -2,9 +2,29 @@ plugins { id 'com.android.application' }
 android {
  namespace 'com.omtiffin.admin'
  compileSdk 35
- defaultConfig { applicationId 'com.omtiffin.admin'; minSdk 26; targetSdk 35; versionCode 12; versionName '0.8.0'; testInstrumentationRunner (project.findProperty('sessionRunner') ?: 'com.omtiffin.admin.ScreenshotInstrumentation') }
+ defaultConfig { applicationId 'com.omtiffin.admin'; minSdk 26; targetSdk 35; versionCode 13; versionName '0.8.1'; testInstrumentationRunner (project.findProperty('sessionRunner') ?: 'com.omtiffin.admin.ScreenshotInstrumentation') }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
  sourceSets { androidTest.assets.srcDirs += ['../../frontend/dist'] }
- buildTypes { release { minifyEnabled false } }
+ signingConfigs {
+  stableRelease {
+   def keyPath = System.getenv('OM_ANDROID_KEYSTORE')
+   if (keyPath) {
+    storeFile file(keyPath)
+    storePassword System.getenv('OM_ANDROID_KEY_PASSWORD')
+    keyAlias 'om-tiffin-admin'
+    keyPassword System.getenv('OM_ANDROID_KEY_PASSWORD')
+   }
+  }
+ }
+ buildTypes { release { minifyEnabled false; signingConfig signingConfigs.stableRelease } }
 }
 dependencies { implementation 'androidx.webkit:webkit:1.13.0'; implementation 'androidx.biometric:biometric:1.1.0'; testImplementation 'junit:junit:4.13.2'; testImplementation 'org.json:json:20240303' }
+
+// Never publish an unsigned release or fall back to the disposable debug key.
+gradle.taskGraph.whenReady { graph ->
+ if (graph.allTasks.any { it.name == 'assembleRelease' || it.name == 'bundleRelease' }) {
+  if (!System.getenv('OM_ANDROID_KEYSTORE') || !System.getenv('OM_ANDROID_KEY_PASSWORD')) {
+   throw new GradleException('Stable Android signing credentials are required for a release build.')
+  }
+ }
+}

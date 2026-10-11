@@ -3,16 +3,16 @@
     "name": "OM Tiffin Admin",
     "slug": "om-tiffin-admin",
     "owner": "om-tiffin-admin",
-    "version": "0.8.0",
+    "version": "0.8.1",
     "android": {
       "package": "com.omtiffin.admin",
-      "versionCode": 12
+      "versionCode": 13
     },
     "extra": {
       "eas": {
         "projectId": "5168fb80-4b6a-4496-ba4f-2c99aeeeb32b"
       }
     },
-    "icon": "./app/src/main/res/drawable-nodpi/brand_logo.png"
+    "icon": "./app/src/main/res/drawable-nodpi/brand_logo.jpg"
   }
 }

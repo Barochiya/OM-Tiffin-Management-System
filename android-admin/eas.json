@@ -10,8 +10,9 @@
       "android": {
         "image": "ubuntu-22.04-jdk-17-ndk-r26b",
         "withoutCredentials": true,
-        "applicationArchivePath": "app/build/outputs/apk/debug/app-debug.apk"
-      }
+        "applicationArchivePath": "app/build/outputs/apk/release/app-release.apk"
+      },
+      "environment": "preview"
     }
   }
 }

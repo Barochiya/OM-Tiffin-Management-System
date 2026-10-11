@@ -93,3 +93,15 @@ Current EAS previews use ephemeral debug signing. APK downloads work, but instal
 Delivery desk now shows Lunch/Dinner shifts, full-shift progress, status filters, customer address/call links, and dispatch/handover timestamps. No GPS tracking, ETA calculation or automatic delivery marking is implied.
 Modern WebViews restore an Android-authenticated token at document start before React routing. Older WebViews keep the existing fallback. Late restore callbacks are cancelled when the activity backgrounds. Temporary Android authentication/read errors retain the encrypted session for retry; explicit logout, expired tokens or invalidated keys still require account login.
 Test: Gradle assembleDebug, testDebugUnitTest and lintDebug passed. SessionInstrumentation on Android 15 emulator passed real phone PIN + Android Keystore enrollment and three cold Activity reopen cycles with fixture web/token; temporary emulator PIN was removed afterwards. Real phone fingerprint/face testing remains outstanding. Android permits only supported strong biometric modalities or device credentials.
+
+## Stable release signing from 0.8.1
+The preview profile now builds a signed, non-debuggable release APK. EAS preview
+secrets OM_ANDROID_KEYSTORE (file) and OM_ANDROID_KEY_PASSWORD (string) hold the
+persistent signing credentials. Local backup is in ignored .signing/; never
+commit or upload it in the source archive. Preserve this backup and the EAS secrets
+for every future version; do not regenerate the key. Release assembly fails if
+credentials are missing, rather than falling back to an unsigned/debug APK.
+Migration from 0.8.0 and earlier needs one uninstall/reinstall because old EAS
+debug signing keys were disposable. Updates from 0.8.1 use this same signing key
+and a higher versionCode. Android still asks the user to approve installation.
+Reference: https://docs.expo.dev/eas/environment-variables/ (secret file variables).

@@ -6,6 +6,8 @@ const adapter=require(root+'/utils/mealDeliveryWhatsApp');
 const customer={customerName:'Demo Customer',phone:'0000000000'};
 const notice=status=>adapter.sendDeliveryNotice(customer,{status,meal:'Dinner',date:'2026-10-09'});
 (async()=>{
+ delete process.env.WHATSAPP_ACCESS_TOKEN;delete process.env.WHATSAPP_PHONE_NUMBER_ID;
+ assert.equal(adapter.setup().enabled,true);
  delete process.env.WHATSAPP_DELIVERY_ENABLED;delete process.env.WHATSAPP_DELIVERY_LANGUAGE;delete process.env.WHATSAPP_DELIVERY_TEMPLATE;delete process.env.WHATSAPP_DISPATCH_TEMPLATE;
  assert.equal(adapter.configured(),false);assert.equal((await notice('Delivered')).status,'not_configured');assert.equal(calls.length,0);
  process.env.WHATSAPP_DELIVERY_ENABLED='true';delete process.env.WHATSAPP_ACCESS_TOKEN;delete process.env.WHATSAPP_PHONE_NUMBER_ID;assert.equal(adapter.configured(),false);
@@ -16,5 +18,5 @@ const notice=status=>adapter.sendDeliveryNotice(customer,{status,meal:'Dinner',d
  failure=new Error('timeout');assert.equal((await notice('Delivered')).status,'unknown');failure=null;response={};assert.equal((await notice('Delivered')).status,'unknown');
  const before=calls.length;await notice('Pending');assert.equal(calls.length,before);
  process.env.WHATSAPP_DELIVERY_ENABLED='false';await notice('Delivered');assert.equal(calls.length,before);
- console.log('PASS WhatsApp adapter: safe default, credential checks, both template names, en_GB, parameter order/date, provider errors/timeout/acknowledgement. Mock sender only; no messages sent.');
+ console.log('PASS WhatsApp adapter: approved-template default, credential checks, both template names, en_GB, parameter order/date, provider errors/timeout/acknowledgement. Mock sender only; no messages sent.');
 })().catch(e=>{console.error(e);process.exitCode=1;});

@@ -20,3 +20,11 @@ Names/language are preconfigured in `backend/config/mealDeliveryWhatsApp.json`. 
 Dispatch and delivery save separate notification results (`dispatchNotification` and `notification`). Status transitions are saved before requesting WhatsApp. Duplicate/concurrent marks cannot trigger another send for the same transition; notifications are not sent retroactively for existing marks. Provider `accepted` only means Meta accepted the request, not that the customer's phone received it. Failed/ambiguous sends are shown in the app and never automatically retried. Approval checks and a real opted-in test recipient are required before claiming live delivery success.
 
 Run `node backend/tests/meal-delivery.test.cjs` and `node backend/tests/meal-delivery-whatsapp.test.cjs`. Both use fake data/providers and never message customers.
+
+## Activation verified 2026-10-11
+Both `om_tiffin_out_for_delivery` and `om_tiffin_delivered` are APPROVED in en_GB.
+Meta read-only checks confirmed the configured phone belongs to the same WABA and
+both body templates use customer name, meal and date in positions 1, 2 and 3.
+Default enabled is now true. Explicit WHATSAPP_DELIVERY_ENABLED=false still stops
+sending. Credentials remain server-side. Tests use mocked sends; no real customer
+message was sent as a test. Provider acceptance is not proof of phone delivery.

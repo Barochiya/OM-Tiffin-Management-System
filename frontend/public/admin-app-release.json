@@ -1,6 +1,6 @@
 {
-  "versionCode": 12,
-  "versionName": "0.8.0",
-  "apkUrl": "https://expo.dev/artifacts/eas/AWJ0_toxVd5OT6NWQzpogzS5mPnpvuD9YaY2Sdq5nbQ.apk",
-  "notes": "Bill & Receipt Design settings with separate colours, fonts, logo position and PDF preview. Improved mobile switches and consistent bill/receipt PDFs. Uninstall the previous preview app before installing, then sign in and enable phone unlock again."
+  "versionCode": 13,
+  "versionName": "0.8.1",
+  "apkUrl": "https://expo.dev/artifacts/eas/V2EK7x7fe8gaCTrYOArbQZDRHuysEKPDKcDaMpC96OI.apk",
+  "notes": "Stable signed release with approved delivery WhatsApp templates, mobile layout and document design settings. One-time migration: uninstall preview 0.8.0 or older, then install and enable phone unlock again. Future releases use the same signing key."
 }

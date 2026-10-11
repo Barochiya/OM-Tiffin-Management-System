@@ -11,6 +11,12 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    // Bound JSON reads so a stalled connection cannot leave screens loading forever.
+    // Keep PDF downloads and writes on their existing policy; never retry writes here.
+    if ((config.method || "get").toLowerCase() === "get" &&
+        !config.timeout && (!config.responseType || config.responseType === "json")) {
+      config.timeout = 60000;
+    }
     const token =
       sessionStorage.getItem("token");
 

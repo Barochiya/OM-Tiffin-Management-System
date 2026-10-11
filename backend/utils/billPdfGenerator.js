@@ -16,9 +16,9 @@ const safe = (value, fallback = "-") => {
   }
   return String(value);
 };
-const generateBillPdf = async (bill, customer) => {
-  const design = await require('./documentDesign').load('bill');
-  if (design.enabled) return require('./customDocumentPdf')('bill', bill, customer, design);
+const generateBillPdf = async (bill, customer, designOverride = null) => {
+  const design = designOverride || await require('./documentDesign').load('bill');
+  if (design.enabled && !designOverride) return require('./customDocumentPdf')('bill', bill, customer, design);
   return new Promise(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({
@@ -27,6 +27,30 @@ const generateBillPdf = async (bill, customer) => {
         bufferPages: true,
         autoFirstPage: true,
       });
+      if (designOverride) {
+        // Design tokens change appearance; the full invoice layout stays intact.
+        const originalFont = doc.font.bind(doc), originalText = doc.text.bind(doc), originalSize = doc.fontSize.bind(doc);
+        let selectedFont = design.font;
+        doc.font = function(name, ...args) {
+          if (name === 'Helvetica' || name === 'Helvetica-Bold') {
+            name = name.endsWith('-Bold') ? ({Helvetica:'Helvetica-Bold','Times-Roman':'Times-Bold',Courier:'Courier-Bold'}[design.font]) : design.font;
+          }
+          selectedFont = name; return originalFont(name, ...args);
+        };
+        doc.fontSize = size => originalSize(size <= 7.8 ? size : size * design.fontSize / 10);
+        doc.text = function(value, ...args) {
+          const gujarati = /[\u0A80-\u0AFF]/.test(String(value ?? ''));
+          if (!gujarati) return originalText(value, ...args);
+          const parts=String(value).split(/([\u0A80-\u0AFF]+)/).filter(Boolean);
+          const options=(typeof args[0]==='number'?args[2]:args[0])||{};
+          parts.forEach((part,index)=>{
+            originalFont(/[\u0A80-\u0AFF]/.test(part)?path.join(__dirname,'../assets/fonts/NotoSansGujarati-'+(/Bold/.test(selectedFont)?'Bold':'Regular')+'.ttf'):selectedFont);
+            const opts={...options,continued:index<parts.length-1||Boolean(options.continued)};
+            if(index===0&&typeof args[0]==='number')originalText(part,args[0],args[1],opts);else originalText(part,opts);
+          });
+          originalFont(selectedFont);return doc;
+        };
+      }
       const buffers = [];
       doc.on("data", (chunk) => buffers.push(chunk));
       doc.on("error", reject);
@@ -56,6 +80,13 @@ const generateBillPdf = async (bill, customer) => {
         tableHeader: "#0f172a",
         tableAlt: "#f8fafc",
       };
+      if (designOverride) {
+        colors.primary = design.primary; colors.text = design.text; colors.primaryDark = design.text;
+        colors.muted='#64748b';colors.border='#dce4ed';colors.borderLight='#e9eef4';
+        colors.tableHeader='#152b3c';colors.tableAlt='#f5f8fc';colors.panel='#ffffff';
+        colors.greenBg=colors.blueBg='#ffffff';colors.yellowBg='#f8fafc';
+        if (design.layout === 'classic') { colors.greenBg = colors.blueBg = colors.tableAlt = colors.yellowBg = '#ffffff'; }
+      }
       // =========================================================
       // BASIC HELPERS
       // =========================================================
@@ -83,7 +114,7 @@ const generateBillPdf = async (bill, customer) => {
       ) => {
         doc
           .roundedRect(x, y, width, height, 8)
-          .fillAndStroke(fill, stroke);
+          .fillAndStroke(fill, designOverride ? colors.border : stroke);
       };
       const drawSectionTitle = (text) => {
         const y = doc.y;
@@ -218,6 +249,29 @@ const generateBillPdf = async (bill, customer) => {
       // HEADER
       // =========================================================
       const drawHeader = () => {
+        if (designOverride) {
+          const startY=52, groupWidth=330, hasLogo=design.showLogo&&fs.existsSync(LOGO_PATH);
+          doc.rect(LEFT,30,CONTENT_WIDTH,3).fill(colors.primary);
+          doc.font('Helvetica-Bold').fontSize(6.5).fillColor(colors.muted).text('CUSTOMER INVOICE',LEFT,40,{width:330,characterSpacing:1.3});
+          let x=LEFT,y=startY,w=groupWidth;
+          if(hasLogo){
+            const lx=design.logoPosition==='center'?LEFT+(groupWidth-50)/2:design.logoPosition==='right'?LEFT+groupWidth-50:LEFT;
+            doc.image(LOGO_PATH,lx,startY,{fit:[50,50]});
+            if(design.logoPosition==='center')y+=62;
+            else if(design.logoPosition==='left'){x+=64;w-=64;}else w-=64;
+          }
+          const align=design.logoPosition==='center'?'center':'left';
+          doc.font('Helvetica-Bold').fontSize(17).fillColor(colors.text).text(design.businessName,x,y,{width:w,align});
+          let end=doc.y+8;
+          for(const line of [design.tagline,design.contact].filter(Boolean)){
+            doc.font('Helvetica').fontSize(8).fillColor(colors.muted).text(line,x,end,{width:w,align});end=doc.y+6;
+          }
+          doc.font('Helvetica-Bold').fontSize(21).fillColor(colors.primary).text('TAX INVOICE',RIGHT-165,startY+3,{width:165,align:'right'});
+          let iy=doc.y+9;
+          doc.font('Helvetica').fontSize(9).text('Invoice: '+safe(bill.invoiceNo),RIGHT-165,iy,{width:165,align:'right'});
+          iy=doc.y+5;doc.text('Date: '+new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'}),RIGHT-165,iy,{width:165,align:'right'});
+          const bottom=Math.max(startY+78,end+8,doc.y+12);drawLine(bottom);doc.y=bottom+20;return;
+        }
         const startY = 44;
         doc.rect(LEFT, 30, CONTENT_WIDTH, 4).fill(colors.primary);
         if (fs.existsSync(LOGO_PATH)) {
@@ -319,13 +373,14 @@ const generateBillPdf = async (bill, customer) => {
           colors.white,
           "#dbe3ef"
         );
+        if(designOverride){doc.roundedRect(LEFT+14,y+14,3,13,1).fill(colors.primary);doc.roundedRect(LEFT+boxWidth+gap+14,y+14,3,13,1).fill(colors.primary);}
         doc
           .font("Helvetica-Bold")
           .fontSize(12)
           .fillColor(colors.text)
           .text(
             "Customer Details",
-            LEFT + 14,
+            LEFT + (designOverride ? 24 : 14),
             y + 14
           );
         doc
@@ -365,7 +420,7 @@ const generateBillPdf = async (bill, customer) => {
           .fillColor(colors.text)
           .text(
             "Billing Details",
-            billingX + 14,
+            billingX + (designOverride ? 24 : 14),
             y + 14
           );
         doc
@@ -513,7 +568,7 @@ const generateBillPdf = async (bill, customer) => {
             day?.dinnerAmount
           ),
           extraText,
-          formatMoney(day?.extraAmount),
+          formatMoney(designOverride ? (day?.extraAmount ?? extraItems.reduce((total,item)=>total+Number(item.amount||0),0)) : day?.extraAmount),
           formatMoney(day?.dailyTotal),
         ];
         // Calculate row height based on the tallest text cell.
@@ -712,6 +767,12 @@ const generateBillPdf = async (bill, customer) => {
           .lineWidth(0.7)
           .stroke();
         doc.y = y + rowHeight;
+        if(designOverride && day.remark){
+          doc.font('Helvetica').fontSize(7);
+          const h=doc.heightOfString(String(day.remark),{width:CONTENT_WIDTH-16})+12;
+          pageBreak(h);const noteY=doc.y;
+          doc.fillColor(colors.muted).text('Note: '+String(day.remark),LEFT+8,noteY+5,{width:CONTENT_WIDTH-16});doc.y=Math.max(doc.y+5,noteY+h);
+        }
       };
       const drawDailyTable = () => {
         drawSectionTitle("Date-wise Meal Details");
@@ -963,7 +1024,7 @@ const generateBillPdf = async (bill, customer) => {
         );
         const pendingAmount =
           Number(bill.pendingAmount || 0);
-        const upiId = "malaybarochiya-5@oksbi";
+        const upiId = designOverride ? design.upiId : "malaybarochiya-5@oksbi";
         const upiUrl =
           `upi://pay?pa=${encodeURIComponent(upiId)}` +
           `&pn=${encodeURIComponent(
@@ -986,6 +1047,7 @@ const generateBillPdf = async (bill, customer) => {
         // QR is deliberately smaller than the box so caption
         // and amount never overlap it.
         try {
+          if(!designOverride || design.showQr){
           const qrDataUrl =
             await QRCode.toDataURL(
               upiUrl,
@@ -1009,9 +1071,10 @@ const generateBillPdf = async (bill, customer) => {
             LEFT + (boxWidth - 112) / 2,
             y + 35,
             {
-              fit: [112, 112],
+              fit: designOverride ? [100, 100] : [112, 112],
             }
           );
+          }
         } catch (error) {
           console.warn(
             "QR generation failed:",
@@ -1036,7 +1099,7 @@ const generateBillPdf = async (bill, customer) => {
           .fontSize(7)
           .fillColor(colors.muted)
           .text(
-            "Scan this QR using any UPI App",
+            (designOverride && !design.showQr) ? "Use the payment details to pay" : "Scan this QR using any UPI App",
             LEFT,
             y + 158,
             {
@@ -1103,6 +1166,14 @@ const generateBillPdf = async (bill, customer) => {
       // TERMS
       // =========================================================
       const drawTerms = () => {
+        if(designOverride){
+          if(!design.terms)return;
+          doc.font('Helvetica').fontSize(7.8);
+          const h=Math.max(70,doc.heightOfString(design.terms,{width:CONTENT_WIDTH-34})+54);
+          pageBreak(h+18);const y=doc.y;drawRoundedBox(LEFT,y,CONTENT_WIDTH,h,colors.yellowBg,colors.yellowBorder);
+          doc.font('Helvetica-Bold').fontSize(11).fillColor(colors.text).text('Terms & Conditions',LEFT+15,y+13);
+          doc.font('Helvetica').fontSize(7.8).text(design.terms,LEFT+17,y+36,{width:CONTENT_WIDTH-34,lineGap:3});doc.y=y+h+18;return;
+        }
         pageBreak(96);
         const terms = [
           "Payment due within 7 days.",
@@ -1150,6 +1221,19 @@ const generateBillPdf = async (bill, customer) => {
       // FOOTER
       // =========================================================
       const drawContentFooter = () => {
+        if(designOverride){
+          const half=(CONTENT_WIDTH-18)/2;
+          doc.font('Helvetica').fontSize(8);
+          const h=Math.max(110,doc.heightOfString(design.footer,{width:half,lineGap:2})+60);
+          pageBreak(h+30);const y=doc.y;drawLine(y);
+          doc.font('Helvetica-Bold').fontSize(12).fillColor(colors.primary).text('Thank You',LEFT,y+15);
+          doc.font('Helvetica').fontSize(8).fillColor(colors.text).text(design.footer,LEFT,y+37,{width:half,lineGap:2});
+          const sx=LEFT+half+18;
+          if(design.signatureImage)doc.image(require('./signatureImage').decode(design.signatureImage),sx,y+10,{fit:[half,48],align:'center',valign:'center'});
+          drawLine(y+67,sx,RIGHT);doc.font('Helvetica-Bold').fontSize(9).text('Authorized Signature',sx,y+76,{width:half,align:'center'});
+          doc.font('Helvetica').fontSize(7).fillColor(colors.muted).text(design.businessName,sx,y+92,{width:half,align:'center'});
+          drawLine(y+h);doc.font('Helvetica').fontSize(7).text(design.contact,LEFT,y+h+9,{width:CONTENT_WIDTH,align:'center'});doc.y=y+h+30;return;
+        }
         pageBreak(100);
         const y = doc.y;
         drawLine(y);

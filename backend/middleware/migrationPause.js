@@ -18,7 +18,12 @@ module.exports = async function migrationPause(req, res, next) {
         if(typeof req.headers[key]==='string')headers[key]=req.headers[key];
       }
       const options={method:req.method,headers,redirect:'error',signal:AbortSignal.timeout(60000)};
-      if(!['GET','HEAD'].includes(req.method)){options.body=req;options.duplex='half';}
+      if(!['GET','HEAD'].includes(req.method)){
+        const chunks=[];let bytes=0;
+        for await(const chunk of req){const buffer=Buffer.from(chunk);bytes+=buffer.length;if(bytes>11*1024*1024)return res.status(413).json({message:'Request body is too large.'});chunks.push(buffer);}
+        // Send a known Content-Length: shared hosting rejects chunked uploads.
+        options.body=Buffer.concat(chunks);
+      }
       const response=await fetch('https://www.omtiffinservices.com'+req.originalUrl,options);
       for(const key of ['content-type','content-disposition','cache-control','retry-after']) {
         const value=response.headers.get(key);if(value)res.setHeader(key,value);

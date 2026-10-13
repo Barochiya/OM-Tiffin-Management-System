@@ -23,7 +23,7 @@ jobs:
       - name: Verify converted business API
         run: |
           set -e
-          for test in security auth billing router accounts announcements inbox-writes webhook whatsapp http; do
+          for test in security auth billing router accounts announcements inbox-writes webhook whatsapp http outbox outbox-crypto deliveries; do
             php "backend-bigrock/tests/$test.php"
           done
       - name: Build website and PDF renderer dependencies
@@ -41,3 +41,4 @@ jobs:
           cd ..
           sha256sum omtiffin-release.zip > omtiffin-release.sha256
           gh release create "bigrock-${GITHUB_SHA}" omtiffin-release.zip omtiffin-release.sha256 --target "${GITHUB_SHA}" --title "OM Tiffin BigRock ${GITHUB_SHA}" --notes "OM_TIFFIN_CODE_ONLY_RELEASE_V1" --latest
+

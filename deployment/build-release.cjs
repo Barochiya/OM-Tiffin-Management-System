@@ -4,7 +4,7 @@ const root=path.resolve(__dirname,'..'),output=path.join(root,'.bigrock-build');
 if(fs.existsSync(output))throw Error('Build output must be a fresh directory');
 const revision=process.env.GITHUB_SHA||process.argv[2];if(!/^[a-f0-9]{40}$/.test(revision||''))throw Error('An exact Git commit SHA is required');
 fs.mkdirSync(output,{recursive:true});
-const runtime=['accounts.php','backup.php','announcements.php','auth.php','barcodes.php','billing.php','catalog.php','config.php','customers.php','dashboard.php','deliveries.php','document-notifications.php','documents.php','entry.php','health.php','http.php','inbox.php','model-defaults.json','modifications.php','notifications.php','outbox-crypto.php','outbox.php','profiles.php','read-models.php','recovery.php','router.php','security.php','store.php','webhook.php','whatsapp.php'];
+const runtime=['accounts.php','backup.php','announcements.php','auth.php','barcodes.php','billing.php','catalog.php','config.php','customers.php','dashboard.php','deliveries.php','document-notifications.php','documents.php','entry.php','health.php','http.php','inbox.php','model-defaults.json','modifications.php','notifications.php','outbox-crypto.php','outbox.php','profiles.php','read-models.php','recovery.php','router.php','security.php','store.php','webhook.php','whatsapp.php','worker.php'];
 for(const file of runtime){fs.mkdirSync(path.join(output,'php'),{recursive:true});fs.copyFileSync(path.join(root,'backend-bigrock',file),path.join(output,'php',file));}
 fs.cpSync(path.join(root,'frontend/dist'),path.join(output,'web'),{recursive:true});
 const render=path.join(output,'render'),backend=path.join(root,'backend'),modules=path.join(backend,'node_modules');
@@ -18,4 +18,5 @@ fs.writeFileSync(path.join(output,'web/index.php'),`<?php\ndeclare(strict_types=
 fs.writeFileSync(path.join(output,'web/.htaccess'),`Options -Indexes\nDirectoryIndex index.php\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\nRewriteRule ^api(?:/.*)?$ index.php [L,QSA]\nRewriteCond %{REQUEST_FILENAME} -f [OR]\nRewriteCond %{REQUEST_FILENAME} -d\nRewriteRule ^ - [L]\nRewriteRule ^ index.php [L]\n`);
 fs.writeFileSync(path.join(output,'manifest.json'),JSON.stringify({project:'omtiffinservices.com',revision,format:1,codeOnly:true},null,2));
 console.log('Built code-only OM Tiffin release '+revision+'; no database/config/uploads included.');
+
 

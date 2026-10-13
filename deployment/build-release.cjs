@@ -7,6 +7,13 @@ fs.mkdirSync(output,{recursive:true});
 const runtime=['accounts.php','backup.php','announcements.php','auth.php','barcodes.php','billing.php','catalog.php','config.php','customers.php','dashboard.php','deliveries.php','document-notifications.php','documents.php','entry.php','health.php','http.php','inbox.php','model-defaults.json','modifications.php','notifications.php','outbox-crypto.php','outbox.php','profiles.php','read-models.php','recovery.php','router.php','security.php','store.php','webhook.php','whatsapp.php','worker.php'];
 for(const file of runtime){fs.mkdirSync(path.join(output,'php'),{recursive:true});fs.copyFileSync(path.join(root,'backend-bigrock',file),path.join(output,'php',file));}
 fs.cpSync(path.join(root,'frontend/dist'),path.join(output,'web'),{recursive:true});
+// Keep pre-cutover public hashed chunks for browsers with an old entry bundle.
+const legacyAssets=path.join(__dirname,'legacy-assets');
+if(fs.existsSync(legacyAssets))for(const name of fs.readdirSync(legacyAssets)){
+ if(!/^[A-Za-z0-9_.-]+\.(js|css|woff2?|ttf|png|svg|jpe?g)$/.test(name))throw Error('Unexpected legacy asset');
+ const destination=path.join(output,'web/assets',name);
+ if(!fs.existsSync(destination))fs.copyFileSync(path.join(legacyAssets,name),destination);
+}
 const render=path.join(output,'render'),backend=path.join(root,'backend'),modules=path.join(backend,'node_modules');
 fs.mkdirSync(path.join(render,'backend/utils'),{recursive:true});fs.mkdirSync(path.join(render,'frontend/src/assets'),{recursive:true});
 for(const file of ['billPdfGenerator.js','receiptPdfGenerator.js','receiptCardPdf.js','customDocumentPdf.js','documentDesign.js','signatureImage.js'])fs.copyFileSync(path.join(backend,'utils',file),path.join(render,'backend/utils',file));

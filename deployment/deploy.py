@@ -42,6 +42,29 @@ def validate(archive, revision):
                 raise ValueError('Required application file missing')
     return manifest
 
+def retain_hashed_assets(staged_web):
+    current = PUBLIC / 'current'
+    if not current.is_symlink():
+        return
+    previous = current.resolve()
+    previous.relative_to((PUBLIC / 'releases').resolve())
+    assets = previous / 'assets'
+    if not assets.is_dir() or assets.is_symlink():
+        return
+    destination = staged_web / 'assets'
+    destination.mkdir(exist_ok=True, mode=0o755)
+    total = 0
+    for old in assets.iterdir():
+        if old.is_symlink() or not old.is_file() or not re.fullmatch(r'.+-[A-Za-z0-9_-]{6,}\.(?:js|css|woff2?|ttf|png|svg|jpe?g)', old.name):
+            continue
+        total += old.stat().st_size
+        if total > 100 * 1024 * 1024:
+            raise ValueError('Prior public asset inventory requires review')
+        target = destination / old.name
+        if not target.exists():
+            shutil.copyfile(old, target)
+            target.chmod(0o644)
+
 def install(archive, revision):
     validate(archive, revision)
     private_target = PRIVATE / 'releases' / revision
@@ -74,6 +97,7 @@ def install(archive, revision):
                     with target.open('xb') as output:
                         output.write(package.read(item))
                     target.chmod(0o644 if parts[0] == 'web' else 0o600)
+        retain_hashed_assets(public_stage / 'web')
         environment = os.environ.copy()
         environment['OMTIFFIN_CONFIG'] = str(PRIVATE / 'private/config.local.json')
         for source in (private_stage / 'php').glob('*.php'):

@@ -1,0 +1,1 @@
+var e=`/assets/logo-Cta1miKU.png`;export{e as t};

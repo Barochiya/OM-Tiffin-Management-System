@@ -1,0 +1,1 @@
+import{c as e}from"./index-BudU5I-t.js";var t=async t=>(await e.post(`/website-orders/public`,t)).data;export{t};

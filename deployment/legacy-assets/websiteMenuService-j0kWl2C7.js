@@ -1,0 +1,1 @@
+import{c as e}from"./index-BudU5I-t.js";var t=async()=>(await e.get(`/website-menu`)).data,n=async t=>(await e.get(`/website-menu/public`,{params:t?{mealType:t}:{}})).data,r=async t=>(await e.post(`/website-menu`,t)).data,i=async(t,n)=>(await e.put(`/website-menu/${t}`,n)).data,a=async t=>(await e.delete(`/website-menu/${t}`)).data;export{i as a,n as i,a as n,t as r,r as t};

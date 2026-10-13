@@ -1,0 +1,1 @@
+import{c as e}from"./index-BudU5I-t.js";var t=new Map,n=()=>{let n=sessionStorage.getItem(`token`)||`public`;if(!t.has(n)){let r=e.get(`/website-settings`).then(e=>e.data).finally(()=>{t.get(n)===r&&t.delete(n)});t.set(n,r)}return t.get(n)},r=async t=>(await e.put(`/website-settings`,t)).data;export{r as n,n as t};

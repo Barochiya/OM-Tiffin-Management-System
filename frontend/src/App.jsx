@@ -59,11 +59,11 @@ const WebsiteOrders = lazy(() => import("./pages/WebsiteOrders"));
 const WebsiteMenu = lazy(() => import("./pages/WebsiteMenu"));
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
-import { CartProvider } from "./context/CartContext";
+
 
 export default function App() {
   return (
-    <CartProvider>
+
       <Suspense fallback={<PageLoading />}><Routes>
       
             {/* Public Website */}
@@ -373,7 +373,7 @@ export default function App() {
       />
       </Route>
       </Routes></Suspense>
-    </CartProvider>
+
   );
 }
 

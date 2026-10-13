@@ -27,6 +27,23 @@ const generateBillPdf = async (bill, customer, designOverride = null) => {
         bufferPages: true,
         autoFirstPage: true,
       });
+      if (!designOverride) {
+        // Preserve the legacy layout while embedding Gujarati glyphs for mixed-language fields.
+        const originalFont = doc.font.bind(doc), originalText = doc.text.bind(doc);
+        let selectedFont = 'Helvetica';
+        doc.font = function(name, ...args) { selectedFont = name; return originalFont(name, ...args); };
+        doc.text = function(value, ...args) {
+          if (!/[\u0A80-\u0AFF]/.test(String(value ?? ''))) return originalText(value, ...args);
+          const parts = String(value).split(/([\u0A80-\u0AFF]+)/).filter(Boolean);
+          const options = (typeof args[0] === 'number' ? args[2] : args[0]) || {};
+          parts.forEach((part, index) => {
+            originalFont(/[\u0A80-\u0AFF]/.test(part) ? path.join(__dirname, '../assets/fonts/NotoSansGujarati-' + (/Bold/.test(selectedFont) ? 'Bold' : 'Regular') + '.ttf') : selectedFont);
+            const opts = { ...options, continued: index < parts.length - 1 || Boolean(options.continued) };
+            if (index === 0 && typeof args[0] === 'number') originalText(part, args[0], args[1], opts); else originalText(part, opts);
+          });
+          originalFont(selectedFont); return doc;
+        };
+      }
       if (designOverride) {
         // Design tokens change appearance; the full invoice layout stays intact.
         const originalFont = doc.font.bind(doc), originalText = doc.text.bind(doc), originalSize = doc.fontSize.bind(doc);

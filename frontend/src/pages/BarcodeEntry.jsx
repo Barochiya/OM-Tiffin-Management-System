@@ -300,7 +300,8 @@ const [saved, setSaved] = useState(false);
     setSaved(false);
     try {
       const response = await fetch(
-        `${API_BASE}/barcodes/lookup/${encodeURIComponent(clean)}`
+        `${API_BASE}/barcodes/lookup/${encodeURIComponent(clean)}`,
+        { headers: { Authorization: `Bearer ${sessionStorage.getItem("token") || ""}` } }
       );
       const data = await response.json();
       if (!response.ok) {

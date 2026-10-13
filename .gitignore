@@ -1,4 +1,4 @@
-﻿.vercel
+.vercel
 backend/.env
 frontend/.env
 frontend/.env.local
@@ -26,3 +26,8 @@ frontend/src/pages/*-backup-*
 frontend/src/pages/*.corrupted-backup
 frontend/src/pages/*.final-backup-*
 frontend/src/pages/*.final-ui-backup-*
+
+.bigrock-build/
+omtiffin-release.zip
+omtiffin-release.sha256
+backend-bigrock/private/

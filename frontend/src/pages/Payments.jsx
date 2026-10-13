@@ -534,7 +534,6 @@ if (savedPayment?._id) {
 
       <option value="Bank">Bank</option>
 
-      <option value="Razorpay">Razorpay</option>
 
     </select>
 

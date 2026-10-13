@@ -33,8 +33,6 @@ const paymentRoutes = require("./routes/paymentRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
 const announcementStatusRoutes = require("./routes/announcementStatusRoutes");
 const paymentReminderRoutes = require("./routes/paymentReminderRoutes");
-// Razorpay Payment Gateway
-const paymentGatewayRoutes = require("./routes/paymentGatewayRoutes");
 const whatsappRoutes = require("./routes/whatsappRoutes");
 const whatsappInboxRoutes = require("./routes/whatsappInboxRoutes");
 // ===============================
@@ -147,11 +145,6 @@ app.use("/api/bills", billRoutes);
 // Manual Payments
 app.use("/api/payments", paymentRoutes);
 
-// Razorpay Payment Gateway
-app.use(
-  "/api/payment-gateway",
-  paymentGatewayRoutes
-);
 
 // Dashboard
 console.log("Dashboard Route Registered");

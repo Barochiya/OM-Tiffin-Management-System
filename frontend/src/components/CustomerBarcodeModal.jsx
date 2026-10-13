@@ -44,7 +44,8 @@ const CustomerBarcodeModal = ({
       }
       try {
         const response = await fetch(
-          `${API_BASE}/barcodes/customer/${encodeURIComponent(customer._id)}`
+          `${API_BASE}/barcodes/customer/${encodeURIComponent(customer._id)}`,
+          { headers: { Authorization: `Bearer ${sessionStorage.getItem("token") || ""}` } }
         );
         if (!response.ok) {
           throw new Error("Unable to load customer barcode");

@@ -243,6 +243,8 @@ export default function Announcement() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionStorage.getItem("token") || ""}`,
+            "Idempotency-Key": crypto.randomUUID(),
           },
           body: JSON.stringify(
             buildPayload(customerIds)

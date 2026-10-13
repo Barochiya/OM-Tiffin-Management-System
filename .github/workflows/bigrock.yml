@@ -1,0 +1,43 @@
+name: Build OM Tiffin for BigRock
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: omtiffin-bigrock-main
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, openssl, pdo_mysql, curl
+      - name: Verify converted business API
+        run: |
+          set -e
+          for test in security auth billing router accounts announcements inbox-writes webhook whatsapp http; do
+            php "backend-bigrock/tests/$test.php"
+          done
+      - name: Build website and PDF renderer dependencies
+        run: |
+          npm ci --prefix frontend --ignore-scripts
+          npm ci --prefix backend --ignore-scripts
+          npm run build --prefix frontend
+          node deployment/build-release.cjs
+      - name: Publish code-only release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd .bigrock-build
+          zip -qr ../omtiffin-release.zip .
+          cd ..
+          sha256sum omtiffin-release.zip > omtiffin-release.sha256
+          gh release create "bigrock-${GITHUB_SHA}" omtiffin-release.zip omtiffin-release.sha256 --target "${GITHUB_SHA}" --title "OM Tiffin BigRock ${GITHUB_SHA}" --notes "OM_TIFFIN_CODE_ONLY_RELEASE_V1" --latest

@@ -1,0 +1,73 @@
+{
+  "bills": {
+    "breakfastQty": 0,
+    "lunchQty": 0,
+    "dinnerQty": 0,
+    "breakfastAmount": 0,
+    "lunchAmount": 0,
+    "dinnerAmount": 0,
+    "extraAmount": 0,
+    "totalAmount": 0,
+    "paidAmount": 0,
+    "pendingAmount": 0,
+    "previousPendingAmount": 0,
+    "previousPendingBill": null,
+    "carriedForward": false,
+    "carriedForwardTo": null,
+    "status": "Pending",
+    "whatsappDelivery.messageId": null,
+    "whatsappDelivery.status": "pending",
+    "whatsappDelivery.delivered": false,
+    "whatsappDelivery.sentAt": null,
+    "whatsappDelivery.deliveredAt": null,
+    "whatsappDelivery.readAt": null,
+    "whatsappDelivery.failedAt": null,
+    "whatsappDelivery.reason": "Not sent yet"
+  },
+  "tiffins": {
+    "mealType": "Lunch",
+    "price": 0,
+    "status": "Active",
+    "paymentStatus": "Pending",
+    "paymentDate": null,
+    "pendingAmount": 0,
+    "advanceBalance": 0,
+    "pricing.pricingType": "default",
+    "pricing.breakfastPrice": 40,
+    "pricing.lunchPrice": 90,
+    "pricing.dinnerPrice": 90,
+    "pricing.extraCharge": 0,
+    "pricing.extraReason": "",
+    "pricing.discountType": "fixed",
+    "pricing.discount": 0
+  },
+  "payments": {
+    "paymentMethod": "Cash",
+    "transactionId": "",
+    "gateway": "",
+    "status": "Success",
+    "note": ""
+  },
+  "whatsappmessages": {
+    "customer": null,
+    "type": "unknown",
+    "message": "",
+    "mediaId": null,
+    "mediaMimeType": null,
+    "mediaFilename": null,
+    "mediaCaption": "",
+    "whatsappTimestamp": null,
+    "direction": "incoming",
+    "inboxStatus": "unread",
+    "paymentStatus": "not_payment_related",
+    "linkedBill": null,
+    "linkedPayment": null,
+    "note": ""
+  },
+  "announcementdeliveries": {
+    "notificationArchived": false,
+    "status": "pending",
+    "whatsappMessageId": "",
+    "failureReason": ""
+  }
+}

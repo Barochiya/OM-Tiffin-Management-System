@@ -11,6 +11,10 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    if (!["get", "head", "options"].includes((config.method || "get").toLowerCase()) &&
+        !config.headers["Idempotency-Key"]) {
+      config.headers["Idempotency-Key"] = crypto.randomUUID();
+    }
     // Bound JSON reads so a stalled connection cannot leave screens loading forever.
     // Keep PDF downloads and writes on their existing policy; never retry writes here.
     if ((config.method || "get").toLowerCase() === "get" &&

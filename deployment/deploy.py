@@ -1,5 +1,5 @@
 """OM Tiffin code-only release puller; never imports or modifies a database."""
-import hashlib, json, os, pathlib, re, ssl, sys, urllib.request, zipfile, tempfile, subprocess
+import hashlib, json, os, pathlib, re, ssl, sys, urllib.request, zipfile, tempfile, subprocess, shutil
 
 PRIVATE = pathlib.Path('/home1/maapn1f6/omtiffin-private')
 PUBLIC = pathlib.Path('/home1/maapn1f6/omtiffinservices.com')
@@ -48,36 +48,50 @@ def install(archive, revision):
     public_target = PUBLIC / 'releases' / revision
     if private_target.exists() or public_target.exists():
         raise ValueError('Release already exists; immutable releases are never overwritten')
-    private_target.mkdir(parents=True, mode=0o700)
-    public_target.mkdir(parents=True, mode=0o755)
-    (PUBLIC / 'releases').chmod(0o755)
-    public_target.chmod(0o755)
-    with zipfile.ZipFile(archive) as package:
-        for item in package.infolist():
-            parts = pathlib.PurePosixPath(item.filename).parts
-            if parts[0] == 'manifest.json':
-                continue
-            target = (public_target if parts[0] == 'web' else private_target).joinpath(*parts)
-            permissions = 0o755 if parts[0] == 'web' else 0o700
-            target.parent.mkdir(parents=True, exist_ok=True, mode=permissions)
-            if parts[0] == 'web':
-                parent = target.parent
-                while parent != PUBLIC:
-                    parent.chmod(0o755)
-                    parent = parent.parent
-            if item.is_dir():
-                target.mkdir(exist_ok=True, mode=permissions)
-            else:
-                with target.open('xb') as output:
-                    output.write(package.read(item))
-                target.chmod(0o644 if parts[0] == 'web' else 0o600)
-    environment = os.environ.copy()
-    environment['OMTIFFIN_CONFIG'] = str(PRIVATE / 'private/config.local.json')
-    for source in (private_target / 'php').glob('*.php'):
-        subprocess.run(['/usr/local/bin/php', '-l', str(source)], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=20)
-    check = subprocess.run(['/usr/local/bin/php', str(private_target / 'php/health.php')], env=environment, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
-    if check.stdout.strip() != b'OM_TIFFIN_RELEASE_HEALTH_OK':
-        raise ValueError('Pre-activation release health check failed')
+    (PRIVATE / 'releases').mkdir(parents=True, exist_ok=True, mode=0o700)
+    (PUBLIC / 'releases').mkdir(parents=True, exist_ok=True, mode=0o755)
+    private_stage = pathlib.Path(tempfile.mkdtemp(prefix='.pending-', dir=PRIVATE / 'releases'))
+    public_stage = pathlib.Path(tempfile.mkdtemp(prefix='.pending-', dir=PUBLIC / 'releases'))
+    try:
+        (PUBLIC / 'releases').chmod(0o755)
+        public_stage.chmod(0o755)
+        with zipfile.ZipFile(archive) as package:
+            for item in package.infolist():
+                parts = pathlib.PurePosixPath(item.filename).parts
+                if parts[0] == 'manifest.json':
+                    continue
+                target = (public_stage if parts[0] == 'web' else private_stage).joinpath(*parts)
+                permissions = 0o755 if parts[0] == 'web' else 0o700
+                target.parent.mkdir(parents=True, exist_ok=True, mode=permissions)
+                if parts[0] == 'web':
+                    parent = target.parent
+                    while parent != PUBLIC:
+                        parent.chmod(0o755)
+                        parent = parent.parent
+                if item.is_dir():
+                    target.mkdir(exist_ok=True, mode=permissions)
+                else:
+                    with target.open('xb') as output:
+                        output.write(package.read(item))
+                    target.chmod(0o644 if parts[0] == 'web' else 0o600)
+        environment = os.environ.copy()
+        environment['OMTIFFIN_CONFIG'] = str(PRIVATE / 'private/config.local.json')
+        for source in (private_stage / 'php').glob('*.php'):
+            subprocess.run(['/usr/local/bin/php', '-l', str(source)], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=20)
+        check = subprocess.run(['/usr/local/bin/php', str(private_stage / 'php/health.php')], env=environment, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+        if check.stdout.strip() != b'OM_TIFFIN_RELEASE_HEALTH_OK':
+            raise ValueError('Pre-activation release health check failed')
+        os.replace(private_stage, private_target)
+        try:
+            os.replace(public_stage, public_target)
+        except Exception:
+            os.replace(private_target, private_stage)
+            raise
+    finally:
+        # Only delete fresh temporary directories created by this invocation.
+        for staging in (private_stage, public_stage):
+            if staging.exists():
+                shutil.rmtree(staging)
     current = PUBLIC / 'current'
     if current.exists() and not current.is_symlink():
         raise ValueError('Refusing to replace a non-symlink website directory')

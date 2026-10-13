@@ -13,7 +13,7 @@ try {
     $files=[];
     if(isset($_FILES['pdf'])){$upload=$_FILES['pdf'];if(($upload['error']??UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK||!is_uploaded_file($upload['tmp_name']??'')||(int)($upload['size']??0)>10*1024*1024)throw new HttpError(400,'Valid PDF upload is required.');$files['pdf']=file_get_contents($upload['tmp_name']);}
     $input=fopen('php://input','rb');$raw=stream_get_contents($input,10*1024*1024+1);fclose($input);
-    $application=new HttpApplication(new Router($store,$settings),new Webhook($store,$settings),new WhatsApp($store,$settings));
+    $application=new HttpApplication(new Router($store,$settings),new Webhook($store,$settings),new WhatsApp($store,$settings),!empty($settings['migration']['stagingOriginEnabled']));
     [$status,$responseHeaders,$bytes]=$application->handle($_SERVER['REQUEST_METHOD']??'GET',$_SERVER['REQUEST_URI']??'/',$headers,$raw,$query,$_POST,$files);
     http_response_code($status);foreach($responseHeaders as $key=>$value)header($key.': '.$value);echo $bytes;
 }catch(HttpError $e){http_response_code($e->status);header('Content-Type: application/json');header('Cache-Control: no-store');echo json_encode(['success'=>false,'message'=>$e->getMessage()]);}

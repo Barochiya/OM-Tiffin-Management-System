@@ -3,14 +3,15 @@ declare(strict_types=1);
 namespace OMT;
 require_once __DIR__.'/router.php';
 final class HttpApplication {
-    public function __construct(private readonly Router $router,private readonly ?Webhook $webhook=null,private readonly ?WhatsApp $whatsapp=null){}
+    public function __construct(private readonly Router $router,private readonly ?Webhook $webhook=null,private readonly ?WhatsApp $whatsapp=null,private readonly bool $stagingOrigin=false){}
     public function handle(string $method,string $uri,array $headers,string $raw,array $query=[],array $form=[],array $files=[]):array {
         $headers=array_change_key_case($headers,CASE_LOWER);$method=strtoupper($method);
         $response=['Cache-Control'=>'no-store','X-Content-Type-Options'=>'nosniff','Referrer-Policy'=>'same-origin'];
         try {
             $origin=$headers['origin']??null;
             if($origin!==null){
-                if(!in_array($origin,['https://omtiffinservices.com','https://www.omtiffinservices.com'],true))throw new HttpError(403,'Origin is not allowed.');
+                $origins=['https://omtiffinservices.com','https://www.omtiffinservices.com'];if($this->stagingOrigin)$origins[]='https://omtiffinservices.com.aapnutaxsolutions.com';
+                if(!in_array($origin,$origins,true))throw new HttpError(403,'Origin is not allowed.');
                 $response['Access-Control-Allow-Origin']=$origin;$response['Vary']='Origin';$response['Access-Control-Allow-Credentials']='true';
             }
             if($method==='OPTIONS')return [204,[...$response,'Access-Control-Allow-Methods'=>'GET, POST, PUT, PATCH, DELETE, OPTIONS','Access-Control-Allow-Headers'=>'Content-Type, Authorization, X-Bill-ID, X-Payment-ID, Idempotency-Key','Access-Control-Max-Age'=>'600'],''];

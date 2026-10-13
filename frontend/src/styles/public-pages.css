@@ -94,3 +94,6 @@ button {
     transition: none;
   }
 }
+/* Public interactions animate only compositor-friendly properties. */
+.om-website-shell :where(a,button,input,textarea) { transition-property: transform, opacity; }
+.om-website-shell :where(a,button):focus-visible { outline: 3px solid #1d4ed8; outline-offset: 3px; }

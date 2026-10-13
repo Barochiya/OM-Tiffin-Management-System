@@ -3,7 +3,7 @@ import PageLoading from "../components/PageLoading";
 ﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { ArrowRight, ShoppingCart } from "lucide-react";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo-public.webp";
 import { getWebsiteSettings } from "../services/websiteSettingsService";
 import { useCart } from "../context/CartContext";
 export default function PublicWebsiteLayout() {
@@ -63,6 +63,7 @@ export default function PublicWebsiteLayout() {
         <div className="w-full max-w-lg rounded-3xl bg-white p-10 text-center shadow-xl">
           <img
             src={logo}
+              width={192} height={192} decoding="async"
             alt="OM Tiffin Service"
             className="mx-auto h-20 w-20 rounded-full border border-slate-200 object-cover"
           />
@@ -107,6 +108,7 @@ export default function PublicWebsiteLayout() {
           >
             <img
               src={logo}
+              width={192} height={192} decoding="async"
               alt="OM Tiffin Service"
               className="h-12 w-12 rounded-full border border-slate-200 object-cover"
             />
@@ -207,6 +209,7 @@ export default function PublicWebsiteLayout() {
               >
                 <img
                   src={logo}
+              width={192} height={192} decoding="async"
                   alt="OM Tiffin Service"
                   className="h-10 w-10 rounded-full border border-slate-200 object-cover"
                 />

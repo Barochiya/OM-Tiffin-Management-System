@@ -11,7 +11,7 @@ import {
   ShoppingCart,
   UtensilsCrossed,
 } from "lucide-react";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo-public.webp";
 import { getWebsiteSettings } from "../services/websiteSettingsService";
 import { getPublicMenuItems } from "../services/websiteMenuService";
 import { getPublicReviews, createPublicReview } from "../services/websiteReviewService";
@@ -243,6 +243,7 @@ export default function Home() {
         <div className="w-full max-w-lg rounded-3xl bg-white p-10 text-center shadow-xl">
           <img
             src={logo}
+              width={192} height={192} decoding="async"
             alt="OM Tiffin Service"
             className="mx-auto h-24 w-24 rounded-full border border-slate-200 object-cover"
           />
@@ -269,7 +270,7 @@ export default function Home() {
     <div className="min-h-screen bg-white text-slate-800">
       {/* Hero */}
       {/* Hero */}
-      <main>
+      <div>
         <section
           id="home"
           className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700"
@@ -293,7 +294,7 @@ export default function Home() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
                   href="#plans"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 font-bold text-white shadow-lg transition hover:bg-orange-600"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-orange-700 px-6 py-3.5 font-bold text-white shadow-lg transition hover:bg-orange-800"
                 >
                   Explore Tiffin Plans
                   <ArrowRight size={18} />
@@ -327,6 +328,7 @@ export default function Home() {
                   <div className="flex items-center gap-4 border-b border-slate-100 pb-5">
                     <img
                       src={logo}
+              width={192} height={192} decoding="async"
                       alt="OM Tiffin Service"
                       className="h-16 w-16 rounded-full object-cover border-2 border-blue-100"
                     />
@@ -524,7 +526,7 @@ export default function Home() {
                                   </div>
                                 </div>
                                 <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                                  <span className="text-xs font-bold uppercase tracking-wide text-green-600">
+                                  <span className="text-xs font-bold uppercase tracking-wide text-green-700">
                                     Available
                                   </span>
                                   {settings.onlineOrdersEnabled ? (
@@ -605,7 +607,7 @@ export default function Home() {
                                   </div>
                                 </div>
                                 <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-4">
-                                  <span className="text-xs font-bold uppercase tracking-wide text-green-600">
+                                  <span className="text-xs font-bold uppercase tracking-wide text-green-700">
                                     Available
                                   </span>
                                   {settings.onlineOrdersEnabled ? (
@@ -659,7 +661,7 @@ export default function Home() {
                   key={step.number}
                   className="relative rounded-3xl border border-slate-200 p-7"
                 >
-                  <span className="text-5xl font-black text-blue-100">
+                  <span className="text-5xl font-black text-blue-700">
                     {step.number}
                   </span>
                   <h3 className="mt-3 text-xl font-black text-slate-900">
@@ -699,7 +701,8 @@ export default function Home() {
                       className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
                     >
                       <div
-                        className="flex items-center gap-1 text-orange-500"
+                        role="img"
+                        className="flex items-center gap-1 text-orange-700"
                         aria-label={`${review.rating} star rating`}
                       >
                         {[1, 2, 3, 4, 5].map((star) => (
@@ -726,7 +729,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="mt-12 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-orange-500">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-orange-700">
                     <Star size={26} className="fill-current" />
                   </div>
                   <h3 className="mt-5 text-xl font-black text-slate-900">
@@ -740,7 +743,7 @@ export default function Home() {
 
               <div className="mx-auto mt-12 max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                 <div>
-                  <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-orange-500">
+                  <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-orange-700">
                     Share your experience
                   </p>
                   <h3 className="mt-2 text-2xl font-black text-slate-900">
@@ -851,7 +854,7 @@ export default function Home() {
                           }
                           disabled={reviewSubmitting}
                           aria-label={`Rate ${star} out of 5 stars`}
-                          className="rounded-lg p-1 text-orange-500 transition hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="rounded-lg p-1 text-orange-700 transition hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           <Star
                             size={28}
@@ -884,7 +887,7 @@ export default function Home() {
                       className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                       disabled={reviewSubmitting}
                     />
-                    <p className="mt-1 text-right text-xs text-slate-400">
+                    <p className="mt-1 text-right text-xs text-slate-600">
                       {reviewForm.reviewText.length}/1000
                     </p>
                   </div>
@@ -975,7 +978,7 @@ export default function Home() {
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
               <a
                 href="#contact"
-                className="rounded-xl bg-orange-500 px-6 py-3.5 font-bold hover:bg-orange-600"
+                className="rounded-xl bg-orange-700 px-6 py-3.5 font-bold hover:bg-orange-800"
               >
                 Get Started
               </a>
@@ -1017,13 +1020,14 @@ export default function Home() {
             </div>
           </div>
         </section>
-      </main>
+      </div>
       {/* Footer */}
       <footer className="bg-slate-950 py-8 text-slate-400">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 text-sm sm:flex-row sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <img
               src={logo}
+              width={192} height={192} decoding="async"
               alt="OM Tiffin Service"
               className="h-9 w-9 rounded-full object-cover"
             />

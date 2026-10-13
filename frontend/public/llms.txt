@@ -1,0 +1,16 @@
+# OM Tiffin Services
+
+> Homestyle Kathiyawadi tiffin service in Sector 6/C, Gandhinagar, Gujarat, India.
+
+Contact: +91 7016297983. Please contact the business to confirm current prices, menu and delivery availability.
+
+## Public website
+
+- [Home](https://www.omtiffinservices.com/): Service overview.
+- [About](https://www.omtiffinservices.com/about): Business information.
+- [Plans](https://www.omtiffinservices.com/plans): Daily and monthly tiffin plans.
+- [Menu](https://www.omtiffinservices.com/menu): Meal information.
+- [How it works](https://www.omtiffinservices.com/how-it-works): Starting the service.
+- [Contact](https://www.omtiffinservices.com/contact): Enquiries and location.
+
+Customer and administrator portals require authentication and are not public information sources.

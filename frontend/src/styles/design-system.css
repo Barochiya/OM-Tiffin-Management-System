@@ -44,7 +44,7 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .om-auth-shell form{margin-top:28px}
 .om-auth-shell button[type=submit]{min-height:48px;border-radius:10px;background:#2457db;color:#fff;box-shadow:0 4px 12px #2457db22}
 .om-auth-shell a{font-size:13px}
-.om-website-shell>header{border-color:#e2e8f0;background:#ffffffed;box-shadow:0 4px 24px #17243b05}
+.om-website-shell>header{position:fixed!important;top:0;inset-inline:0;border-color:#e2e8f0;background:#ffffffed;box-shadow:0 4px 24px #17243b05}
 .om-website-shell nav a{font-size:13px;letter-spacing:.01em}
 .om-website-shell :where(h1,h2,h3){letter-spacing:-.035em}
 .om-website-shell :where(.rounded-3xl){border-radius:22px}

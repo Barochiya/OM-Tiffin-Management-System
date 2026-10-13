@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import PageLoading from "../components/PageLoading";
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import logo from "../assets/logo.png";
@@ -9,6 +9,8 @@ import { useCart } from "../context/CartContext";
 export default function PublicWebsiteLayout() {
   const { cartItems = [] } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const headerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(73);
   const [settings, setSettings] = useState({
     websiteEnabled: true,
     plansEnabled: true,
@@ -46,6 +48,15 @@ export default function PublicWebsiteLayout() {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, []);
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+    const measure = () => setHeaderHeight(header.getBoundingClientRect().height);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(header);
+    return () => observer.disconnect();
+  }, [settings.websiteEnabled]);
   if (!settings.websiteEnabled) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 px-6">
@@ -74,8 +85,8 @@ export default function PublicWebsiteLayout() {
   }
   const closeMobileMenu = () => setMobileMenuOpen(false);
   return (
-    <div className="om-website-shell min-h-screen bg-white text-slate-800">
-      <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur">
+    <div className="om-website-shell min-h-screen bg-white text-slate-800" style={{ paddingTop: headerHeight }}>
+      <header ref={headerRef} className="fixed inset-x-0 top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <button
             type="button"

@@ -1,20 +1,7 @@
-import { createRoot } from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import "./styles/design-system.css";
-
-import App from "./PublicApp";
-import SearchMetadata from "./components/SearchMetadata";
-import NotificationCenter from "./components/NotificationCenter";
-
-const application = (
-  <BrowserRouter>
-    <SearchMetadata />
-    <App />
-    <NotificationCenter />
-  </BrowserRouter>
-);
-const root = document.getElementById("root");
-// The static public preview paints immediately; mount the interactive app
-// normally so provider/portal changes cannot cause hydration mismatches.
-createRoot(root).render(application);
+const publicPaths = new Set(["/", "/about", "/plans", "/menu", "/how-it-works", "/contact"]);
+const path = window.location.pathname.replace(/\/$/, "") || "/";
+// Private entry points do not download the homepage or public marketing code.
+const runtime = publicPaths.has(path) ? import("./PublicRoot") : import("./PrivateRoot");
+runtime.then(module => module.mount());

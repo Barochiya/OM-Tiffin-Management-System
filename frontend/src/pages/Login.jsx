@@ -3,7 +3,7 @@ import { notify } from "../services/notifications";
 import { useNavigate } from "react-router-dom";
 import { loginAdmin } from "../services/authService";
 
-import logo from "../assets/logo.png";
+import logo from "../assets/logo-screen.webp";
 
 import {
   FaEnvelope,
@@ -71,13 +71,14 @@ const Login = () => {
   };
 
   return (
-    <div className="om-auth-shell min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
+    <main className="om-auth-shell min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
       <div className="om-auth-intro hidden lg:block"><span>OM TIFFIN SERVICE</span><h2>Your service.
 One clear workspace.</h2><p>Customers, meals, billing and payments — organised in one place.</p><div className="om-auth-intro-rule" /><small>ADMIN WORKSPACE</small></div>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
         <div className="flex justify-center">
           <img
             src={logo}
+            width={192} height={192} decoding="async"
             alt="OM Tiffin"
             className="w-28 h-28 rounded-full shadow-lg border-4 border-blue-100"
           />
@@ -98,7 +99,7 @@ One clear workspace.</h2><p>Customers, meals, billing and payments — organised
           className="mt-8 space-y-5"
         >
           <div>
-            <label className="block font-semibold text-gray-700 mb-2">
+            <label htmlFor="admin-username" className="block font-semibold text-gray-700 mb-2">
               Email
             </label>
 
@@ -107,6 +108,8 @@ One clear workspace.</h2><p>Customers, meals, billing and payments — organised
 
               <input
                 type="email"
+                autoComplete="username"
+                id="admin-username"
                 placeholder="Enter Email"
                 value={email}
                 onChange={(e) =>
@@ -119,7 +122,7 @@ One clear workspace.</h2><p>Customers, meals, billing and payments — organised
           </div>
 
           <div>
-            <label className="block font-semibold text-gray-700 mb-2">
+            <label htmlFor="admin-password" className="block font-semibold text-gray-700 mb-2">
               Password
             </label>
 
@@ -132,6 +135,8 @@ One clear workspace.</h2><p>Customers, meals, billing and payments — organised
                     ? "text"
                     : "password"
                 }
+                autoComplete="current-password"
+                id="admin-password"
                 placeholder="Enter Password"
                 value={password}
                 onChange={(e) =>
@@ -150,7 +155,9 @@ One clear workspace.</h2><p>Customers, meals, billing and payments — organised
                     !showPassword
                   )
                 }
-                className="absolute right-4 top-4 text-gray-500"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="absolute right-1 top-1 flex h-11 w-11 items-center justify-center rounded-lg text-gray-600 focus-visible:outline-2 focus-visible:outline-blue-700"
               >
                 {showPassword ? (
                   <FaEyeSlash />
@@ -176,7 +183,7 @@ One clear workspace.</h2><p>Customers, meals, billing and payments — organised
           © 2026 OM Tiffin Service
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

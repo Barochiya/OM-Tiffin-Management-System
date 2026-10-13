@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   loginCustomer,
 } from "../services/customerAuthService";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo-screen.webp";
 const CustomerLogin = () => {
   useEffect(() => {
     document.title = "OM Tiffin Service - Customer Login";
@@ -57,13 +57,14 @@ const CustomerLogin = () => {
     }
   };
   return (
-    <div className="om-auth-shell min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
+    <main className="om-auth-shell min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
       <div className="om-auth-intro hidden lg:block"><span>OM TIFFIN SERVICE</span><h2>Good food.
 Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and stay connected with OM Tiffin Service.</p><div className="om-auth-intro-rule" /><small>CUSTOMER PORTAL</small></div>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
         <div className="flex justify-center">
           <img
             src={logo}
+            width={192} height={192} decoding="async"
             alt="OM Tiffin Service"
             className="w-28 h-28 rounded-full shadow-lg border-4 border-blue-100"
           />
@@ -81,12 +82,13 @@ Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and sta
           className="mt-8 space-y-5"
         >
           <div>
-            <label className="block font-semibold text-gray-700 mb-2">
+            <label htmlFor="customer-username" className="block font-semibold text-gray-700 mb-2">
               Customer User ID
             </label>
             <input
               type="text"
-              placeholder="Enter Customer ID"
+              id="customer-username"
+                placeholder="Enter Customer ID"
               value={userId}
               onChange={(e) =>
                 setUserId(e.target.value)
@@ -97,12 +99,13 @@ Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and sta
             />
           </div>
           <div>
-            <label className="block font-semibold text-gray-700 mb-2">
+            <label htmlFor="customer-password" className="block font-semibold text-gray-700 mb-2">
               Password
             </label>
             <input
               type="password"
-              placeholder="Enter Password"
+              id="customer-password"
+                placeholder="Enter Password"
               value={password}
               onChange={(e) =>
                 setPassword(e.target.value)
@@ -153,7 +156,7 @@ Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and sta
           © 2026 OM Tiffin Service
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 export default CustomerLogin;

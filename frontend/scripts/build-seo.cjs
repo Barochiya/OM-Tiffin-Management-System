@@ -20,7 +20,7 @@ const schema = {
   contactPoint:{'@type':'ContactPoint',telephone:seo.secondaryPhone,contactType:'customer service'}
 };
 // Unknown/private SPA routes receive noindex even before JavaScript runs.
-fs.writeFileSync(path.join(dist,'index.html'),template.replace('</head>','<meta name="robots" content="noindex,follow" /></head>'));
+fs.writeFileSync(path.join(dist,'index.html'),publicTemplate.replace('</head>','<meta name="robots" content="noindex,follow" /></head>'));
 for (const [route,page] of Object.entries(seo.pages)) {
   const filename = route==='/' ? 'seo-home.html' : 'seo-'+route.slice(1)+'.html';
   const head = `<meta name="description" content="${escape(page.description)}" />

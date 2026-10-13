@@ -64,6 +64,7 @@ app.use(
 );
 
 app.options("*", cors());
+app.use(require("./middleware/migrationPause"));
 
 app.use(
   "/api/payments/send-whatsapp",

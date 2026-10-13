@@ -3,7 +3,7 @@ import { lazy, Suspense } from "react";
 import PageLoading from "./components/PageLoading";
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import AdminLayout from "./layouts/AdminLayout";
+const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
 const Plans = lazy(() => import("./pages/Plans"));

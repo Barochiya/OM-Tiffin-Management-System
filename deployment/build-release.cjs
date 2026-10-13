@@ -15,7 +15,7 @@ const visited=new Set();function dependency(name,from){const req=createRequire(p
 dependency('pdfkit',backend);dependency('qrcode',backend);
 const privateRelease='/home1/maapn1f6/omtiffin-private/releases/'+revision;
 fs.writeFileSync(path.join(output,'web/index.php'),`<?php\ndeclare(strict_types=1);\n$path=parse_url($_SERVER['REQUEST_URI']??'/',PHP_URL_PATH);\nif($path==='/api'||str_starts_with($path,'/api/')){putenv('OMTIFFIN_CONFIG=/home1/maapn1f6/omtiffin-private/private/config.local.json');require '${privateRelease}/php/entry.php';exit;}\nheader('Content-Type: text/html; charset=utf-8');header('Cache-Control: no-cache');readfile(__DIR__.'/index.html');\n`);
-fs.writeFileSync(path.join(output,'web/.htaccess'),`Options -Indexes\nDirectoryIndex index.php\nRewriteEngine On\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\nRewriteRule ^api(?:/.*)?$ index.php [L,QSA]\nRewriteCond %{REQUEST_FILENAME} -f [OR]\nRewriteCond %{REQUEST_FILENAME} -d\nRewriteRule ^ - [L]\nRewriteRule ^ index.php [L]\n`);
+fs.writeFileSync(path.join(output,'web/.htaccess'),`Options -Indexes\nDirectoryIndex index.php\nRewriteEngine On\nRewriteCond %{HTTPS} !=on\nRewriteCond %{HTTP_HOST} ^(www\\.)?omtiffinservices\\.com$ [NC]\nRewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]\nRewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]\nRewriteRule ^api(?:/.*)?$ index.php [L,QSA]\nRewriteCond %{REQUEST_FILENAME} -f [OR]\nRewriteCond %{REQUEST_FILENAME} -d\nRewriteRule ^ - [L]\nRewriteRule ^ index.php [L]\n`);
 fs.writeFileSync(path.join(output,'manifest.json'),JSON.stringify({project:'omtiffinservices.com',revision,format:1,codeOnly:true},null,2));
 console.log('Built code-only OM Tiffin release '+revision+'; no database/config/uploads included.');
 

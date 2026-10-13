@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import PageLoading from "../components/PageLoading";
-﻿import { useEffect, useLayoutEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import logo from "../assets/logo-public.webp";
@@ -48,12 +48,15 @@ export default function PublicWebsiteLayout() {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, []);
-  useLayoutEffect(() => {
+  useEffect(() => {
     const header = headerRef.current;
     if (!header) return;
-    const measure = () => setHeaderHeight(header.getBoundingClientRect().height);
-    measure();
-    const observer = new ResizeObserver(measure);
+    // ResizeObserver supplies the completed layout size; avoid a synchronous
+    // geometry read during React's commit, which forces a full-page reflow.
+    const observer = new ResizeObserver(([entry]) => {
+      const size = entry.borderBoxSize?.[0]?.blockSize ?? entry.contentRect.height + 1;
+      setHeaderHeight(previous => Math.abs(previous - size) < 0.5 ? previous : size);
+    });
     observer.observe(header);
     return () => observer.disconnect();
   }, [settings.websiteEnabled]);

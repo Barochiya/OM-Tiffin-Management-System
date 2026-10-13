@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Clock3,
   MapPin,
@@ -8,15 +8,11 @@ import {
 } from "lucide-react";
 import "../styles/public-pages.css";
 
-const PHONE = "9409380470";
-const WHATSAPP = "919409380470";
+const PHONE = "7016297983";
+const WHATSAPP = "917016297983";
 
 export default function Contact() {
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    document.title = "Contact | OM Tiffin Service";
-  }, []);
 
   const openWhatsApp = () => {
   const text =
@@ -58,7 +54,8 @@ export default function Contact() {
             </div>
             <h2 className="mt-6 text-xl font-black text-slate-950">Call Us</h2>
             <p className="mt-2 text-slate-600">Speak directly with OM Tiffin Service.</p>
-            <p className="mt-4 font-black text-blue-600">9409380470</p>
+            <p className="mt-4 font-black text-blue-600">7016297983</p>
+            <p className="mt-2 text-sm text-slate-600">Additional contact: 9409380470</p>
           </a>
 
           <button
@@ -82,9 +79,9 @@ export default function Contact() {
             </div>
             <h2 className="mt-6 text-xl font-black text-slate-950">Service Area</h2>
             <p className="mt-2 text-slate-600">
-              OM Tiffin Service is based in Gandhinagar.
+              Plot No 1086/2, Bhuneshwari Society, Sector 6/C, near Civil Hospital, Gandhinagar, Gujarat 382006.
             </p>
-            <p className="mt-4 font-black text-orange-600">Gandhinagar</p>
+            <a className="mt-4 inline-block font-black text-orange-600" href="https://www.google.com/maps?cid=8344742168876336675" target="_blank" rel="noopener noreferrer">Find us on Google Maps</a>
           </div>
         </div>
       </section>

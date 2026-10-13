@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -51,10 +50,6 @@ const plans = [
 ];
 
 export default function Plans() {
-  useEffect(() => {
-    document.title = "Tiffin Plans | OM Tiffin Service";
-  }, []);
-
   return (
     <main className="om-public-page bg-slate-50 text-slate-800">
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700">

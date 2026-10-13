@@ -33,6 +33,7 @@ jobs:
           npm ci --prefix frontend --ignore-scripts
           npm ci --prefix backend --ignore-scripts
           npm run build --prefix frontend
+          node frontend/scripts/verify-seo.cjs
           node deployment/build-release.cjs
       - name: Publish code-only release
         env:

@@ -109,9 +109,6 @@ const faqs = [
 
 export default function Home() {
   const [openFaq, setOpenFaq] = useState(null);
-useEffect(() => {
-    document.title = "OM Tiffin Service";
-  }, []);
   const {
   cartItems,
   addToCart,
@@ -259,7 +256,7 @@ useEffect(() => {
             Please contact OM Tiffin Service for assistance.
           </p>
           <a
-            href="tel:9409380470"
+            href="tel:7016297983"
             className="mt-7 inline-flex rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
           >
             Contact Us
@@ -286,12 +283,12 @@ useEffect(() => {
                 Fresh • Homestyle • Reliable
               </div>
               <h1 className="max-w-3xl text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
-                Fresh &amp; Delicious
-                <span className="block text-orange-300">Tiffin Service</span>
+                Homestyle Tiffin Service
+                <span className="block text-orange-300">in Gandhinagar</span>
               </h1>
               <p className="mt-6 max-w-xl text-lg leading-8 text-blue-100 sm:text-xl">
                 Enjoy fresh, homestyle meals with a convenient tiffin service
-                designed for your everyday needs.
+                in Gandhinagar. Contact us to confirm delivery for your address.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <a
@@ -1012,7 +1009,7 @@ useEffect(() => {
             </div>
             <div className="mt-8 flex justify-center">
               <a
-                href="tel:9409380470"
+                href="tel:7016297983"
                 className="rounded-xl bg-blue-600 px-7 py-3.5 font-bold text-white shadow-lg hover:bg-blue-700"
               >
                 Call OM Tiffin Service

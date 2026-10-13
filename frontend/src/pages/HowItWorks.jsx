@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -48,10 +47,6 @@ const portalFeatures = [
 ];
 
 export default function HowItWorks() {
-  useEffect(() => {
-    document.title = "How It Works | OM Tiffin Service";
-  }, []);
-
   return (
     <main className="om-public-page bg-slate-50 text-slate-800">
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700">

@@ -162,7 +162,7 @@ const CustomerAccountSetup = () => {
     setMessage("");
   };
   return (
-    <div className="om-auth-shell min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
+    <main className="om-auth-shell min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex items-center justify-center px-4">
       <div className="om-auth-intro hidden lg:block"><span>OM TIFFIN SERVICE</span><h2>Good food.
 Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and stay connected with OM Tiffin Service.</p><div className="om-auth-intro-rule" /><small>CUSTOMER PORTAL</small></div>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
@@ -180,10 +180,11 @@ Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and sta
             className="mt-8 space-y-5"
           >
             <div>
-              <label className="block font-semibold text-gray-700 mb-2">
+              <label htmlFor="customeraccountsetup-field-1" className="block font-semibold text-gray-700 mb-2">
                 Customer User ID
               </label>
               <input
+                id="customeraccountsetup-field-1"
                 type="text"
                 placeholder="Enter Customer User ID"
                 value={userId}
@@ -246,10 +247,11 @@ Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and sta
               </p>
             </div>
             <div>
-              <label className="block font-semibold text-gray-700 mb-2">
+              <label htmlFor="customeraccountsetup-field-2" className="block font-semibold text-gray-700 mb-2">
                 Verification Code
               </label>
               <input
+                id="customeraccountsetup-field-2"
                 type="text"
                 inputMode="numeric"
                 maxLength={6}
@@ -303,10 +305,11 @@ Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and sta
               </p>
             </div>
             <div>
-              <label className="block font-semibold text-gray-700 mb-2">
+              <label htmlFor="customeraccountsetup-field-3" className="block font-semibold text-gray-700 mb-2">
                 New Password
               </label>
               <input
+                id="customeraccountsetup-field-3"
                 type="password"
                 value={newPassword}
                 onChange={(e) =>
@@ -322,10 +325,11 @@ Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and sta
               </p>
             </div>
             <div>
-              <label className="block font-semibold text-gray-700 mb-2">
+              <label htmlFor="customeraccountsetup-field-4" className="block font-semibold text-gray-700 mb-2">
                 Confirm New Password
               </label>
               <input
+                id="customeraccountsetup-field-4"
                 type="password"
                 value={confirmPassword}
                 onChange={(e) =>
@@ -357,7 +361,7 @@ Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and sta
           © 2026 OM Tiffin Service
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 export default CustomerAccountSetup;

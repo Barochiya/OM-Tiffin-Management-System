@@ -1,7 +1,7 @@
 import { House, CreditCard, LogOut, Megaphone, Inbox, MessageCircle, FileText, Download, ChartColumn, UtensilsCrossed } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/logo.png";
+import logo from "../assets/logo-screen.webp";
 import {
   getCustomerMealHistory,
   getCustomerProfile,

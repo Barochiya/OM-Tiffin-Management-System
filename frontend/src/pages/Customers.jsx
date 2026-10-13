@@ -274,7 +274,7 @@ How can we help you today?`;
   ).length;
 
   const pendingPayments = customers.filter(
-    (customer) => customer.paymentStatus !== "Paid"
+    (customer) => Number(customer.pendingAmount || 0) > 0
   ).length;
 
   return (

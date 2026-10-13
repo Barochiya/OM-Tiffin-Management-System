@@ -26,6 +26,8 @@ jobs:
           for test in security auth billing router accounts announcements inbox-writes webhook whatsapp http outbox outbox-crypto deliveries; do
             php "backend-bigrock/tests/$test.php"
           done
+      - name: Verify billing cycle calendar
+        run: node --test frontend/src/services/billingCycle.test.js
       - name: Build website and PDF renderer dependencies
         run: |
           npm ci --prefix frontend --ignore-scripts

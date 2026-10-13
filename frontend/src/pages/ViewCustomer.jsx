@@ -17,6 +17,7 @@ import {
   FaTrash,
 } from "react-icons/fa";
 
+import { currentBillingPeriod, defaultCycle, cycleEntries } from "../services/billingCycle";
 import { getCustomerById } from "../services/customerService";
 import {
   getCustomerEntries,
@@ -35,23 +36,20 @@ export default function ViewCustomer() {
 // =======================================
 
 const [dailyEntries, setDailyEntries] = useState([]);
-const [dailyEntriesLoading, setDailyEntriesLoading] = useState(false);
+const [dailyEntriesLoading, setDailyEntriesLoading] = useState(true);
 
-const [selectedMonth, setSelectedMonth] = useState(
-  new Date().getMonth() + 1
-);
-
-const [selectedYear, setSelectedYear] = useState(
-  new Date().getFullYear()
-);
-
-const [selectedCycle, setSelectedCycle] = useState("2");
-
+const [billingPeriod, setBillingPeriod] = useState(() => currentBillingPeriod());
+const { month: selectedMonth, year: selectedYear, cycle: selectedCycle } = billingPeriod;
+const setSelectedMonth = (month) => setBillingPeriod(period => ({ ...period, month, cycle: defaultCycle(month, period.year) }));
+const setSelectedYear = (year) => setBillingPeriod(period => ({ ...period, year, cycle: defaultCycle(period.month, year) }));
+const setSelectedCycle = (cycle) => setBillingPeriod(period => ({ ...period, cycle }));
 
 const [savingEntryIds, setSavingEntryIds] = useState(() => new Set());
 const pendingEntrySaves = useRef(new Set());
 
   useEffect(() => {
+    setBillingPeriod(currentBillingPeriod());
+    setDailyEntries([]);
     loadCustomer();
   }, [id]);
 
@@ -61,196 +59,20 @@ const pendingEntrySaves = useRef(new Set());
 
 useEffect(() => {
   if (!id) return;
+  let active = true;
+  loadDailyEntries(() => active);
+  return () => { active = false; };
+}, [id, selectedMonth, selectedYear, selectedCycle]);
 
-  loadDailyEntries();
-}, [id, selectedMonth, selectedYear, selectedCycle]);// =======================================
-// AUTO BILLING CYCLE
-// =======================================
-// Current month:
-// Day 1-15   => Cycle 1
-// Day 16-end => Cycle 2
-//
-// Other month/year:
-// Default => Cycle 1
-// =======================================
-useEffect(() => {
-  const today = new Date();
-  const isCurrentMonth =
-    Number(selectedYear) === today.getFullYear() &&
-    Number(selectedMonth) === today.getMonth() + 1;
-  const nextCycle = isCurrentMonth
-    ? today.getDate() <= 15
-      ? "1"
-      : "2"
-    : "1";
-  setSelectedCycle(nextCycle);
-}, [selectedMonth, selectedYear]);
-
-const loadDailyEntries = async () => {
+const loadDailyEntries = async (isActive) => {
+  setDailyEntriesLoading(true);
   try {
-    setDailyEntriesLoading(true);
-
-    const response = await getCustomerEntries(
-      id,
-      selectedMonth,
-      selectedYear,
-      selectedCycle
-    );
-
-    const savedEntries = response?.data || [];
-
-    // =======================================
-    // CURRENT DATE LIMIT
-    // =======================================
-
-    const today = new Date();
-
-    const currentYear = today.getFullYear();
-    const currentMonth = today.getMonth() + 1;
-    const currentDay = today.getDate();
-
-    // =======================================
-    // CYCLE START / END
-    // =======================================
-
-    let cycleStartDay;
-    let cycleEndDay;
-
-    if (String(selectedCycle) === "1") {
-      // Cycle 1 = 1 to 15
-      cycleStartDay = 1;
-      cycleEndDay = 15;
-    } else {
-      // Cycle 2 = 16 to month end
-      cycleStartDay = 16;
-
-      cycleEndDay = new Date(
-        selectedYear,
-        selectedMonth,
-        0
-      ).getDate();
-    }
-
-    // =======================================
-    // IF SELECTED MONTH IS CURRENT MONTH
-    // DON'T SHOW FUTURE DATES
-    // =======================================
-
-    if (
-      Number(selectedYear) === currentYear &&
-      Number(selectedMonth) === currentMonth
-    ) {
-      cycleEndDay = Math.min(
-        cycleEndDay,
-        currentDay
-      );
-    }
-
-    // =======================================
-    // IF SELECTED MONTH IS FUTURE
-    // SHOW NOTHING
-    // =======================================
-
-    const selectedMonthDate = new Date(
-      Number(selectedYear),
-      Number(selectedMonth) - 1,
-      1
-    );
-
-    const currentMonthDate = new Date(
-      currentYear,
-      currentMonth - 1,
-      1
-    );
-
-    if (selectedMonthDate > currentMonthDate) {
-      setDailyEntries([]);
-
-      return;
-    }
-
-    // =======================================
-// CREATE DATE-WISE ENTRIES
-// INCLUDING MISSING DATES
-// =======================================
-
-const entryMap = new Map();
-
-// Backend stored dates à¤•à¥‹ calendar date à¤•à¥‡ à¤¹à¤¿à¤¸à¤¾à¤¬ à¤¸à¥‡ map à¤•à¤°à¥‡à¤‚
-savedEntries.forEach((entry) => {
-  const entryDate = new Date(entry.date);
-
-  const key = `${entryDate.getUTCFullYear()}-${String(
-    entryDate.getUTCMonth() + 1
-  ).padStart(2, "0")}-${String(
-    entryDate.getUTCDate()
-  ).padStart(2, "0")}`;
-
-  entryMap.set(key, entry);
-});
-
-const generatedEntries = [];
-
-for (
-  let day = cycleStartDay;
-  day <= cycleEndDay;
-  day++
-) {
-  const key = `${Number(selectedYear)}-${String(
-    Number(selectedMonth)
-  ).padStart(2, "0")}-${String(day).padStart(
-    2,
-    "0"
-  )}`;
-
-  const existingEntry = entryMap.get(key);
-
-  if (existingEntry) {
-    generatedEntries.push(existingEntry);
-  } else {
-    // Calendar date à¤•à¥‹ directly UTC midnight à¤ªà¤° à¤¬à¤¨à¤¾à¤à¤‚.
-    // Local Date + toISOString() use à¤¨à¤¹à¥€à¤‚ à¤•à¤°à¤¨à¤¾ à¤¹à¥ˆ.
-    const dateString = `${Number(selectedYear)}-${String(
-      Number(selectedMonth)
-    ).padStart(2, "0")}-${String(day).padStart(
-      2,
-      "0"
-    )}`;
-
-    generatedEntries.push({
-      _id: `new-${key}`,
-
-      customer: id,
-
-      date: `${dateString}T00:00:00.000Z`,
-
-      breakfastQty: 0,
-      lunchQty: 0,
-      dinnerQty: 0,
-
-      extraItems: [],
-
-      remark: "",
-
-      isNewEntry: true,
-    });
-  }
-}
-
-setDailyEntries(generatedEntries);
-
+    const response = await getCustomerEntries(id, selectedMonth, selectedYear, selectedCycle);
+    if (isActive()) setDailyEntries(cycleEntries(response?.data || [], billingPeriod, id));
   } catch (error) {
-    console.error(
-      "Load customer daily entries error:",
-      error
-    );
-
-    notify(
-      error?.response?.data?.message ||
-        "Failed to load daily meal entries."
-    );
+    if (isActive()) notify(error?.response?.data?.message || "Failed to load daily meal entries.");
   } finally {
-    setDailyEntriesLoading(false);
+    if (isActive()) setDailyEntriesLoading(false);
   }
 };
 
@@ -676,7 +498,7 @@ const handleSaveDailyEntry = async (entryId) => {
             CUSTOMER DAILY MEAL ENTRIES
         ======================================= */}
 
-        <div className="hidden md:block mt-6 rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="mt-6 rounded-2xl border border-slate-200 overflow-hidden">
 
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 sm:px-8 py-6 text-white">
@@ -698,6 +520,7 @@ const handleSaveDailyEntry = async (entryId) => {
 
                 {/* Month */}
                 <select
+                  aria-label="Billing month"
                   value={selectedMonth}
                   onChange={(e) =>
                     setSelectedMonth(Number(e.target.value))
@@ -740,6 +563,7 @@ const handleSaveDailyEntry = async (entryId) => {
 
                 {/* Year */}
                 <select
+                  aria-label="Billing year"
                   value={selectedYear}
                   onChange={(e) =>
                     setSelectedYear(Number(e.target.value))
@@ -768,6 +592,7 @@ const handleSaveDailyEntry = async (entryId) => {
 
                 {/* Cycle */}
                 <select
+                  aria-label="Billing cycle"
                   value={selectedCycle}
                   onChange={(e) =>
                     setSelectedCycle(e.target.value)
@@ -867,7 +692,7 @@ const handleSaveDailyEntry = async (entryId) => {
             DATE-WISE DAILY ENTRIES
         ======================================= */}
 
-        <div className="hidden md:block mt-6 rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="mt-6 rounded-2xl border border-slate-200 overflow-hidden">
 
           <div className="px-6 sm:px-8 py-5 border-b border-slate-200 bg-slate-50">
             <h3 className="text-lg font-bold text-slate-800">
@@ -901,7 +726,7 @@ const handleSaveDailyEntry = async (entryId) => {
 
           ) : (
 
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
 
               <table className="w-full min-w-[1000px]">
 
@@ -1393,7 +1218,7 @@ const dailyTotal =
           ======================================= */}
           <div className="block md:hidden w-full max-w-none p-3 space-y-4">
 
-            {dailyEntries.map((entry) => {
+            {(dailyEntriesLoading ? [] : dailyEntries).map((entry) => {
               const isSaving =
                 savingEntryIds.has(entry._id);
 

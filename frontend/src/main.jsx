@@ -1,4 +1,4 @@
-import { createRoot, hydrateRoot } from "react-dom/client";
+import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import "./index.css";
 import "./styles/design-system.css";
@@ -15,5 +15,6 @@ const application = (
   </BrowserRouter>
 );
 const root = document.getElementById("root");
-if (root.hasAttribute("data-prerendered")) hydrateRoot(root, application);
-else createRoot(root).render(application);
+// The static public preview paints immediately; mount the interactive app
+// normally so provider/portal changes cannot cause hydration mismatches.
+createRoot(root).render(application);

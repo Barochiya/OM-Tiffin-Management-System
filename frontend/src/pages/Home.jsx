@@ -1029,7 +1029,9 @@ export default function Home() {
             />
             <span>© 2026 OM Tiffin Service</span>
           </div>
-          <div className="flex gap-5">
+          <div className="flex flex-wrap gap-5">
+            <a href="https://www.instagram.com/om_tiffin_service_gandhinagar/" target="_blank" rel="noopener noreferrer" className="hover:text-white">Instagram</a>
+            <a href="https://g.page/r/CSPGGE7Kes5zEBM/review" target="_blank" rel="noopener noreferrer" className="hover:text-white">Review us on Google</a>
             {settings.customerLoginEnabled && (
               <Link to="/customer-login" className="hover:text-white">
                 Customer Login

@@ -8,7 +8,7 @@ const template = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
 const escape = value => String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const schema = {
   '@context':'https://schema.org', '@type':'FoodEstablishment', '@id':seo.origin+'/#business',
-  name:'OM Tiffin Services', url:seo.origin+'/', telephone:seo.phone,
+  name:'OM Tiffin Services', url:seo.origin+'/', telephone:seo.phone, sameAs:[seo.instagram],
   image:seo.origin+'/logo.png', hasMap:seo.map, areaServed:{'@type':'City',name:'Gandhinagar'},
   address:{'@type':'PostalAddress',streetAddress:'Plot No 1086/2, Bhuneshwari Society, Sector 6/C, near Civil Hospital',addressLocality:'Gandhinagar',addressRegion:'Gujarat',postalCode:'382006',addressCountry:'IN'},
   contactPoint:{'@type':'ContactPoint',telephone:seo.secondaryPhone,contactType:'customer service'}

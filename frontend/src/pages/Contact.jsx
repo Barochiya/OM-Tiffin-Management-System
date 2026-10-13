@@ -77,11 +77,12 @@ export default function Contact() {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600">
               <MapPin size={22} />
             </div>
-            <h2 className="mt-6 text-xl font-black text-slate-950">Service Area</h2>
+            <h2 className="mt-6 text-xl font-black text-slate-950">Our Location</h2>
             <p className="mt-2 text-slate-600">
               Plot No 1086/2, Bhuneshwari Society, Sector 6/C, near Civil Hospital, Gandhinagar, Gujarat 382006.
             </p>
             <a className="mt-4 inline-block font-black text-orange-600" href="https://www.google.com/maps?cid=8344742168876336675" target="_blank" rel="noopener noreferrer">Find us on Google Maps</a>
+            <a className="mt-3 block font-bold text-blue-600" href="https://www.instagram.com/om_tiffin_service_gandhinagar/" target="_blank" rel="noopener noreferrer">OM Tiffin on Instagram</a>
           </div>
         </div>
       </section>

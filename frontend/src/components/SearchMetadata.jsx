@@ -23,6 +23,14 @@ export default function SearchMetadata() {
       meta("og:description", page.description, true);
       meta("og:url", seo.origin + pathname, true);
     } else {
+      const accountTitles = {
+        "/admin": "Admin Login", "/login": "Admin Login",
+        "/customer-login": "Customer Login",
+        "/customer-account-setup": "Customer Account Setup",
+        "/customer-forgot-user-id": "Recover Customer User ID",
+        "/customer-forgot-password": "Reset Customer Password",
+      };
+      if (accountTitles[pathname]) document.title = accountTitles[pathname] + " | OM Tiffin Service";
       canonical?.remove();
       document.querySelectorAll('meta[property^="og:"], script[data-public-business]').forEach(tag => tag.remove());
     }

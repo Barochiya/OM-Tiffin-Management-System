@@ -38,7 +38,7 @@ const benefits = [
 
 export default function About() {
   return (
-    <main className="om-public-page bg-slate-50 text-slate-800">
+    <div className="om-public-page bg-slate-50 text-slate-800">
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700">
         <div className="om-grid-pattern absolute inset-0 opacity-20" />
         <div className="absolute -right-32 -top-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
@@ -162,6 +162,6 @@ export default function About() {
           </Link>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

@@ -76,7 +76,7 @@ export default function Menu() {
     );
   }, [menuItems, selectedMealType]);
   return (
-    <main className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-slate-900">
@@ -221,7 +221,7 @@ export default function Menu() {
             </div>
           )}
       </section>
-    </main>
+    </div>
   );
 }
 

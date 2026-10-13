@@ -7,7 +7,7 @@ for (const [route,page] of Object.entries(seo.pages)) {
   assert(html.includes(`href="${seo.origin+route}"`));
   assert(html.includes('content="index,follow"'));
   assert(!html.includes('content="noindex,follow"'));
-  assert(html.includes('<h1>') && html.includes('Gandhinagar'));
+  assert(/<h1\b/.test(html) && html.includes('Gandhinagar'));
   assert(html.includes('google-site-verification'));
   assert(!titles.has(page.title)); titles.add(page.title);
   const schema = JSON.parse(html.match(/data-public-business>(.*?)<\/script>/s)[1]);
@@ -21,3 +21,9 @@ assert.equal((sitemap.match(/<loc>/g)||[]).length,6);
 assert(!/customer|admin|login|bill|payment/.test(sitemap));
 assert(fs.readFileSync(path.join(dist,'robots.txt'),'utf8').includes(seo.origin+'/sitemap.xml'));
 console.log('PASS public crawlable content, six canonical URLs, verified contact/schema, private noindex and sitemap.');
+
+const home = fs.readFileSync(path.join(dist,'seo-home.html'),'utf8');
+assert(home.includes('data-prerendered'));
+assert(home.includes('id="home"') && home.includes('Explore Tiffin Plans'));
+assert(!/<link[^>]+rel="stylesheet"/.test(home));
+console.log('PASS homepage design rendered in initial HTML with inline styles.');

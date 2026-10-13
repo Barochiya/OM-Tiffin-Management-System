@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && node scripts/build-seo.cjs",
+    "build": "vite build && vite build --ssr src/prerender.jsx --outDir .prerender && node scripts/render-home.mjs && node scripts/build-seo.cjs",
     "lint": "oxlint",
     "preview": "vite preview"
   },

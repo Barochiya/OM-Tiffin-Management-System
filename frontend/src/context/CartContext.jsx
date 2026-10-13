@@ -2,6 +2,7 @@
 const CartContext = createContext(null);
 const CART_STORAGE_KEY = "om-tiffin-website-cart";
 const loadStoredCart = () => {
+  if (typeof localStorage === "undefined") return [];
   try {
     const storedCart = localStorage.getItem(CART_STORAGE_KEY);
     if (!storedCart) {

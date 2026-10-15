@@ -42,7 +42,7 @@ async function harness(file, mocks = {}, extras = {}) {
     const exports=Object.keys(values);return new vm.SyntheticModule(exports,function(){for(const name of exports)this.setExport(name,values[name]);},{context});
   });
   await mod.evaluate();
-  function render(){cursor=0;tree=mod.namespace.default();return tree;}
+  function render(){cursor=0;tree=mod.namespace.default(extras.props);return tree;}
   function find(predicate,element=tree,result=[]){if(!element)return result;if(Array.isArray(element)){element.forEach(item=>find(predicate,item,result));return result;}if(typeof element==='object'){if(predicate(element))result.push(element);find(element.props?.children,undefined,result);}return result;}
   // Traverse JSX output without running third-party widgets or DOM/browser code.
   function nodes(predicate,element=tree){const result=[];function visit(value){if(Array.isArray(value))value.forEach(visit);else if(value&&typeof value==='object'){if(predicate(value))result.push(value);visit(value.props?.children);}}visit(element);return result;}
@@ -86,6 +86,12 @@ async function check(name,fn){if(process.env.TEST_FILTER&&!name.includes(process
     h.render();await h.flush();h.render();const buttons=h.nodes(node=>node.type==='button');
     await buttons[1].props.onClick();assert(h.calls.some(call=>call[0]==='download'&&call[1].includes('CUSTOM-RECEIPT')));
     await buttons[2].props.onClick();assert.equal(sends[0][0],'audit-bill');assert.equal(sends[0][1],undefined);assert(h.nodes(node=>node.type==='img').some(node=>node.props.src==='data:image/png;base64,synthetic-signature'));h.dispose();
+  });
+  await check('receipt delivery report loads receipt records and labels untracked history honestly',async()=>{
+    const reads=[];
+    const h=await harness('pages/BillDeliveryStatus.jsx',{'../services/api':{default:{get:async url=>{reads.push(url);return {data:{data:[{billId:'receipt-id',customer:'Fixture',invoice:'RECEIPT-1',month:10,year:2026,status:'unknown',reason:'No delivery tracking record'}]}};}}}},{props:{documentType:'receipt'}});
+    h.render();await h.flush();h.render();assert.deepEqual(reads,['/payments/delivery-status']);
+    const text=JSON.stringify(h.nodes(()=>true));assert(text.includes('Not tracked'));assert(text.includes('RECEIPT-1'));assert(!text.includes('Retry Bill'));h.dispose();
   });
   await check('Login stores the new token and enters dashboard without a blocking alert',async()=>{
     const h=await harness('pages/Login.jsx',{'../services/authService':{loginAdmin:async()=>({success:true,token:'new-audit-token'})}});

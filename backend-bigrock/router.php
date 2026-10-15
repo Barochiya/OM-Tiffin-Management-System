@@ -122,6 +122,7 @@ final class Router {
         $this->route('GET','/tiffins/stats','admin',fn()=>$r->customerStats());
         $this->route('GET','/tiffins','admin',fn($p,$q)=>$r->customers($q));
         $this->route('GET','/tiffins/:id','admin',fn($p)=>$r->customer($p['id']));
+        $this->route('GET','/payments/delivery-status','admin',fn()=>$r->receiptDelivery());
         $this->route('GET','/bills/delivery-status','admin',fn()=>$r->billDelivery());
         $this->route('POST','/bills/generate','admin',fn($p,$q,$b)=>$billing->generate($b));
         $this->route('GET','/bills/customer/:customerId','admin',fn($p)=>success($r->latestBill($p['customerId'])));

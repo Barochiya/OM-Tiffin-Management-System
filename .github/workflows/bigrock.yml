@@ -23,7 +23,7 @@ jobs:
       - name: Verify converted business API
         run: |
           set -e
-          for test in security auth billing router accounts announcements inbox-writes webhook whatsapp http outbox outbox-crypto deliveries; do
+          for test in security auth billing router accounts announcements inbox-writes webhook whatsapp http outbox outbox-crypto deliveries receipt-delivery; do
             php "backend-bigrock/tests/$test.php"
           done
       - name: Verify billing cycle calendar

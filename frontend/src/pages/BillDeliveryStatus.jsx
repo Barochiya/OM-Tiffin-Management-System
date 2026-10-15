@@ -1,3 +1,5 @@
+import api from "../services/api";
+import { sendPaymentReceiptWhatsApp } from "../services/paymentService";
 import { notify } from "../services/notifications";
 import { useEffect, useState } from "react";
 import { MailCheck, Eye } from "lucide-react";
@@ -6,7 +8,9 @@ import {
   retryBill,
 } from "../services/billService";
 
-export default function BillDeliveryStatus() {
+export default function BillDeliveryStatus({ documentType = "bill" }) {
+  const receipt = documentType === "receipt";
+  const label = receipt ? "Receipt" : "Bill";
   const [data, setData] = useState([]);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
@@ -17,16 +21,16 @@ export default function BillDeliveryStatus() {
 
     const interval = setInterval(() => {
       loadData();
-    }, 1000);
+    }, 5000);
 
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [documentType]);
 
   const loadData = async () => {
     try {
-      const response = await getBillDeliveryStatus();
+      const response = receipt ? (await api.get("/payments/delivery-status")).data : await getBillDeliveryStatus();
       setData(response.data || []);
     } catch (error) {
       console.error(error);
@@ -42,9 +46,9 @@ export default function BillDeliveryStatus() {
 
   const handleRetry = async (billId) => {
     try {
-      await retryBill(billId);
+      const result = await (receipt ? sendPaymentReceiptWhatsApp(billId) : retryBill(billId));
 
-      notify("Bill sent successfully.");
+      notify(result?.message || `${label} queued for delivery.`);
 
       loadData();
     } catch (error) {
@@ -120,6 +124,8 @@ export default function BillDeliveryStatus() {
       case "pending":
         return "Pending";
 
+      case "unknown":
+        return "Not tracked";
       default:
         return "Pending";
     }
@@ -168,12 +174,13 @@ export default function BillDeliveryStatus() {
         {/* HEADER */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-            Bill Delivery Status
+            {label} Delivery Status
           </h1>
 
           <p className="mt-2 text-sm text-gray-500 sm:text-base">
-            Monitor WhatsApp bill delivery.
+            Monitor WhatsApp {label.toLowerCase()} delivery.
           </p>
+          {receipt && <p className="mt-2 text-sm text-gray-600">Not tracked: {data.filter(item => item.status === "unknown").length}. These receipts have no saved delivery confirmation. New sends update automatically.</p>}
         </div>
 
         {loading ? (
@@ -190,7 +197,7 @@ export default function BillDeliveryStatus() {
               {/* TOTAL */}
               <div className="min-w-0 rounded-2xl bg-white p-4 shadow sm:p-6">
                 <p className="text-xs text-gray-500 sm:text-sm">
-                  Total Bills
+                  Total {receipt ? "Receipts" : "Bills"}
                 </p>
 
                 <h2 className="mt-1 text-2xl font-bold text-gray-900 sm:text-3xl">
@@ -336,7 +343,7 @@ export default function BillDeliveryStatus() {
             {filteredData.length === 0 && (
               <div className="rounded-2xl bg-white p-8 text-center shadow">
                 <p className="font-semibold text-gray-700">
-                  No bill delivery records found.
+                  No {label.toLowerCase()} delivery records found.
                 </p>
 
                 <p className="mt-1 text-sm text-gray-500">
@@ -356,7 +363,7 @@ export default function BillDeliveryStatus() {
                       </th>
 
                       <th className="p-4 text-left text-sm font-semibold text-gray-700">
-                        Invoice
+                        {receipt ? "Receipt" : "Invoice"}
                       </th>
 
                       <th className="p-4 text-left text-sm font-semibold text-gray-700">
@@ -520,7 +527,7 @@ export default function BillDeliveryStatus() {
                                 }
                                 className="mt-1 rounded-lg bg-red-500 px-3 py-2 text-xs font-bold text-white transition hover:bg-red-600"
                               >
-                                Retry Bill
+                                Retry {label}
                               </button>
                             )}
                           </div>
@@ -566,7 +573,7 @@ export default function BillDeliveryStatus() {
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="rounded-xl bg-slate-50 p-3">
                         <p className="text-xs text-gray-500">
-                          Invoice
+                          {receipt ? "Receipt" : "Invoice"}
                         </p>
 
                         <p className="mt-1 truncate text-sm font-bold text-gray-800">
@@ -676,7 +683,7 @@ export default function BillDeliveryStatus() {
                         }
                         className="mt-4 w-full rounded-xl bg-red-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-red-600 active:scale-[0.98]"
                       >
-                        Retry Bill Delivery
+                        Retry {label} Delivery
                       </button>
                     )}
                   </div>

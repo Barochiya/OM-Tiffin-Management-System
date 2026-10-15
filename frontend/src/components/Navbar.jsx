@@ -138,6 +138,7 @@ const Navbar = ({ setSidebarOpen }) => {
       };
     }
 
+    if (path === "/receipt-delivery-status") return {title: "Receipt Delivery Status", subtitle: "Monitor WhatsApp receipt delivery"};
     if (path === "/bill-delivery-status") {
       return {
         title: "Bill Delivery Status",

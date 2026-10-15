@@ -73,6 +73,13 @@ final class ReadModels {
             $items[]=['billId'=>$bill['_id'],'customer'=>$c['customerName']??'Unknown','invoice'=>$bill['invoiceNo']??'-','month'=>$bill['month'],'year'=>$bill['year'],'cycle'=>$bill['cycle'],'status'=>$w['status']??'pending','sentAt'=>$w['sentAt']??null,'deliveredAt'=>$w['deliveredAt']??null,'readAt'=>$w['readAt']??null,'failedAt'=>$w['failedAt']??null,'reason'=>$w['reason']??'Not sent yet'];
         }return success($items);
     }
+    public function receiptDelivery():array {
+        $items=[];foreach(sorted($this->store->all('payments'),['createdAt'=>-1])as $payment){
+            $c=$this->store->get('tiffins',$payment['customer']);$w=$payment['whatsappDelivery']??[];
+            $date=new \DateTimeImmutable($payment['paymentDate']??$payment['createdAt']??'now');
+            $items[]=['billId'=>$payment['_id'],'customer'=>$c['customerName']??'Unknown','invoice'=>$payment['receiptNo']??strtoupper(substr($payment['_id'],-6)),'month'=>(int)$date->format('n'),'year'=>(int)$date->format('Y'),'status'=>$w['status']??'unknown','sentAt'=>$w['sentAt']??null,'deliveredAt'=>$w['deliveredAt']??null,'readAt'=>$w['readAt']??null,'failedAt'=>$w['failedAt']??null,'reason'=>$w['reason']??'No delivery tracking record. Open the receipt to send if needed.'];
+        }return success($items);
+    }
     public function profile(string $customer):array {
         $doc=$this->store->get('tiffins',$customer);if(!$doc)throw new HttpError(404,'Customer profile not found');
         return [200,['success'=>true,'customer'=>only($this->hydrate('tiffins',$doc),explode(' ','customerName phone address deliveryLocation mealType status barcode pricing createdAt updatedAt'))]];

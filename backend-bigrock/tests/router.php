@@ -35,3 +35,9 @@ rejected(fn()=>$r->dispatch('POST','/api/admin/register',[],[]),404);
 check($r->dispatch('POST','/api/admin/login',[],['email'=>'test@example.invalid','password'=>'test'])[0]===200);
 file_put_contents(dirname(__DIR__,2).'/implemented-routes.json',json_encode($r->inventory(),JSON_PRETTY_PRINT|JSON_THROW_ON_ERROR));
 echo 'PASS API routing: admin/customer separation, customer ownership, first-login restriction, read-only staging, public settings, disabled Razorpay and closed registration. '.count($r->inventory()).' candidate routes registered.'.PHP_EOL;
+
+rejected(fn()=>$r->dispatch('GET','/api/payments/delivery-status'),401);
+rejected(fn()=>$r->dispatch('GET','/api/payments/delivery-status',[],[],$customer),401);
+$s->put('payments',['_id'=>'507f1f77bcf86cd799439099','customer'=>$cid,'paymentDate'=>'2026-10-15','receiptNo'=>'TEST-RECEIPT'],true);
+$receiptStatus=$r->dispatch('GET','/api/payments/delivery-status',[],[],$admin);check($receiptStatus[0]===200&&$receiptStatus[1]['data'][0]['status']==='unknown');
+echo "PASS receipt delivery report is admin-only and never invents historical delivery confirmation.\n";

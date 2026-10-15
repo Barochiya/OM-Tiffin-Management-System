@@ -216,6 +216,7 @@ const closeSidebar = () => {
   <FaTruck className="text-cyan-300" />
   Bill Delivery Status
 </Link>
+    <Link to="/receipt-delivery-status" onClick={closeSidebar} className={`flex items-center gap-3 px-4 py-3 rounded-lg ${location.pathname === "/receipt-delivery-status" ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaTruck className="text-cyan-300" />Receipt Delivery Status</Link>
     <Link
       to="/announcement-delivery-status"
       onClick={closeSidebar}

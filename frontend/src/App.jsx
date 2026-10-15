@@ -294,6 +294,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/receipt-delivery-status" element={<ProtectedRoute><BillDeliveryStatus documentType="receipt" /></ProtectedRoute>} />
         <Route
           path="/announcement-delivery-status"
           element={

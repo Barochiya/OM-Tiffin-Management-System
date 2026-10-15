@@ -22,6 +22,11 @@ final class DocumentNotifications {
             return [200,['success'=>true,'message'=>ucfirst($type).' PDF notification queued.','data'=>['queued'=>true,'eventKey'=>$key]]];
         });
     }
+    public function receipt(array $body):array {
+        $id=(string)($body['paymentId']??'');
+        $bytes=($body['renderPdf']??false)===true?$this->documents->receipt($id)[1]->bytes:(string)($body['_pdfBytes']??'');
+        return $this->send('receipt',$id,$bytes);
+    }
     public function retry(string $id):array{return $this->send('bill',$id,$this->documents->bill($id)[1]->bytes);}
     public function all(array $body):array {
         (new ReadModels($this->store))->period($body);$completed=[];$failed=[];

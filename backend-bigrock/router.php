@@ -27,7 +27,7 @@ final class Router {
         $this->route('POST','/bills/generate-all','admin',fn($p,$q,$b)=>$documentNotifications->all($b));
         $this->route('POST','/bills/send-whatsapp','admin',fn($p,$q,$b)=>$documentNotifications->send('bill',(string)($b['billId']??''),(string)($b['_pdfBytes']??'')));
         $this->route('POST','/bills/retry/:billId','admin',fn($p)=>$documentNotifications->retry($p['billId']));
-        $this->route('POST','/payments/send-whatsapp','admin',fn($p,$q,$b)=>$documentNotifications->send('receipt',(string)($b['paymentId']??''),(string)($b['_pdfBytes']??'')));
+        $this->route('POST','/payments/send-whatsapp','admin',fn($p,$q,$b)=>$documentNotifications->receipt($b));
         $this->route('POST','/payments/approve-whatsapp-payment','admin',fn($p,$q,$b)=>$billing->approveWhatsApp($b));
         $webhook=new Webhook($store,$settings);
         $whatsapp=new WhatsApp($store,$settings);

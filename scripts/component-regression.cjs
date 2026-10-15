@@ -49,7 +49,7 @@ async function harness(file, mocks = {}, extras = {}) {
   return {render,nodes,notices,calls,timers,slots,async flush(){while(effects.length)effects.shift()();await settle();await settle();},async runTimers(){const pending=[...timers.values()];timers.clear();for(const timer of pending)await timer.fn();await settle();},dispose(){for(const slot of slots)slot?.cleanup?.();}};
 }
 let checks=0;
-async function check(name,fn){await fn();checks++;console.log('PASS '+name);}
+async function check(name,fn){if(process.env.TEST_FILTER&&!name.includes(process.env.TEST_FILTER))return;await fn();checks++;console.log('PASS '+name);}
 (async()=>{
   await check('Price Settings displays actual API prices, including zero, and saves those values',async()=>{
     const prices={breakfast:0,lunch:117,dinner:132};let saved;
@@ -82,10 +82,10 @@ async function check(name,fn){await fn();checks++;console.log('PASS '+name);}
   await check('receipt download and manual send use server PDF with no viewport-dependent canvas',async()=>{
     const blob=new Blob(['%PDF-canonical-receipt'],{type:'application/pdf'});const sends=[];
     const payment={_id:'audit-bill',receiptNo:'CUSTOM-RECEIPT',amount:120,paymentDate:'2026-10-08T02:00:00Z',paymentMethod:'Bank',customer:{customerName:'Audit',phone:'0000000000'},bill:{status:'Partial',invoiceNo:'AUDIT-1'}};
-    const h=await harness('pages/PaymentReceipt.jsx',{'../services/paymentService':{getPaymentById:async()=>payment,downloadPaymentReceiptPdf:async()=>({data:blob}),sendPaymentReceiptWhatsApp:async(id,pdf)=>{sends.push([id,pdf]);return {success:true};}}});
+    const h=await harness('pages/PaymentReceipt.jsx',{'../services/api':{default:{get:async()=>({data:{data:{receipt:{signatureImage:'data:image/png;base64,synthetic-signature'}}}})}},'../services/paymentService':{getPaymentById:async()=>payment,downloadPaymentReceiptPdf:async()=>({data:blob}),sendPaymentReceiptWhatsApp:async(id,pdf)=>{sends.push([id,pdf]);return {success:true};}}});
     h.render();await h.flush();h.render();const buttons=h.nodes(node=>node.type==='button');
     await buttons[1].props.onClick();assert(h.calls.some(call=>call[0]==='download'&&call[1].includes('CUSTOM-RECEIPT')));
-    await buttons[2].props.onClick();assert.equal(sends[0][0],'audit-bill');assert.equal(sends[0][1],blob);h.dispose();
+    await buttons[2].props.onClick();assert.equal(sends[0][0],'audit-bill');assert.equal(sends[0][1],undefined);assert(h.nodes(node=>node.type==='img').some(node=>node.props.src==='data:image/png;base64,synthetic-signature'));h.dispose();
   });
   await check('Login stores the new token and enters dashboard without a blocking alert',async()=>{
     const h=await harness('pages/Login.jsx',{'../services/authService':{loginAdmin:async()=>({success:true,token:'new-audit-token'})}});

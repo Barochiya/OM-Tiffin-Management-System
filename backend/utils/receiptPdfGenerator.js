@@ -66,7 +66,7 @@ module.exports = async function generateReceiptPdf(payment) {
       doc.font("Helvetica-Bold").fontSize(16).fillColor("#1d4ed8").text("Thank You",36,616);
       doc.font("Helvetica").fontSize(10).fillColor("#475569").text("Thank you for choosing OM TIFFIN SERVICE.\nThis receipt confirms that we have successfully\nreceived your payment.",36,642,{width:half+20,lineGap:4});
       label("This is a computer-generated receipt.\nNo signature is required for validity.\nPlease keep this receipt for your records.",36,705,half+30,{lineGap:4});
-      if(fs.existsSync(logoPath)) doc.image(logoPath,420,623,{fit:[54,54]});
+      if(design.signatureImage) doc.image(require('./signatureImage').decode(design.signatureImage),366,623,{fit:[189,54],align:'center',valign:'center'});
       doc.moveTo(366,696).lineTo(555,696).strokeColor("#94a3b8").stroke();
       value("Authorized Signature",366,709,189,{align:"center"});
       label("OM TIFFIN SERVICE",366,729,189,{align:"center"});

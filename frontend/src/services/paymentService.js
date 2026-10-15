@@ -95,19 +95,16 @@ export const getPaymentById = async (id) => {
 // Send Payment Receipt PDF via WhatsApp
 // ===============================
 export const sendPaymentReceiptWhatsApp = async (
-  paymentId,
-  pdfBlob
+  paymentId
 ) => {
   const token = sessionStorage.getItem("token");
 
   const response = await api.post(
     "/payments/send-whatsapp",
-    pdfBlob,
+    { paymentId, renderPdf: true },
     {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "application/pdf",
-        "X-Payment-Id": paymentId,
       },
     }
   );

@@ -27,6 +27,7 @@ import {
 
 
 import logo from "../assets/logo.png";
+import api from "../services/api";
 
 import {
   getPaymentById,
@@ -47,6 +48,14 @@ const autoSend =
   const receiptRef = useRef();
 
   const [payment, setPayment] = useState(null);
+  const [signatureImage, setSignatureImage] = useState("");
+  useEffect(() => {
+    let active = true;
+    api.get("/document-design").then(({data}) => {
+      if (active) setSignatureImage(data.data.receipt.signatureImage || "");
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   const [loading, setLoading] = useState(true);
 
@@ -108,16 +117,12 @@ const autoSend =
 
        setSendingWhatsApp(true);
 
-       const pdfBlob =
-       await createReceiptPdf();
-
       await sendPaymentReceiptWhatsApp(
-         payment._id,
-         pdfBlob
+         payment._id
        );
 
       console.log(
-        "✅ Payment receipt PDF sent automatically."
+        "Payment receipt PDF queued automatically."
       );
      } catch (error) {
        console.error(
@@ -235,17 +240,14 @@ const handleSendReceiptWhatsApp = async () => {
   try {
     setSendingWhatsApp(true);
 
-    const pdfBlob = await createReceiptPdf();
-
     const result =
       await sendPaymentReceiptWhatsApp(
-        payment._id,
-        pdfBlob
+        payment._id
       );
 
     notify(
       result?.message ||
-        "Payment receipt PDF sent successfully on WhatsApp."
+        "Payment receipt PDF queued for WhatsApp delivery."
     );
   } catch (error) {
     console.error(
@@ -690,11 +692,10 @@ const handleSendReceiptWhatsApp = async () => {
 
                   <img
 
-                    src={logo}
-
-                    alt="Company"
-
-                    className="w-16 h-16 mb-3 opacity-90"
+                    src={signatureImage || undefined}
+                    alt="Authorized signature"
+                    hidden={!signatureImage}
+                    className="w-48 h-16 object-contain mb-3"
 
                   />
 

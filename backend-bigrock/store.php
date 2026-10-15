@@ -59,6 +59,11 @@ class Store {
         if(!$this->pdo->inTransaction())throw new \LogicException('Write requires a business transaction');
         $q=$this->pdo->prepare('DELETE FROM omt_documents WHERE collection_name=? AND id=?');$q->execute([$collection,$id]);return $q->rowCount()===1;
     }
+    public function prepareWalletCollections():void {
+        if(!$this->pdo->inTransaction())throw new \LogicException('Wallet setup requires a business transaction');
+        $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
+        foreach(['walletaccounts','wallettransactions']as $name)$q->execute([$name]);
+    }
     public function operation(string $key,string $hash,callable $callback):array {
         return $this->transaction(function()use($key,$hash,$callback){
             $q=$this->pdo->prepare('SELECT request_sha256,response FROM omt_operations WHERE operation_key=? FOR UPDATE');$q->execute([$key]);$existing=$q->fetch(\PDO::FETCH_ASSOC);

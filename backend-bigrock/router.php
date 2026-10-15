@@ -23,6 +23,12 @@ final class Router {
     public function __construct(private readonly Store $store,private readonly array $settings){
         $c=new Catalog($store);$r=new ReadModels($store);$a=new Auth($store,$settings['JWT_SECRET']??'',$settings['CUSTOMER_JWT_SECRET']??'');$billing=new Billing($store);
         $announcements=new Announcements($store);
+        $wallet=new Wallet($store);
+        $this->route('GET','/customer-portal/wallet','customer',fn($p,$q,$b,$user)=>$wallet->view($user['customer'],(int)($q['before']??PHP_INT_MAX)));
+        $this->route('GET','/wallets/:id','admin',fn($p,$q)=>$wallet->view($p['id'],(int)($q['before']??PHP_INT_MAX)));
+        $this->route('GET','/wallets/:id/reconciliation','admin',function($p)use($wallet){$proposal=$wallet->preview($p['id']);unset($proposal['basis']);return [200,['success'=>true,'data'=>$proposal]];});
+        $this->route('POST','/wallets/:id/activate','admin',fn($p,$q,$b,$user)=>$wallet->activate($p['id'],(string)($b['fingerprint']??''),$user['_id']));
+        $this->route('POST','/wallets/:id/adjustments','admin',fn($p,$q,$b,$user)=>$wallet->adjust($p['id'],$b,$user['_id']));
         $documentNotifications=new DocumentNotifications($store,new Documents($store));
         $this->route('POST','/bills/generate-all','admin',fn($p,$q,$b)=>$documentNotifications->all($b));
         $this->route('POST','/bills/send-whatsapp','admin',fn($p,$q,$b)=>$documentNotifications->send('bill',(string)($b['billId']??''),(string)($b['_pdfBytes']??'')));

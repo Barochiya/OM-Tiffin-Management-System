@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 namespace OMT;
+require_once __DIR__.'/wallet.php';
 function dayKey(mixed $value):string {
     $text=(string)$value;
     if(!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/D',$text,$m)||!checkdate((int)$m[2],(int)$m[3],(int)$m[1]))throw new HttpError(400,'Use a valid YYYY-MM-DD date.');
@@ -14,17 +15,20 @@ final class Billing {
         if(empty($body['customer'])||empty($body['date']))throw new HttpError(400,'Customer and date are required.');
         $customer=(string)$body['customer'];$day=dayKey(substr((string)$body['date'],0,10));
         return $this->store->transaction(function()use($body,$customer,$day){
+            $person=$this->store->get('tiffins',$customer);if(!$person)throw new HttpError(404,'Customer not found');
             if(($body['deliveryCheck']??false)===true){
                 $records=$this->store->find('mealdeliveries',fn($d)=>$d['customer']===$customer&&$d['date']===$day);$missing=[];
                 foreach(['Lunch','Dinner']as $meal)if(numeric($body[strtolower($meal).'Qty']??0)>0&&!array_filter($records,fn($d)=>$d['meal']===$meal&&$d['status']==='Delivered'))$missing[]=$meal;
                 if($missing&&($body['confirmUndelivered']??false)!==true)throw new HttpError(409,implode(' / ',$missing).' tiffin has not been marked Delivered. Verify before saving.',['code'=>'DELIVERY_NOT_CONFIRMED','missingMeals'=>$missing]);
             }
             $entries=sorted($this->store->find('dailyentries',fn($d)=>$d['customer']===$customer&&substr($d['date'],0,10)===$day),['createdAt'=>1]);
+            if(count($entries)>1&&(new Wallet($this->store))->account($customer))throw new HttpError(409,'Duplicate daily entries need reconciliation before editing');
             $doc=$entries[0]??['customer'=>$customer];$insert=!$entries;$doc['date']=$day.'T00:00:00.000Z';
             foreach(['breakfastQty','lunchQty','dinnerQty']as $key)$doc[$key]=numeric($body[$key]??0);
             $doc['extraItems']=[];
             foreach(is_array($body['extraItems']??null)?$body['extraItems']:[]as $item){$description=trim((string)($item['description']??''));if($description==='')throw new HttpError(400,'Extra item description is required');$doc['extraItems'][]=['_id'=>$item['_id']??bin2hex(random_bytes(12)),'description'=>$description,'amount'=>money($item['amount']??null)];}
             $doc['remark']=(string)($body['remark']??'');$doc=$this->store->put('dailyentries',$doc,$insert);
+            $updated=(new Wallet($this->store))->entry($doc,$person);if(isset($updated['walletBasis']))$doc=$this->store->put('dailyentries',$updated);
             // Preserve the established save workflow: the oldest daily entry remains the identity.
             foreach(array_slice($entries,1)as $duplicate)$this->store->delete('dailyentries',$duplicate['_id']);
             return success($doc,'Daily Entry Saved Successfully');
@@ -50,9 +54,16 @@ final class Billing {
                 $dayExtra=array_sum(array_column($d['extraItems'],'amount'));
                 if($extra>0)$d['extraItems'][]=['description'=>$reason?:'Extra Charge','amount'=>$extra];
                 $d['extraAmount']=$dayExtra+$extra;$d['dailyTotal']=$dayTotal+$dayExtra+$extra;$d['remark']=$entry['remark']??'';
+                if(isset($entry['walletBasis'])){
+                    $snapshot=$entry['walletBasis']['rates'];$mealSum=0;
+                    foreach(['breakfast','lunch','dinner']as $meal){$d[$meal.'Amount']=round(numeric($entry[$meal.'Qty']??0)*$snapshot[$meal])/100;$mealSum+=$d[$meal.'Amount'];}
+                    $d['extraItems']=array_map(fn($i)=>['description'=>$i['description']??'','amount'=>numeric($i['amount']??0)],$items);
+                    if($snapshot['extra']>0)$d['extraItems'][]=['description'=>$snapshot['extraReason']?:'Extra Charge','amount'=>$snapshot['extra']/100];
+                    $d['dailyTotal']=$entry['walletBasis']['chargePaise']/100;$d['extraAmount']=$d['dailyTotal']-$mealSum;$dayExtra=$d['extraAmount']-$extra;
+                }
                 $details[]=$d;$extraTotal+=$dayExtra+$extra;
             }
-            $amounts=[];foreach($quantities as $meal=>$quantity)$amounts[$meal]=$quantity*$rates[$meal];$current=array_sum($amounts)+$extraTotal;
+            $amounts=[];foreach($quantities as $meal=>$quantity)$amounts[$meal]=array_sum(array_column($details,$meal.'Amount'));$current=array_sum($amounts)+$extraTotal;
             if($current==0)throw new HttpError(400,'No meals found for selected billing cycle.');
             $bill=$this->store->first('bills',fn($b)=>$b['customer']===$customer&&(int)$b['month']===$period['month']&&(int)$b['year']===$period['year']&&(string)$b['cycle']===$period['cycle']);$insert=$bill===null;
             $prevMonth=$period['month'];$prevYear=$period['year'];$prevCycle='1';
@@ -81,12 +92,14 @@ final class Billing {
             $person=$this->store->get('tiffins',$customer);$bill=$this->store->get('bills',$billId);
             if(!$person)throw new HttpError(404,'Customer not found');if(!$bill)throw new HttpError(404,'Bill not found');
             if($bill['customer']!==$customer)throw new HttpError(400,'Bill does not belong to this customer');
+            if(($bill['carriedForward']??false)===true&&(new Wallet($this->store))->account($customer))throw new HttpError(409,'This invoice was carried forward. Record payment against the current invoice.');
             $amount=money($body['amount']??null);if($amount<=0)throw new HttpError(400,'Valid payment amount is required.');
             $method=$body['paymentMethod']??'Cash';if(!in_array($method,['Cash','UPI','Bank'],true))throw new HttpError(400,'Invalid payment method');
             $payment=$this->store->put('payments',['__v'=>0,'customer'=>$customer,'bill'=>$billId,'amount'=>$amount,'paymentMethod'=>$method,'note'=>(string)($body['remark']??''),'transactionId'=>'','gateway'=>'','paymentDate'=>gmdate('Y-m-d\TH:i:s.000\Z'),'status'=>'Success'],true);
             $paid=numeric($bill['paidAmount']??0)+$amount;$extra=max(0,$paid-numeric($bill['totalAmount']));$person['advanceBalance']=numeric($person['advanceBalance']??0)+$extra;
             $bill['paidAmount']=min($paid,numeric($bill['totalAmount']));$bill['pendingAmount']=max(0,numeric($bill['totalAmount'])-$bill['paidAmount']);$bill['status']=$bill['pendingAmount']<=0?'Paid':($bill['paidAmount']>0?'Partial':'Pending');
             $this->store->put('tiffins',$person);$this->store->put('bills',$bill);
+            (new Wallet($this->store))->payment($payment);
             $key='receipt-auto:'.$payment['_id'];
             if(!empty($person['phone'])){
                 $this->store->queue($key,['kind'=>'receipt-auto','documentType'=>'receipt','documentId'=>$payment['_id']]);

@@ -36,7 +36,7 @@ final class Customers {
         return $this->store->transaction(function()use($create,$id,$updates){
             $doc=$create?['mealType'=>'Lunch','status'=>'Active','price'=>0,'paymentStatus'=>'Pending','pendingAmount'=>0,'advanceBalance'=>0,'paymentDate'=>null,'paymentMonth'=>gmdate('F')]:$this->store->get('tiffins',$id);
             if(!$doc)throw new HttpError(404,'Customer not found');$doc=$this->store->put('tiffins',array_replace($doc,$updates),$create);
-            if($create){(new Barcodes($this->store,true))->customer($doc['_id']);$doc=$this->store->get('tiffins',$doc['_id']);}
+            if($create){(new Barcodes($this->store,true))->customer($doc['_id']);$doc=$this->store->get('tiffins',$doc['_id']);$wallet=new Wallet($this->store);$proposal=$wallet->preview($doc['_id']);$wallet->activate($doc['_id'],$proposal['fingerprint'],'customer-created');}
             $provision=['success'=>false,'created'=>false,'whatsappSent'=>false];
             try{
                 $result=$this->ensureAccount($doc['_id']);$provision['created']=$result['created'];$provision['success']=true;
@@ -49,6 +49,8 @@ final class Customers {
     }
     public function remove(string $id):array{return $this->store->transaction(function()use($id){if(!$this->store->delete('tiffins',$id))throw new HttpError(404,'Customer not found');return [200,['success'=>true,'message'=>'Customer deleted successfully']];});}
     public function markPaid(string $billId):array {
-        return $this->store->transaction(function()use($billId){$bill=$this->store->get('bills',$billId);if(!$bill)throw new HttpError(404,'Bill not found');$bill['paidAmount']=$bill['totalAmount'];$bill['pendingAmount']=0;$bill['status']='Paid';$bill=$this->store->put('bills',$bill);return success((new ReadModels($this->store))->hydrate('bills',$bill),'Payment marked as Paid');});
+        return $this->store->transaction(function()use($billId){$bill=$this->store->get('bills',$billId);if(!$bill)throw new HttpError(404,'Bill not found');
+            if((new Wallet($this->store))->account($bill['customer'])){if(numeric($bill['pendingAmount']??0)>0)(new Billing($this->store))->addPayment(['customer'=>$bill['customer'],'bill'=>$billId,'amount'=>$bill['pendingAmount'],'paymentMethod'=>'Cash','remark'=>'Admin marked invoice paid']);return success((new ReadModels($this->store))->hydrate('bills',$this->store->get('bills',$billId)),'Payment marked as Paid');}
+            $bill['paidAmount']=$bill['totalAmount'];$bill['pendingAmount']=0;$bill['status']='Paid';$bill=$this->store->put('bills',$bill);return success((new ReadModels($this->store))->hydrate('bills',$bill),'Payment marked as Paid');});
     }
 }

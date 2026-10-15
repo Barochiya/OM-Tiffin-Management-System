@@ -10,6 +10,7 @@ import {
 import useCustomerAutoRefresh from "../customer/hooks/useCustomerAutoRefresh";
 import CustomerModificationRequest from "../customer/components/CustomerModificationRequest";
 import CustomerSidebar from "../customer/components/CustomerSidebar";
+import WalletPanel from "../components/WalletPanel";
 const CustomerDashboard = () => {
   const navigate = useNavigate();
   const now = new Date();
@@ -247,6 +248,7 @@ const CustomerDashboard = () => {
           </div>
         </section>
         {/* Meal Summary */}
+        <WalletPanel refreshKey={lastUpdated} />
         <section>
           <div className="flex items-end justify-between gap-4 mb-4">
             <div>

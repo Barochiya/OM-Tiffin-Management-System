@@ -24,8 +24,17 @@ final class DocumentNotifications {
     }
     public function receipt(array $body):array {
         $id=(string)($body['paymentId']??'');
+        $existing=$this->store->get('payments',$id);$delivery=$existing['whatsappDelivery']??[];
+        if(!empty($delivery['eventKey'])&&in_array($delivery['status']??null,['pending','sent','delivered','read'],true))return [200,['success'=>true,'message'=>'Receipt delivery is already queued or sent.','data'=>['queued'=>($delivery['status']==='pending'),'status'=>$delivery['status']]]];
         $bytes=($body['renderPdf']??false)===true?$this->documents->receipt($id)[1]->bytes:(string)($body['_pdfBytes']??'');
         return $this->send('receipt',$id,$bytes);
+    }
+    public function prepareAutomaticReceipt(string $id):array {
+        $payment=$this->store->get('payments',$id);if(!$payment)throw new HttpError(404,'Payment not found.');
+        $customer=$this->store->get('tiffins',$payment['customer']);if(empty($customer['phone']))throw new HttpError(400,'Customer phone number not found.');
+        $number=$payment['receiptNo']??strtoupper(substr($id,-6));$date=(new \DateTimeImmutable($payment['paymentDate']))->setTimezone(new \DateTimeZone('Asia/Kolkata'))->format('d/m/Y');
+        $variables=[$customer['customerName']??'Customer',$number,(string)($payment['amount']??0),$payment['paymentMethod']??'Cash',$date];
+        return ['kind'=>'document-template','documentType'=>'receipt','documentId'=>$id,'to'=>$customer['phone'],'attachment'=>$this->file($this->documents->receipt($id)[1]->bytes),'filename'=>'OM-Tiffin-Payment-Receipt-'.preg_replace('/[^A-Za-z0-9_-]/','_',$number).'.pdf','templateName'=>'om_tiffin_payment_receipt','languageCode'=>'en_GB','components'=>[['type'=>'body','parameters'=>array_map(fn($v)=>['type'=>'text','text'=>$v],$variables)]]];
     }
     public function retry(string $id):array{return $this->send('bill',$id,$this->documents->bill($id)[1]->bytes);}
     public function all(array $body):array {

@@ -88,7 +88,7 @@ class Store {
         $q=$this->pdo->prepare("UPDATE omt_outbox SET status=?,provider_id=?,completed_at=UTC_TIMESTAMP(3) WHERE id=? AND status='processing'");$q->execute([$status,$notification['messageId']??null,$event['id']]);
         if($q->rowCount()!==1)throw new \RuntimeException('Outbox claim is no longer active');
         $p=$event['payload'];
-          if(($p['kind']??null)==='document-template'&&in_array($p['documentType']??null,['bill','receipt'],true)){
+          if(in_array($p['kind']??null,['document-template','receipt-auto'],true)&&in_array($p['documentType']??null,['bill','receipt'],true)){
               $collection=$p['documentType']==='bill'?'bills':'payments';$bill=$this->get($collection,$p['documentId']);if(!$bill)throw new \RuntimeException('Bill notification target missing');
               if(($bill['whatsappDelivery']['eventKey']??null)===$event['event_key']){$bill['whatsappDelivery']=array_replace($bill['whatsappDelivery'],['messageId'=>$notification['messageId']??null,'status'=>$status==='accepted'?'sent':($status==='failed'?'failed':'pending'),'reason'=>$status==='accepted'?'Message sent to Meta':($notification['error']??'Provider acknowledgement uncertain')]);$bill['whatsappDelivery'][$status==='accepted'?'sentAt':'failedAt']=gmdate('Y-m-d\TH:i:s.000\Z');$this->put($collection,$bill);}
           }

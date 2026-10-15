@@ -292,7 +292,7 @@ const handleApprove = async () => {
 await onApproved();
 
 navigate(
-  `/payment-receipt/${response.data.payment._id}?autosend=true`
+  `/payment-receipt/${response.data.payment._id}`
 );
 
   } catch (error) {

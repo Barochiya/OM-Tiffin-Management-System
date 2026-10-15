@@ -34,6 +34,10 @@ try{
     $delivery=$s->records['payments']['p']['whatsappDelivery'];
     receiptCheck($delivery['status']==='sent'&&$delivery['messageId']==='synthetic-receipt-provider'&&isset($delivery['sentAt']));
     receiptCheck(!isset($s->records['bills']));
+    $notifications->receipt(['paymentId'=>'p','renderPdf'=>true]);receiptCheck(count($s->events)===1);
+    $automatic=$payload;$automatic['kind']='receipt-auto';
+    $s->finishOutbox(['id'=>1,'event_key'=>$key,'payload'=>$automatic],['status'=>'accepted','messageId'=>'automatic-provider']);
+    receiptCheck($s->records['payments']['p']['whatsappDelivery']['messageId']==='automatic-provider');
     // A stale completion cannot overwrite a newer send's tracking record.
     $s->records['payments']['p']['whatsappDelivery']['eventKey']='newer-event';
     $s->finishOutbox(['id'=>1,'event_key'=>$key,'payload'=>$payload],['status'=>'failed']);

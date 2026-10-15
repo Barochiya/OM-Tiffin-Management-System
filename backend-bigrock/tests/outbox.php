@@ -22,3 +22,8 @@ $s->failCompletion=false;check($worker->runApproved(['crash'])['crash']==='not-c
 $s->records['customerotps']['expired']=['expiresAt'=>gmdate('c',time()-1),'usedAt'=>null];$s->events['expired']=['status'=>'pending','payload'=>['kind'=>'customer-otp','otpId'=>'expired']];check($worker->runApproved(['expired'])['expired']==='failed');check($calls===3);
 $s->records['customerotps']['superseded']=['expiresAt'=>gmdate('c',time()+600),'usedAt'=>gmdate('c')];$s->events['superseded']=['status'=>'pending','payload'=>['kind'=>'customer-otp','otpId'=>'superseded']];check($worker->runApproved(['superseded'])['superseded']==='failed');check($calls===3);
 echo "PASS outbox: disabled gates, exact approved keys only, repeated keys, lost acknowledgement and bookkeeping crash never automatically resend. Injected synthetic sender; no network calls.\n";
+
+$s->events['receipt-render-failure']=['status'=>'pending','payload'=>['kind'=>'receipt-auto','documentType'=>'receipt','documentId'=>'missing']];
+check($worker->runApproved(['receipt-render-failure'])['receipt-render-failure']==='failed');check($calls===3);
+check($worker->runApproved(['receipt-render-failure'])['receipt-render-failure']==='not-claimed');check($calls===3);
+echo "PASS receipt rendering failure records failure without calling the provider or resending.\n";

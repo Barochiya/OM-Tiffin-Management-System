@@ -164,7 +164,7 @@ setPaymentMethod("Cash");
 
 if (savedPayment?._id) {
   navigate(
-  `/payment-receipt/${savedPayment._id}?autosend=true`
+  `/payment-receipt/${savedPayment._id}`
 );
 }
 

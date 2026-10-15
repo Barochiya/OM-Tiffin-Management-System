@@ -13,3 +13,6 @@ denied(fn()=>$billing->approveWhatsApp($body),400);check(count($s->all('payments
 $body['amount']=60;$result=$billing->approveWhatsApp($body)[1];check($result['data']['bill']['pendingAmount']===40.0);check($result['data']['whatsappMessage']['linkedPayment']===$result['data']['payment']['_id']);
 denied(fn()=>$billing->approveWhatsApp($body),400);check(count($s->all('payments'))===1);check($s->get('tiffins',$customer['_id'])['advanceBalance']===0.0);
 echo "PASS synthetic WhatsApp payment approval: ownership/overpayment guard, atomic bill/payment/review links, duplicate approval rejected, no real payment or notification.\n";
+
+$autoReceipts=array_filter($s->events,fn($event)=>($event['kind']??null)==='receipt-auto');check(count($autoReceipts)===1);
+echo "PASS WhatsApp approval queues exactly one PDF receipt; duplicate approval cannot queue another.\n";

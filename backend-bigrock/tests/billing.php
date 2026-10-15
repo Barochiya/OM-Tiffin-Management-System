@@ -2,7 +2,8 @@
 declare(strict_types=1);
 require dirname(__DIR__).'/router.php';require_once dirname(__DIR__).'/billing.php';
 final class BillingMemoryStore extends OMT\Store {
-    public array $records=[];
+    public array $records=[],$events=[];
+    public function queue(string $key,array $payload):void{$this->events[$key]=$payload;}
     public function __construct(){}
     public function all(string $collection):array{return array_values($this->records[$collection]??[]);}
     public function get(string $collection,string $id):?array{return $this->records[$collection][$id]??null;}
@@ -31,3 +32,10 @@ check($s->get('bills',$bill['_id'])['status']==='Paid');check($s->get('tiffins',
 $b->saveDaily(['customer'=>$id,'date'=>'2026-10-16','dinnerQty'=>1]);$next=$b->generate([...$body,'cycle'=>'2'])[1]['data'];check($next['totalAmount']===90.0);check($next['paidAmount']===55.0);check($next['pendingAmount']===35.0);check((float)$next['previousPendingAmount']===0.0);check($next['invoiceNo']==='OMTS-202610-0002');
 check(count($s->all('payments'))===1);
 echo "PASS billing conversion: calendar validation, delivery warning, stable daily identity, custom prices/extras, previous pending once, advance once, regeneration, invoice sequence, overpayment balance, next-cycle advance, disabled Razorpay. Synthetic data; no customer messages.\n";
+
+$paidRecord=$s->get('payments',$payment[1]['_id']);check($paidRecord['whatsappDelivery']['status']==='failed');
+$s->records['tiffins'][$id]['phone']='0000000000';
+$autoPayment=$b->addPayment(['customer'=>$id,'bill'=>$next['_id'],'amount'=>1,'paymentMethod'=>'Cash'])[1];
+check($autoPayment['whatsappDelivery']['status']==='pending'&&count($s->events)===1);
+check($s->events['receipt-auto:'.$autoPayment['_id']]['kind']==='receipt-auto');
+echo "PASS payment save atomically queues one automatic PDF receipt intent; missing phone never rolls back payment.\n";

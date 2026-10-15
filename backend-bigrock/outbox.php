@@ -13,9 +13,14 @@ final class OutboxWorker {
             if(!is_string($key)||strlen($key)>191||!preg_match('/^[A-Za-z0-9:._-]+$/D',$key))throw new \InvalidArgumentException('Invalid event key');
             $event=$this->store->transaction(fn()=>$this->store->claimOutbox($key));
             if(!$event){$outcomes[$key]='not-claimed';continue;}
+            $payload=$event['payload'];
+            if(($payload['kind']??null)==='receipt-auto'){
+                try{require_once __DIR__.'/catalog.php';require_once __DIR__.'/document-notifications.php';$payload=(new DocumentNotifications($this->store,new Documents($this->store)))->prepareAutomaticReceipt($payload['documentId']);}
+                catch(\Throwable){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','error'=>'Receipt PDF could not be prepared; no message was sent.']));$outcomes[$key]='failed';continue;}
+            }
             // Claim commits BEFORE HTTP. A crash or ambiguous provider response must never auto-resend.
             try{
-                $payload=$event['payload'];$eligible=true;
+                $eligible=true;
                 if(($payload['kind']??null)==='customer-otp'){$otp=$this->store->get('customerotps',$payload['otpId']);$eligible=$otp&&empty($otp['usedAt'])&&!empty($otp['expiresAt'])&&(float)(new \DateTimeImmutable($otp['expiresAt']))->format('U.u')>microtime(true);}
                 $notification=$eligible?($this->send)($payload):['status'=>'failed','error'=>'OTP expired or superseded before delivery.'];
             }

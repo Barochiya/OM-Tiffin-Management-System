@@ -87,6 +87,12 @@ final class Billing {
             $paid=numeric($bill['paidAmount']??0)+$amount;$extra=max(0,$paid-numeric($bill['totalAmount']));$person['advanceBalance']=numeric($person['advanceBalance']??0)+$extra;
             $bill['paidAmount']=min($paid,numeric($bill['totalAmount']));$bill['pendingAmount']=max(0,numeric($bill['totalAmount'])-$bill['paidAmount']);$bill['status']=$bill['pendingAmount']<=0?'Paid':($bill['paidAmount']>0?'Partial':'Pending');
             $this->store->put('tiffins',$person);$this->store->put('bills',$bill);
+            $key='receipt-auto:'.$payment['_id'];
+            if(!empty($person['phone'])){
+                $this->store->queue($key,['kind'=>'receipt-auto','documentType'=>'receipt','documentId'=>$payment['_id']]);
+                $payment['whatsappDelivery']=['messageId'=>null,'status'=>'pending','eventKey'=>$key,'reason'=>'Receipt queued automatically after payment approval'];
+            }else $payment['whatsappDelivery']=['status'=>'failed','reason'=>'Customer phone number not found.'];
+            $payment=$this->store->put('payments',$payment);
             return [201,$payment];
         });
     }
@@ -100,11 +106,6 @@ final class Billing {
             if(!empty($message['customer'])&&$message['customer']!==$customer)throw new HttpError(400,'WhatsApp payment belongs to another customer.');
             $payment=$this->addPayment(['customer'=>$customer,'bill'=>$billId,'amount'=>$amount,'paymentMethod'=>$body['paymentMethod']??'UPI','remark'=>$body['remark']??'WhatsApp payment screenshot approved'])[1];
             $message=array_replace($message,['paymentStatus'=>'payment_received','linkedPayment'=>$payment['_id'],'linkedBill'=>$billId,'inboxStatus'=>'read','note'=>'Payment approved by admin.']);$message=$this->store->put('whatsappmessages',$message);$person=$this->store->get('tiffins',$customer);
-            if(!empty($person['phone'])){
-                $receipt=strtoupper(substr($payment['_id'],-6));$date=(new \DateTimeImmutable($payment['paymentDate']))->setTimezone(new \DateTimeZone('Asia/Kolkata'))->format('d/m/Y');
-                $text="🧾 *OM TIFFIN SERVICE*\n\n✅ *Payment Approved Successfully*\n\n👤 Customer : ".($person['customerName']??'Customer')."\n\n📄 Receipt No : ".$receipt."\n\n💰 Amount : ₹".$amount."\n\n💳 Payment Method : ".$payment['paymentMethod']."\n\n📄 Invoice No : ".($bill['invoiceNo']??'N/A')."\n\n📅 Date : ".$date."\n\n🙏 Thank you for choosing OM TIFFIN SERVICE.";
-                $this->store->queue('payment-approved:'.$payment['_id'],['kind'=>'text','to'=>$person['phone'],'message'=>$text]);
-            }
             return [200,['success'=>true,'message'=>'WhatsApp payment approved successfully.','data'=>['payment'=>$payment,'bill'=>$this->store->get('bills',$billId),'whatsappMessage'=>$this->read->hydrate('whatsappmessages',$message)]]];
         });
     }

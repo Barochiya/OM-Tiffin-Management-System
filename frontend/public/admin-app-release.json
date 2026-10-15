@@ -1,6 +1,6 @@
 {
-  "versionCode": 13,
-  "versionName": "0.8.1",
-  "apkUrl": "https://expo.dev/artifacts/eas/V2EK7x7fe8gaCTrYOArbQZDRHuysEKPDKcDaMpC96OI.apk",
-  "notes": "Stable signed release with approved delivery WhatsApp templates, mobile layout and document design settings. One-time migration: uninstall preview 0.8.0 or older, then install and enable phone unlock again. Future releases use the same signing key."
+  "versionCode": 14,
+  "versionName": "0.8.2",
+  "apkUrl": "https://expo.dev/artifacts/eas/Cf7dBzSLQpl7cna0nmBPcyXJDP11umvVGiiL0oWwHIE.apk",
+  "notes": "Automatic PDF receipts after payment approval, Receipt Delivery Status in More, saved signature display and faster notification queue checks. Update over version 0.8.1; no uninstall needed."
 }

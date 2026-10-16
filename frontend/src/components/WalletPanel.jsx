@@ -34,7 +34,7 @@ export default function WalletPanel({ customerId, refreshKey }) {
   };
   const more = async () => {
     if (busy) return; const key = filterKey, loadAtStart = activeLoad.current; setBusy(true);
-    try { const before = wallet.nextBefore; const { data } = await client.get(path, { params: { ...params, before } }); if (selection.current !== key || activeLoad.current !== loadAtStart) return; setOlder(rows => [...new Map([...rows, ...data.data.history].map(row => [row._id, row])).values()]); setWallet(w => ({ ...w, nextBefore: data.data.nextBefore })); }
+    try { const before = wallet.nextBefore; const { data } = await client.get(path, { params: { ...params, before } }); if (selection.current !== key || activeLoad.current !== loadAtStart) return; if (data.data.sequence !== wallet.sequence) { await load(); return; } setOlder(rows => [...new Map([...rows, ...data.data.history].map(row => [row._id, row])).values()]); setWallet(w => ({ ...w, nextBefore: data.data.nextBefore })); }
     catch { if (selection.current === key) setError('Older entries could not be loaded'); } finally { setBusy(false); }
   };
   return <section className="my-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-label="Wallet">

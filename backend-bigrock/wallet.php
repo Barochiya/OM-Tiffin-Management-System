@@ -83,11 +83,15 @@ final class Wallet {
         $this->store->put('wallettransactions',['_id'=>$id,'customer'=>$customer,'event'=>$event,'type'=>$type,'amountPaise'=>$delta,'balancePaise'=>$account['balancePaise'],'sequence'=>$account['sequence'],'reason'=>$reason,'actor'=>$actor,'source'=>$source],true);
         $this->store->put('walletaccounts',$account);
     }
-    public function entry(array $entry,array $person):array {
+    private function entryState(array $entry):string {
+        return json_encode([numeric($entry['breakfastQty']??0),numeric($entry['lunchQty']??0),numeric($entry['dinnerQty']??0),array_map(fn($i)=>[(string)($i['description']??''),self::paise($i['amount']??0)],$entry['extraItems']??[]),(string)($entry['remark']??'')],JSON_THROW_ON_ERROR);
+    }
+    public function entry(array $entry,array $person,?array $previous=null):array {
         if(!$this->account($person['_id']))return $entry;
-        $old=$entry['walletBasis']??null;$rates=$old['rates']??$this->rates($person);$amount=$this->charge($entry,$rates);$previous=$old['chargePaise']??0;$version=($old['version']??0)+1;
-        if($amount!==$previous)$this->post($person['_id'],'entry:'.$entry['_id'].':'.$version,'meal',$previous-$amount,'Meal charge adjustment for '.substr($entry['date'],0,10),'',['entry'=>$entry['_id'],'date'=>$entry['date']]);
-        $entry['walletBasis']=['rates'=>$rates,'chargePaise'=>$amount,'version'=>$version,'date'=>substr($entry['date'],0,10)];return $entry;
+        $old=$entry['walletBasis']??null;$rates=$old['rates']??$this->rates($person);$amount=$this->charge($entry,$rates);$priorAmount=$old['chargePaise']??0;
+        $changed=$this->entryState($entry)!==$this->entryState($previous??[]);$version=($old['version']??0)+(($changed||$amount!==$priorAmount)?1:0);
+        if($changed||$amount!==$priorAmount)$this->post($person['_id'],'entry:'.$entry['_id'].':'.$version,'meal',$priorAmount-$amount,'Meal charge adjustment for '.substr($entry['date'],0,10),'',['entry'=>$entry['_id'],'date'=>$entry['date'],'chargePaise'=>$amount]);
+        $entry['walletBasis']=['rates'=>$rates,'chargePaise'=>$amount,'version'=>$version,'modified'=>($old['modified']??false)||($changed&&$previous!==null),'date'=>substr($entry['date'],0,10)];return $entry;
     }
     public function payment(array $payment):void {
         if($this->account($payment['customer'])&&($payment['status']??'')==='Success')$this->post($payment['customer'],'payment:'.$payment['_id'],'payment',self::paise($payment['amount']),'Payment received','',['payment'=>$payment['_id']]);
@@ -103,5 +107,60 @@ final class Wallet {
         $history=sorted($this->store->find('wallettransactions',fn($d)=>$d['customer']===$customer&&$d['sequence']<$before),['sequence'=>-1]);$page=array_slice($history,0,30);
         foreach($page as &$row)unset($row['actor']);unset($row);
         return [200,['success'=>true,'data'=>['active'=>true,'balancePaise'=>$account['balancePaise'],'sequence'=>$account['sequence'],'history'=>$page,'nextBefore'=>count($history)>30?end($page)['sequence']:null]]];
+    }
+    public function statement(string $customer,array $query=[]):array {
+        if(!$this->store->get('tiffins',$customer))throw new HttpError(404,'Customer not found');
+        $account=$this->account($customer);if(!$account)return [200,['success'=>true,'data'=>['active'=>false]]];
+        $mode=(string)($query['mode']??'unbilled');if(!in_array($mode,['unbilled','cycle','all','audit'],true))throw new HttpError(400,'Invalid wallet history filter');
+        $period=$mode==='cycle'?(new ReadModels($this->store))->period($query):null;
+        $entries=[];foreach($this->store->find('dailyentries',fn($e)=>$e['customer']===$customer)as $e)$entries[$e['_id']]=$e;
+        $events=sorted($this->store->find('wallettransactions',fn($t)=>$t['customer']===$customer),['sequence'=>1]);$rows=[];
+        foreach($events as $event){
+            unset($event['actor']);$entryId=$event['source']['entry']??null;
+            $event['serviceDate']=$event['type']==='meal'?substr($event['source']['date']??$event['createdAt'],0,10):(new \DateTimeImmutable($event['createdAt']))->setTimezone(new \DateTimeZone('Asia/Kolkata'))->format('Y-m-d');
+            if($mode==='audit'||$event['type']!=='meal'||!$entryId){$rows['event:'.$event['_id']]=$event;continue;}
+            $key='meal:'.$event['serviceDate'];$count=($rows[$key]['updateCount']??0)+1;$entry=$entries[$entryId]??null;
+            $event['amountPaise']=-($entry['walletBasis']['chargePaise']??$event['source']['chargePaise']??0);
+            $event['modified']=$count>1||($entry['walletBasis']['modified']??false);$event['updateCount']=$count;
+            $event['reason']=$event['modified']?'Entry modified':'Meal entry';
+            $event['quantities']=$entry?['breakfast'=>$entry['breakfastQty']??0,'lunch'=>$entry['lunchQty']??0,'dinner'=>$entry['dinnerQty']??0]:null;
+            $rows[$key]=$event;
+        }
+        // Opening reconciliation already accounts for historic charges. Display its frozen
+        // entries without posting another financial transaction or inventing a running balance.
+        if($mode!=='audit')foreach($account['opening']['basis']??[]as $entryId=>$basis){
+            $day=$basis['date'];$key='meal:'.$day;if(isset($rows[$key]))continue;$entry=$entries[$entryId]??null;
+            $rows[$key]=['_id'=>'opening-entry:'.$entryId,'type'=>'meal','serviceDate'=>$day,'sequence'=>1,'amountPaise'=>-($basis['chargePaise']??0),'balancePaise'=>null,'createdAt'=>$account['createdAt'],'modified'=>$entry['walletBasis']['modified']??false,'reason'=>'Included in opening balance','openingEntry'=>true,'quantities'=>$entry?['breakfast'=>$entry['breakfastQty']??0,'lunch'=>$entry['lunchQty']??0,'dinner'=>$entry['dinnerQty']??0]:null];
+        }
+        $closed=$this->store->find('bills',fn($b)=>$b['customer']===$customer);
+
+        foreach($rows as $key=>$row){
+            $day=$row['serviceDate'];$archived=false;
+            foreach($closed as $bill){
+                $snapshot=$bill['walletStatement']??null;
+                if($snapshot&&$row['type']==='meal'&&$row['sequence']<=$snapshot['sequence']&&$day>=$snapshot['startDay']&&$day<$snapshot['endDay']){$archived=true;break;}
+                // Legacy bills predate checkpoints. Only opening snapshot rows are known covered;
+                // later edits stay visible until the invoice is explicitly regenerated.
+                if(!$snapshot&&($row['openingEntry']??false))foreach($bill['dailyDetails']??[]as $detail)if(substr($detail['date'],0,10)===$day){$archived=true;break 2;}
+            }
+            $rows[$key]['archived']=$archived;
+            if(($mode==='unbilled'&&$archived)||($period&&($day<substr($period['startDate'],0,10)||$day>=substr($period['endDate'],0,10))))unset($rows[$key]);
+        }
+        // Group first, paginate second: older pages must never resurrect superseded meal versions.
+        $cursor=(string)($query['before']??PHP_INT_MAX);$parts=explode(':',$cursor,2);$before=(int)$parts[0];$beforeId=isset($parts[1])?rawurldecode($parts[1]):null;
+        $history=array_values(array_filter($rows,fn($row)=>$row['sequence']<$before||($beforeId!==null&&$row['sequence']===$before&&strcmp($row['_id'],$beforeId)<0)));
+        usort($history,fn($a,$b)=>($b['sequence']<=>$a['sequence'])?:strcmp($b['_id'],$a['_id']));$page=array_slice($history,0,30);
+        return [200,['success'=>true,'data'=>['active'=>true,'balancePaise'=>$account['balancePaise'],'sequence'=>$account['sequence'],'mode'=>$mode,'history'=>$page,'nextBefore'=>count($history)>30?end($page)['sequence'].':'.rawurlencode(end($page)['_id']):null]]];
+    }
+    public function customers(array $query=[]):array {
+        $search=strtolower(trim((string)($query['search']??'')));$filter=$query['filter']??'all';if(!in_array($filter,['all','credit','due','zero','inactive'],true))throw new HttpError(400,'Invalid balance filter');
+        $accounts=[];foreach($this->store->all('walletaccounts')as $a)$accounts[$a['customer']]=$a;
+        $rows=[];$credit=0;$due=0;
+        foreach($this->store->all('tiffins')as $c){$a=$accounts[$c['_id']]??null;$balance=$a['balancePaise']??0;$credit+=max(0,$balance);$due+=max(0,-$balance);
+            if($search!==''&&!str_contains(strtolower(($c['customerName']??'').' '.($c['barcode']??'').' '.($c['phone']??'')),$search))continue;
+            if(($filter==='credit'&&(!$a||$balance<=0))||($filter==='due'&&(!$a||$balance>=0))||($filter==='zero'&&(!$a||$balance!==0))||($filter==='inactive'&&$a))continue;
+            $rows[]=['customer'=>$c['_id'],'name'=>$c['customerName']??'Customer','barcode'=>$c['barcode']??'','active'=>$a!==null,'balancePaise'=>$balance,'advancePaise'=>self::paise($c['advanceBalance']??0)];
+        }
+        usort($rows,fn($a,$b)=>strnatcasecmp($a['name'],$b['name']));return [200,['success'=>true,'data'=>$rows,'summary'=>['creditPaise'=>$credit,'duePaise'=>$due,'customers'=>count($this->store->all('tiffins'))]]];
     }
 }

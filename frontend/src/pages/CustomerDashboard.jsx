@@ -10,13 +10,15 @@ import {
 import useCustomerAutoRefresh from "../customer/hooks/useCustomerAutoRefresh";
 import CustomerModificationRequest from "../customer/components/CustomerModificationRequest";
 import CustomerSidebar from "../customer/components/CustomerSidebar";
-import WalletPanel from "../components/WalletPanel";
+import WalletDialog from "../components/WalletDialog";
+import { Wallet } from "lucide-react";
 const CustomerDashboard = () => {
   const navigate = useNavigate();
   const now = new Date();
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [walletOpen, setWalletOpen] = useState(false);
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [year, setYear] = useState(now.getFullYear());
   const [cycle, setCycle] = useState(now.getDate() <= 15 ? "1" : "2");
@@ -152,6 +154,7 @@ const CustomerDashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              <button type="button" aria-label="Open my wallet" onClick={() => setWalletOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/15 px-3 py-2.5 text-sm font-semibold hover:bg-white/25"><Wallet size={20} /><span className="hidden sm:inline">Wallet</span></button>
               <button
                 type="button"
                 onClick={handleManualRefresh}
@@ -248,7 +251,7 @@ const CustomerDashboard = () => {
           </div>
         </section>
         {/* Meal Summary */}
-        <WalletPanel refreshKey={lastUpdated} />
+        {walletOpen && <WalletDialog onClose={() => setWalletOpen(false)} />}
         <section>
           <div className="flex items-end justify-between gap-4 mb-4">
             <div>

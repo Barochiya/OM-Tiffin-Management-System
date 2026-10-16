@@ -293,6 +293,7 @@ How can we help you today?`;
           </div>
 
           <div className="flex gap-3 flex-wrap">
+            <Link to="/customers?view=wallets" className="rounded-xl border border-blue-200 bg-white px-5 py-3 font-semibold text-blue-700">Wallets</Link>
             <button
               type="button"
               onClick={sendBulkReminder}

@@ -45,3 +45,7 @@ rejected(fn()=>$r->dispatch('GET','/api/payments/delivery-status',[],[],$custome
 $s->put('payments',['_id'=>'507f1f77bcf86cd799439099','customer'=>$cid,'paymentDate'=>'2026-10-15','receiptNo'=>'TEST-RECEIPT'],true);
 $receiptStatus=$r->dispatch('GET','/api/payments/delivery-status',[],[],$admin);check($receiptStatus[0]===200&&$receiptStatus[1]['data'][0]['status']==='unknown');
 echo "PASS receipt delivery report is admin-only and never invents historical delivery confirmation.\n";
+
+rejected(fn()=>$r->dispatch('GET','/api/wallets',[],[],$customer),401);
+check($r->dispatch('GET','/api/wallets',[],[],$admin)[0]===200);
+echo "PASS wallet list is admin-only.\n";

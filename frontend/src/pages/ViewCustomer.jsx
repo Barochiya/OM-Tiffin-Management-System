@@ -19,7 +19,6 @@ import {
 
 import { currentBillingPeriod, defaultCycle, cycleEntries } from "../services/billingCycle";
 import { getCustomerById } from "../services/customerService";
-import WalletPanel from "../components/WalletPanel";
 import {
   getCustomerEntries,
   saveDailyEntry,
@@ -499,7 +498,6 @@ const handleSaveDailyEntry = async (entryId) => {
             CUSTOMER DAILY MEAL ENTRIES
         ======================================= */}
 
-        <WalletPanel key={id} customerId={id} refreshKey={dailyEntries} />
 
         <div className="mt-6 rounded-2xl border border-slate-200 overflow-hidden">
 

@@ -28,7 +28,7 @@ final class Billing {
             $doc['extraItems']=[];
             foreach(is_array($body['extraItems']??null)?$body['extraItems']:[]as $item){$description=trim((string)($item['description']??''));if($description==='')throw new HttpError(400,'Extra item description is required');$doc['extraItems'][]=['_id'=>$item['_id']??bin2hex(random_bytes(12)),'description'=>$description,'amount'=>money($item['amount']??null)];}
             $doc['remark']=(string)($body['remark']??'');$doc=$this->store->put('dailyentries',$doc,$insert);
-            $updated=(new Wallet($this->store))->entry($doc,$person);if(isset($updated['walletBasis']))$doc=$this->store->put('dailyentries',$updated);
+            $updated=(new Wallet($this->store))->entry($doc,$person,$entries[0]??null);if(isset($updated['walletBasis']))$doc=$this->store->put('dailyentries',$updated);
             // Preserve the established save workflow: the oldest daily entry remains the identity.
             foreach(array_slice($entries,1)as $duplicate)$this->store->delete('dailyentries',$duplicate['_id']);
             return success($doc,'Daily Entry Saved Successfully');
@@ -81,6 +81,8 @@ final class Billing {
             $advance=numeric($person['advanceBalance']??0);$remaining=$bill['totalAmount']-numeric($bill['paidAmount']??0);
             if($advance>0&&$remaining>0){$used=min($advance,$remaining);$person['advanceBalance']=$advance-$used;$bill['paidAmount']=numeric($bill['paidAmount']??0)+$used;$this->store->put('tiffins',$person);}
             $bill['pendingAmount']=max(0,$bill['totalAmount']-numeric($bill['paidAmount']??0));$bill['status']=$bill['pendingAmount']<=0?'Paid':(numeric($bill['paidAmount']??0)>0?'Partial':'Pending');
+            $account=(new Wallet($this->store))->account($customer);
+            if($account)$bill['walletStatement']=['sequence'=>$account['sequence'],'startDay'=>substr($period['startDate'],0,10),'endDay'=>substr($period['endDate'],0,10),'generatedAt'=>gmdate('c')];
             $bill=$this->read->hydrate('bills',$bill);$bill=$this->store->put('bills',$bill,$insert);
             if($insert&&$previous&&$carry>0&&$previous['_id']!==$bill['_id']){$previous['carriedForward']=true;$previous['carriedForwardTo']=$bill['_id'];$this->store->put('bills',$previous);}
             return success($this->read->populate($bill,'customer','tiffins'));

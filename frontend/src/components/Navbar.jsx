@@ -18,6 +18,7 @@ const Navbar = ({ setSidebarOpen }) => {
 
   const getPageInfo = () => {
     const path = location.pathname;
+    if (path === "/wallets" || (path === "/customers" && new URLSearchParams(location.search).get("view") === "wallets")) return { title: "Customer Wallets", subtitle: "Balances, current entries and wallet history" };
     if(path === "/document-design") return {title:"Document Design",subtitle:"Shared bill and receipt appearance"};
     if(path === "/website-orders") return {title:"Website Orders",subtitle:"Online order approvals and fulfillment"};
     if (path === "/whatsapp-inbox") return { title: "WhatsApp Inbox", subtitle: "Customer conversations and replies" };

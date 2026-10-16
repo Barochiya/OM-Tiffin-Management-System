@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import {
+  FaWallet,
   FaUsers,
   FaUserPlus,
   FaCalendarAlt,
@@ -18,6 +19,7 @@ import {
 
 const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
   const location = useLocation();
+  const walletsActive = location.pathname === "/wallets" || (location.pathname === "/customers" && new URLSearchParams(location.search).get("view") === "wallets");
 
 const closeSidebar = () => {
   if (window.innerWidth < 1024) {
@@ -81,14 +83,17 @@ const closeSidebar = () => {
           to="/customers"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/customers"
+            location.pathname === "/customers" && !walletsActive
               ? "bg-white text-blue-700 font-semibold shadow"
               : "hover:bg-blue-600"
           }`}
         >
           <FaUsers className="text-blue-200" />
           Customers
-        </Link>        <Link
+        </Link>
+        <p className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-blue-200">Wallets & balances</p>
+        <Link to="/customers?view=wallets" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${walletsActive ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaWallet />Customer Wallets</Link>
+        <Link
           to="/users"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all

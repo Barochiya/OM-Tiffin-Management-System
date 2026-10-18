@@ -154,6 +154,7 @@ export default function Home() {
   const [menuItems, setMenuItems] = useState([]);
   const [menuLoading, setMenuLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const [reviewsLoading, setReviewsLoading] = useState(true);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewError, setReviewError] = useState("");
@@ -687,6 +688,7 @@ export default function Home() {
                 <p className="mx-auto mt-4 max-w-2xl text-slate-600">
                   Real reviews from customers who have shared their experience with OM Tiffin Service.
                 </p>
+                {!reviewsLoading && <p className="mt-4 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-sm font-semibold text-blue-700"><ShieldCheck size={18} aria-hidden="true" />{reviews.length} verified {reviews.length === 1 ? "review" : "reviews"}</p>}
               </div>
 
               {reviewsLoading ? (
@@ -694,11 +696,12 @@ export default function Home() {
                   <p className="font-semibold text-slate-600">Loading customer reviews...</p>
                 </div>
               ) : reviews.length > 0 ? (
-                <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {reviews.map((review) => (
+                <>
+                <div id="customer-review-list" className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {reviews.map((review, index) => (
                     <article
                       key={review._id}
-                      className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm"
+                      className={`rounded-3xl border border-slate-200 bg-white p-7 shadow-sm ${showAllReviews || index < 3 ? "" : index < 6 ? "hidden md:block" : "hidden"}`}
                     >
                       <div
                         role="img"
@@ -727,6 +730,12 @@ export default function Home() {
                     </article>
                   ))}
                 </div>
+                {reviews.length > 3 && <div className={`mt-8 text-center ${reviews.length <= 6 ? "md:hidden" : ""}`}>
+                  <button type="button" aria-expanded={showAllReviews} aria-controls="customer-review-list" onClick={() => setShowAllReviews(value => !value)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-blue-700 px-7 py-3 font-bold text-white shadow-sm transition-colors hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-700">
+                    {showAllReviews ? "View less" : "View more reviews"}<ArrowRight size={18} aria-hidden="true" className={showAllReviews ? "-rotate-90" : "rotate-90"} />
+                  </button>
+                </div>}
+                </>
               ) : (
                 <div className="mt-12 rounded-3xl border border-dashed border-slate-300 bg-white p-10 text-center">
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-orange-50 text-orange-700">

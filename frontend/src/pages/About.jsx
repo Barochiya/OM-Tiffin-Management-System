@@ -49,11 +49,12 @@ export default function About() {
               Fresh • Homestyle • Reliable
             </span>
             <h1 className="mt-6 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-              About OM Tiffin Service
+              About OM Tiffin Services in Gandhinagar
             </h1>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-blue-50 sm:text-xl">
-              A practical everyday tiffin service focused on fresh meals,
-              dependable service and a convenient customer experience.
+              Based in Sector 6/C near Civil Hospital, OM Tiffin Services helps
+              customers in Gandhinagar arrange regular lunch and dinner meals.
+              Explore daily, monthly and custom tiffin plans with our team.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link
@@ -84,15 +85,16 @@ export default function About() {
               Everyday meals, made easier.
             </h2>
             <p className="mt-5 text-lg leading-8 text-slate-600">
-              OM Tiffin Service is built for people who want a simple and
-              dependable solution for their regular meal requirements. The
-              website and customer portal make it easier to understand plans,
-              view the available menu and manage a registered customer account.
+              We are based at Plot No 1086/2, Bhuneshwari Society, Sector 6/C,
+              near Civil Hospital, Gandhinagar, Gujarat 382006. If you are looking
+              for a regular meal arrangement, our team can help you confirm the
+              available meals, a suitable plan and delivery availability for your address.
             </p>
             <p className="mt-4 leading-7 text-slate-600">
-              Whether you need a daily arrangement, a monthly service or a plan
-              tailored to your routine, the service is structured to keep the
-              process clear and convenient.
+              A daily arrangement can suit a changing routine, while a monthly
+              plan can help you organise regular meals. Lunch, dinner and custom
+              requirements should be confirmed with our team before starting.
+              Check the current menu and pricing rather than relying on an old bill or offer.
             </p>
           </div>
 
@@ -141,6 +143,22 @@ export default function About() {
                 <p className="mt-3 leading-7 text-slate-600">{text}</p>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="grid gap-8 md:grid-cols-2">
+          <div className="rounded-3xl border border-slate-200 bg-white p-7">
+            <h2 className="text-2xl font-black text-slate-950">Your customer account</h2>
+            <p className="mt-4 leading-7 text-slate-600">Registered customers can sign in to the customer portal to view their meal records, bills and payment history. Their wallet shows available credit or the amount outstanding, with previous entries available in history. The portal gives customers a place to check their records and contact the team about their service.</p>
+            <Link to="/customer-login" className="mt-5 inline-flex items-center gap-2 font-bold text-blue-700">Customer portal <ArrowRight size={18} /></Link>
+          </div>
+          <div className="rounded-3xl border border-slate-200 bg-white p-7">
+            <h2 className="text-2xl font-black text-slate-950">Before starting your tiffin service</h2>
+            <p className="mt-4 leading-7 text-slate-600">Share your delivery address, preferred meals and intended start date. Let us know about dietary requirements so that we can discuss whether the available menu is suitable. Confirm delivery coverage, the current price and your meal arrangement directly with the team before placing an order.</p>
+            <p className="mt-4 leading-7 text-slate-600">Call <a href="tel:+917016297983" className="font-bold text-blue-700">7016297983</a> or <a href="tel:+919409380470" className="font-bold text-blue-700">9409380470</a> for current service information.</p>
+            <Link to="/menu" className="mt-5 inline-flex items-center gap-2 font-bold text-blue-700">Explore the menu <ArrowRight size={18} /></Link>
           </div>
         </div>
       </section>

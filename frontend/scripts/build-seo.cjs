@@ -31,10 +31,11 @@ for (const [route,page] of Object.entries(seo.pages)) {
 <script type="application/ld+json" data-public-business>${JSON.stringify(schema).replace(/</g,'\\u003c')}</script>`;
   const nav = Object.entries(seo.pages).map(([url,p])=>`<a href="${url}">${escape(url==='/'?'Home':p.heading)}</a>`).join(' · ');
   const content = `<main style="max-width:70rem;margin:2rem auto;padding:1.5rem;font-family:system-ui;line-height:1.8"><nav>${nav}</nav><h1>${escape(page.heading)}</h1><p>${escape(page.text)}</p><h2>Gandhinagar enquiries and delivery availability</h2><p>Contact us to confirm delivery for your address and the current menu and plan prices.</p><address>${escape(seo.address)}</address><p><a href="tel:${seo.phone}">7016297983</a> · Additional contact: <a href="tel:${seo.secondaryPhone}">9409380470</a></p><p><a href="${seo.map}">Find OM Tiffin Services on Google Maps</a> · <a href="/customer-login">Customer login</a></p></main>`;
-  const body = route === '/' ? fs.readFileSync(path.join(root, '.prerender/home.html'), 'utf8') : content;
-  const rootTag = route === '/' ? '<div id="root" data-prerendered>' : '<div id="root">';
+  const prerender = route === '/' ? 'home' : route === '/about' ? 'about' : null;
+  const body = prerender ? fs.readFileSync(path.join(root, '.prerender/'+prerender+'.html'), 'utf8') : content;
+  const rootTag = prerender ? '<div id="root" data-prerendered>' : '<div id="root">';
   fs.writeFileSync(path.join(dist,filename),publicTemplate.replace(/<title>.*?<\/title>/s,`<title>${escape(page.title)}</title>`).replace('</head>',head+'</head>').replace('<div id="root"></div>',`${rootTag}${body}</div>`));
 }
-fs.writeFileSync(path.join(dist,'sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+Object.keys(seo.pages).map(route=>`<url><loc>${seo.origin+route}</loc></url>`).join('')+'</urlset>');
+fs.writeFileSync(path.join(dist,'sitemap.xml'),'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+Object.keys(seo.pages).map(route=>`<url><loc>${seo.origin+route}</loc>${seo.pages[route].lastModified ? '<lastmod>'+seo.pages[route].lastModified+'</lastmod>' : ''}</url>`).join('')+'</urlset>');
 fs.writeFileSync(path.join(dist,'robots.txt'),`User-agent: *\nAllow: /\nSitemap: ${seo.origin}/sitemap.xml\n`);
 console.log('Built six crawlable public pages; private SPA pages default to noindex.');

@@ -39,3 +39,21 @@ $autoPayment=$b->addPayment(['customer'=>$id,'bill'=>$next['_id'],'amount'=>1,'p
 check($autoPayment['whatsappDelivery']['status']==='pending'&&count($s->events)===1);
 check($s->events['receipt-auto:'.$autoPayment['_id']]['kind']==='receipt-auto');
 echo "PASS payment save atomically queues one automatic PDF receipt intent; missing phone never rolls back payment.\n";
+
+// Pending must roll through successive cycles once, including partial payment.
+$chainStore=new BillingMemoryStore();$chain=new OMT\Billing($chainStore);
+$chainStore->put('tiffins',['_id'=>$id,'customerName'=>'Synthetic carry chain','advanceBalance'=>0],true);
+$chainStore->put('prices',['breakfast'=>40,'lunch'=>100,'dinner'=>80],true);
+$chain->saveDaily(['customer'=>$id,'date'=>'2026-10-01','lunchQty'=>1]);
+$c1=$chain->generate(['customer'=>$id,'month'=>10,'year'=>2026,'cycle'=>'1'])[1]['data'];
+$chain->saveDaily(['customer'=>$id,'date'=>'2026-10-16','lunchQty'=>1]);
+$c2=$chain->generate(['customer'=>$id,'month'=>10,'year'=>2026,'cycle'=>'2'])[1]['data'];
+check($c2['previousPendingAmount']===100.0&&$c2['pendingAmount']===200.0);
+$chain->addPayment(['customer'=>$id,'bill'=>$c2['_id'],'amount'=>50,'paymentMethod'=>'Cash']);
+$chain->saveDaily(['customer'=>$id,'date'=>'2026-11-01','lunchQty'=>1]);
+$c3=$chain->generate(['customer'=>$id,'month'=>11,'year'=>2026,'cycle'=>'1'])[1]['data'];
+check($c3['previousPendingAmount']===150.0&&$c3['pendingAmount']===250.0);
+$repeat=$chain->generate(['customer'=>$id,'month'=>11,'year'=>2026,'cycle'=>'1'])[1]['data'];
+check($repeat['_id']===$c3['_id']&&$repeat['pendingAmount']===250.0);
+check($chainStore->get('bills',$c1['_id'])['carriedForward']&&$chainStore->get('bills',$c2['_id'])['carriedForward']);
+echo "PASS consecutive cycle carry-forward, partial payment, month rollover and repeat generation without duplicate dues. Synthetic only.\n";

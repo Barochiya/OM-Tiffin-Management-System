@@ -11,16 +11,19 @@ export default function WalletPanel({ customerId, refreshKey }) {
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [older, setOlder] = useState([]);
   const [mode, setMode] = useState('unbilled'), [period, setPeriod] = useState(currentBillingPeriod);
   const [amount, setAmount] = useState(''), [reason, setReason] = useState(''), [adjustOpen, setAdjustOpen] = useState(false);
+  const [refreshing, setRefreshing] = useState(false), [refreshedAt, setRefreshedAt] = useState(null);
   const request = useRef(null), activeLoad = useRef(null), selection = useRef('');
   const filterKey = JSON.stringify([path, mode, period]); selection.current = filterKey;
   const wallet = loadedWallet?._selection === filterKey ? loadedWallet : null;
   const params = { mode, ...(mode === 'cycle' ? period : {}) };
-  const load = useCallback(async () => {
-    activeLoad.current?.abort(); const controller = new AbortController(); activeLoad.current = controller;
-    try { const { data } = await client.get(path, { params: { mode, ...(mode === 'cycle' ? period : {}) }, signal: controller.signal }); if (!controller.signal.aborted) { setOlder([]); setWallet({ ...data.data, _selection: JSON.stringify([path, mode, period]) }); setError(''); } }
+  const load = useCallback(async (background = false) => {
+    if (background === true && activeLoad.current) return;
+    activeLoad.current?.abort(); setRefreshing(true); const controller = new AbortController(); activeLoad.current = controller;
+    try { const { data } = await client.get(path, { params: { mode, ...(mode === 'cycle' ? period : {}) }, signal: controller.signal, timeout: 12000 }); if (!controller.signal.aborted) { setOlder([]); setWallet({ ...data.data, _selection: JSON.stringify([path, mode, period]) }); setError(''); setRefreshedAt(new Date()); } }
     catch (e) { if (!controller.signal.aborted) setError(e.response?.data?.message || 'Wallet could not be refreshed. Please retry.'); }
+    finally { if (activeLoad.current === controller) { activeLoad.current = null; setRefreshing(false); } }
   }, [client, path, mode, period]);
-  useEffect(() => { setOlder([]); setProposal(null); load(); const timer = setInterval(() => { if (!document.hidden) load(); }, 15000); window.addEventListener('focus', load); return () => { activeLoad.current?.abort(); clearInterval(timer); window.removeEventListener('focus', load); }; }, [load, refreshKey]);
+  useEffect(() => { setOlder([]); setProposal(null); load(); const refresh = () => { if (!document.hidden) load(true); }; const timer = setInterval(refresh, 15000); window.addEventListener('focus', refresh); window.addEventListener('online', refresh); document.addEventListener('visibilitychange', refresh); return () => { activeLoad.current?.abort(); clearInterval(timer); window.removeEventListener('focus', refresh); window.removeEventListener('online', refresh); document.removeEventListener('visibilitychange', refresh); }; }, [load, refreshKey]);
   const review = async () => { setBusy(true); try { const { data } = await api.get(`${path}/reconciliation`); setProposal(data.data); setError(''); } catch(e) { setError(e.response?.data?.message || 'Reconciliation failed'); } finally { setBusy(false); } };
   const activate = async () => { setBusy(true); try { await api.post(`${path}/activate`, { fingerprint: proposal.fingerprint }); setProposal(null); await load(); } catch(e) { setError(e.response?.data?.message || 'Activation failed'); } finally { setBusy(false); } };
   const adjust = async event => {
@@ -38,7 +41,8 @@ export default function WalletPanel({ customerId, refreshKey }) {
     catch { if (selection.current === key) setError('Older entries could not be loaded'); } finally { setBusy(false); }
   };
   return <section className="my-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6" aria-label="Wallet">
-    <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-bold text-slate-900">Wallet</h2><button type="button" onClick={load} className="rounded-lg border px-3 py-2 text-blue-700">Refresh wallet</button></div>
+    <div className="flex items-center justify-between gap-3"><h2 className="text-xl font-bold text-slate-900">Wallet</h2><button type="button" onClick={() => load()} disabled={refreshing} className="rounded-lg border px-3 py-2 text-blue-700">{refreshing ? 'Refreshing…' : 'Refresh wallet'}</button></div>
+    <p role="status" className="mt-2 text-xs text-slate-500">{refreshing ? 'Checking latest wallet…' : refreshedAt ? `Last refreshed at ${refreshedAt.toLocaleTimeString('en-IN')}. Auto-refresh every 15 seconds.` : 'Auto-refresh every 15 seconds.'}</p>
     {error && <p role="alert" className="mt-3 text-red-700">{error}</p>}
     {!wallet && <p className="mt-3">Loading wallet…</p>}
     {wallet && !wallet.active && <><p className="mt-3 text-slate-600">Wallet opening balance is awaiting reconciliation.</p>{admin && <button disabled={busy} onClick={review} className="mt-3 rounded-lg bg-blue-700 px-4 py-2 text-white">Review opening balance</button>}</>}

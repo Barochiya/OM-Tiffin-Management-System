@@ -94,7 +94,7 @@ final class Billing {
             $person=$this->store->get('tiffins',$customer);$bill=$this->store->get('bills',$billId);
             if(!$person)throw new HttpError(404,'Customer not found');if(!$bill)throw new HttpError(404,'Bill not found');
             if($bill['customer']!==$customer)throw new HttpError(400,'Bill does not belong to this customer');
-            if(($bill['carriedForward']??false)===true&&(new Wallet($this->store))->account($customer))throw new HttpError(409,'This invoice was carried forward. Record payment against the current invoice.');
+            if(($bill['carriedForward']??false)===true)throw new HttpError(409,'This invoice was carried forward. Record payment against the current invoice.');
             $amount=money($body['amount']??null);if($amount<=0)throw new HttpError(400,'Valid payment amount is required.');
             $method=$body['paymentMethod']??'Cash';if(!in_array($method,['Cash','UPI','Bank'],true))throw new HttpError(400,'Invalid payment method');
             $payment=$this->store->put('payments',['__v'=>0,'customer'=>$customer,'bill'=>$billId,'amount'=>$amount,'paymentMethod'=>$method,'note'=>(string)($body['remark']??''),'transactionId'=>'','gateway'=>'','paymentDate'=>gmdate('Y-m-d\TH:i:s.000\Z'),'status'=>'Success'],true);

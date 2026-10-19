@@ -65,7 +65,7 @@ final class ReadModels {
         return [200,$this->populate($this->populate($this->hydrate('payments',$doc),'customer','tiffins'),'bill','bills')];
     }
     public function billsForPayment(string $customer,bool $pending=false):array {
-        return [200,sorted($this->store->find('bills',fn($d)=>$d['customer']===$customer&&(!$pending||($d['pendingAmount']??0)>0)),['createdAt'=>-1])];
+        return [200,sorted($this->store->find('bills',fn($d)=>$d['customer']===$customer&&($d['carriedForward']??false)!==true&&(!$pending||($d['pendingAmount']??0)>0)),['createdAt'=>-1])];
     }
     public function billDelivery():array {
         $items=[];foreach(sorted($this->store->all('bills'),['createdAt'=>-1])as $bill){

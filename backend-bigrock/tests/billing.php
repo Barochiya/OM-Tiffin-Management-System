@@ -57,3 +57,15 @@ $repeat=$chain->generate(['customer'=>$id,'month'=>11,'year'=>2026,'cycle'=>'1']
 check($repeat['_id']===$c3['_id']&&$repeat['pendingAmount']===250.0);
 check($chainStore->get('bills',$c1['_id'])['carriedForward']&&$chainStore->get('bills',$c2['_id'])['carriedForward']);
 echo "PASS consecutive cycle carry-forward, partial payment, month rollover and repeat generation without duplicate dues. Synthetic only.\n";
+// Payment picker must expose only the invoice owning the carried balance.
+$pickerStore=new BillingMemoryStore();$pickerBilling=new OMT\Billing($pickerStore);
+$pickerStore->put('tiffins',['_id'=>$id,'customerName'=>'Synthetic payment picker','advanceBalance'=>0],true);
+$pickerStore->put('prices',['breakfast'=>40,'lunch'=>900,'dinner'=>80],true);
+$pickerStore->put('bills',['_id'=>$old,'customer'=>$id,'month'=>9,'year'=>2026,'cycle'=>'2','invoiceNo'=>'OLD','pendingAmount'=>50,'totalAmount'=>50,'paidAmount'=>0,'status'=>'Pending'],true);
+$pickerBilling->saveDaily(['customer'=>$id,'date'=>'2026-10-01','lunchQty'=>1]);
+$current=$pickerBilling->generate(['customer'=>$id,'month'=>10,'year'=>2026,'cycle'=>'1'])[1]['data'];
+$picker=new OMT\ReadModels($pickerStore);
+foreach([false,true]as $pendingOnly){$options=$picker->billsForPayment($id,$pendingOnly)[1];check(count($options)===1&&$options[0]['_id']===$current['_id']&&$options[0]['pendingAmount']===950.0);}
+denied(fn()=>$pickerBilling->addPayment(['customer'=>$id,'bill'=>$old,'amount'=>50,'paymentMethod'=>'Cash']),409);
+check(count($pickerStore->all('bills'))===2&&count($pickerStore->all('payments'))===0);
+echo "PASS payment selection: 50 carried plus 900 current exposes only 950 current invoice; superseded invoice payment rejected and history retained.\n";

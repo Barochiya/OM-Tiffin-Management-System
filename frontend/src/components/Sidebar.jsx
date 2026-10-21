@@ -65,9 +65,11 @@ const closeSidebar = () => {
       </div>
 
       {/* Menu */}
-      <nav className="flex-1 mt-6 px-3 space-y-2 overflow-y-auto pb-6">
-
-        <Link
+      <nav aria-label="Admin navigation" className="flex-1 mt-4 px-3 overflow-y-auto pb-6">
+        <section aria-labelledby="admin-nav-0" className="mb-4">
+          <h2 id="admin-nav-0" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Overview</h2>
+          <div className="space-y-1">
+            <Link
           to="/dashboard"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -78,8 +80,12 @@ const closeSidebar = () => {
         >
           Dashboard
         </Link>
-
-        <Link
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-1" className="mb-4">
+          <h2 id="admin-nav-1" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Customers</h2>
+          <div className="space-y-1">
+            <Link
           to="/customers"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -91,22 +97,7 @@ const closeSidebar = () => {
           <FaUsers className="text-blue-200" />
           Customers
         </Link>
-        <p className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-blue-200">Team &amp; payroll</p><Link to="/customers?view=employees" onClick={closeSidebar} className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-blue-600"><FaUsers />Employee Management</Link>
-        <p className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-blue-200">Wallets & balances</p>
-        <Link to="/customers?view=wallets" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${walletsActive ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaWallet />Customer Wallets</Link>
-        <Link
-          to="/users"
-          onClick={closeSidebar}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-            duration-300 ${
-              location.pathname === "/users"
-                ? "bg-white text-blue-700 font-semibold shadow"
-                : "hover:bg-blue-600"
-            }`}
-        >
-          <FaUsers className="text-blue-200" />
-          Users
-        </Link><Link
+            <Link
           to="/add-customer"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -118,8 +109,12 @@ const closeSidebar = () => {
           <FaUserPlus className="text-green-300" />
           Add Customer
         </Link>
-
-        <Link
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-2" className="mb-4">
+          <h2 id="admin-nav-2" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Daily work</h2>
+          <div className="space-y-1">
+            <Link
           to="/daily-entry"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -131,8 +126,7 @@ const closeSidebar = () => {
           <FaCalendarAlt className="text-yellow-300" />
           Daily Entry
         </Link>
-
-       <Link
+            <Link
          to="/barcode-entry"
          onClick={closeSidebar}
          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -144,137 +138,7 @@ const closeSidebar = () => {
          <FaBarcode className="text-purple-300" />
          Barcode Entry
        </Link>
-
-       <Link
-         to="/price-settings"
-          onClick={closeSidebar}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/price-settings"
-              ? "bg-white text-blue-700 font-semibold shadow"
-              : "hover:bg-blue-600"
-          }`}
-        >
-          <FaCog className="text-gray-200" />
-          Price Settings
-        </Link>
-
-        <Link
-          to="/billing"
-          onClick={closeSidebar}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/billing"
-              ? "bg-white text-blue-700 font-semibold shadow"
-              : "hover:bg-blue-600"
-          }`}
-        >
-          <FaFileInvoiceDollar className="text-orange-300" />
-          Billing
-        </Link>
-
-        <Link
-  to="/view-bills"
-  onClick={closeSidebar}
-  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-    location.pathname === "/view-bills"
-      ? "bg-white text-blue-700 font-semibold shadow"
-      : "hover:bg-blue-600"
-  }`}
->
-  <FaFileInvoice className="text-cyan-300" />
-  View Bills
-</Link>
-
-        <Link
-          to="/payments"
-          onClick={closeSidebar}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/payments"
-              ? "bg-white text-blue-700 font-semibold shadow"
-              : "hover:bg-blue-600"
-          }`}
-        >
-          <FaMoneyBillWave className="text-green-300" />
-          Payments
-        </Link>
-
-          <Link
-  to="/announcement"
-  onClick={closeSidebar}
-  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-    location.pathname === "/announcement"
-      ? "bg-white text-blue-700 font-semibold shadow"
-      : "hover:bg-blue-600"
-  }`}
->
-  <FaBullhorn className="text-yellow-300" />
-  Announcement Center
-</Link>
-
-        <Link
-  to="/bill-delivery-status"
-  onClick={closeSidebar}
-  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-    location.pathname === "/bill-delivery-status"
-      ? "bg-white text-blue-700 font-semibold shadow"
-      : "hover:bg-blue-600"
-  }`}
->
-  <FaTruck className="text-cyan-300" />
-  Bill Delivery Status
-</Link>
-    <Link to="/receipt-delivery-status" onClick={closeSidebar} className={`flex items-center gap-3 px-4 py-3 rounded-lg ${location.pathname === "/receipt-delivery-status" ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaTruck className="text-cyan-300" />Receipt Delivery Status</Link>
-    <Link
-      to="/announcement-delivery-status"
-      onClick={closeSidebar}
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-        location.pathname === "/announcement-delivery-status"
-          ? "bg-white text-blue-700 font-semibold shadow"
-          : "hover:bg-blue-600"
-      }`}
-    >
-      <FaBullhorn className="text-yellow-300" />
-      Announcement Status
-    </Link>
-        <Link
-          to="/whatsapp-inbox"
-          onClick={closeSidebar}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/whatsapp-inbox"
-              ? "bg-white text-blue-700 font-semibold shadow"
-              : "hover:bg-blue-600"
-          }`}
-        >
-          <FaWhatsapp className="text-green-400" />
-          WhatsApp Inbox
-        </Link>
-
-       <Link
-         to="/customer-login-id-sender"
-         onClick={closeSidebar}
-         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-           location.pathname === "/customer-login-id-sender"
-             ? "bg-white text-blue-700 font-semibold shadow"
-             : "hover:bg-blue-600"
-         }`}
-       >
-         <FaWhatsapp className="text-green-400" />
-         Customer Login ID Sender
-       </Link>
-
-        <Link
-          to="/whatsapp-payment-approval"
-          onClick={closeSidebar}
-          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/whatsapp-payment-approval"
-              ? "bg-white text-blue-700 font-semibold shadow"
-              : "hover:bg-blue-600"
-          }`}
-        >
-          <FaMoneyCheckAlt className="text-emerald-300" />
-          WhatsApp Payment Approval
-        </Link>
-
-      <Link
+            <Link
         to="/customer-modification-requests"
         onClick={closeSidebar}
         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -286,18 +150,149 @@ const closeSidebar = () => {
         <FaCalendarAlt className="text-orange-300" />
         Tiffin Modifications
       </Link>
-      <Link
-        to="/customer-modification-settings"
-        onClick={closeSidebar}
-        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-          location.pathname === "/customer-modification-settings"
-            ? "bg-white text-blue-700 font-semibold shadow"
-            : "hover:bg-blue-600"
-        }`}
-      >
-        <FaCog className="text-cyan-300" />
-        Tiffin Modification Settings
-      </Link>
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-3" className="mb-4">
+          <h2 id="admin-nav-3" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Team &amp; payroll</h2>
+          <div className="space-y-1">
+            <Link to="/customers?view=employees" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${(location.pathname === "/employees" || (location.pathname === "/customers" && new URLSearchParams(location.search).get("view") === "employees")) ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaUsers />Employee Management</Link>
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-4" className="mb-4">
+          <h2 id="admin-nav-4" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Wallets &amp; balances</h2>
+          <div className="space-y-1">
+            <Link to="/customers?view=wallets" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${walletsActive ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaWallet />Customer Wallets</Link>
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-5" className="mb-4">
+          <h2 id="admin-nav-5" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Billing &amp; receipts</h2>
+          <div className="space-y-1">
+            <Link
+          to="/billing"
+          onClick={closeSidebar}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+            location.pathname === "/billing"
+              ? "bg-white text-blue-700 font-semibold shadow"
+              : "hover:bg-blue-600"
+          }`}
+        >
+          <FaFileInvoiceDollar className="text-orange-300" />
+          Billing
+        </Link>
+            <Link
+  to="/view-bills"
+  onClick={closeSidebar}
+  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+    location.pathname === "/view-bills"
+      ? "bg-white text-blue-700 font-semibold shadow"
+      : "hover:bg-blue-600"
+  }`}
+>
+  <FaFileInvoice className="text-cyan-300" />
+  View Bills
+</Link>
+            <Link
+          to="/payments"
+          onClick={closeSidebar}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+            location.pathname === "/payments"
+              ? "bg-white text-blue-700 font-semibold shadow"
+              : "hover:bg-blue-600"
+          }`}
+        >
+          <FaMoneyBillWave className="text-green-300" />
+          Payments
+        </Link>
+            <Link to="/document-design" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${(location.pathname === "/document-design") ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaCog />Bill &amp; Receipt Design</Link>
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-6" className="mb-4">
+          <h2 id="admin-nav-6" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Delivery status</h2>
+          <div className="space-y-1">
+            <Link
+  to="/bill-delivery-status"
+  onClick={closeSidebar}
+  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+    location.pathname === "/bill-delivery-status"
+      ? "bg-white text-blue-700 font-semibold shadow"
+      : "hover:bg-blue-600"
+  }`}
+>
+  <FaTruck className="text-cyan-300" />
+  Bill Delivery Status
+</Link>
+            <Link to="/receipt-delivery-status" onClick={closeSidebar} className={`flex items-center gap-3 px-4 py-3 rounded-lg ${location.pathname === "/receipt-delivery-status" ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaTruck className="text-cyan-300" />Receipt Delivery Status</Link>
+            <Link
+      to="/announcement-delivery-status"
+      onClick={closeSidebar}
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+        location.pathname === "/announcement-delivery-status"
+          ? "bg-white text-blue-700 font-semibold shadow"
+          : "hover:bg-blue-600"
+      }`}
+    >
+      <FaBullhorn className="text-yellow-300" />
+      Announcement Status
+    </Link>
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-7" className="mb-4">
+          <h2 id="admin-nav-7" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">WhatsApp &amp; announcements</h2>
+          <div className="space-y-1">
+            <Link
+          to="/whatsapp-inbox"
+          onClick={closeSidebar}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+            location.pathname === "/whatsapp-inbox"
+              ? "bg-white text-blue-700 font-semibold shadow"
+              : "hover:bg-blue-600"
+          }`}
+        >
+          <FaWhatsapp className="text-green-400" />
+          WhatsApp Inbox
+        </Link>
+            <Link
+          to="/whatsapp-payment-approval"
+          onClick={closeSidebar}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+            location.pathname === "/whatsapp-payment-approval"
+              ? "bg-white text-blue-700 font-semibold shadow"
+              : "hover:bg-blue-600"
+          }`}
+        >
+          <FaMoneyCheckAlt className="text-emerald-300" />
+          WhatsApp Payment Approval
+        </Link>
+            <Link
+  to="/announcement"
+  onClick={closeSidebar}
+  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+    location.pathname === "/announcement"
+      ? "bg-white text-blue-700 font-semibold shadow"
+      : "hover:bg-blue-600"
+  }`}
+>
+  <FaBullhorn className="text-yellow-300" />
+  Announcement Center
+</Link>
+            <Link
+         to="/customer-login-id-sender"
+         onClick={closeSidebar}
+         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+           location.pathname === "/customer-login-id-sender"
+             ? "bg-white text-blue-700 font-semibold shadow"
+             : "hover:bg-blue-600"
+         }`}
+       >
+         <FaWhatsapp className="text-green-400" />
+         Customer Login ID Sender
+       </Link>
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-8" className="mb-4">
+          <h2 id="admin-nav-8" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Website</h2>
+          <div className="space-y-1">
+            <Link to="/website-orders" onClick={closeSidebar} className={`flex items-center gap-3 px-4 py-3 rounded-lg ${location.pathname === "/website-orders" ? "bg-white text-blue-700 font-semibold" : "hover:bg-blue-600"}`}><FaTruck />Website Orders</Link>
             <Link
         to="/website-menu"
         onClick={closeSidebar}
@@ -310,7 +305,7 @@ const closeSidebar = () => {
         <FaUtensils className="text-orange-300" />
         Website Menu
       </Link>
-      <Link
+            <Link
         to="/website-reviews"
         onClick={closeSidebar}
         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -322,8 +317,7 @@ const closeSidebar = () => {
         <FaStar className="text-yellow-300" />
         Reviews
       </Link>
-            <Link to="/website-orders" onClick={closeSidebar} className={`flex items-center gap-3 px-4 py-3 rounded-lg ${location.pathname === "/website-orders" ? "bg-white text-blue-700 font-semibold" : "hover:bg-blue-600"}`}><FaTruck />Website Orders</Link>
-        <Link
+            <Link
         to="/website-settings"
         onClick={closeSidebar}
         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
@@ -335,7 +329,50 @@ const closeSidebar = () => {
         <FaCog className="text-yellow-300" />
         Website Settings
       </Link>
-      <Link to="/document-design" onClick={closeSidebar} className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-600"><FaCog />Bill &amp; Receipt Design</Link>
+          </div>
+        </section>
+        <section aria-labelledby="admin-nav-9" className="mb-4">
+          <h2 id="admin-nav-9" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Administration &amp; settings</h2>
+          <div className="space-y-1">
+            <Link
+          to="/users"
+          onClick={closeSidebar}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all
+            duration-300 ${
+              location.pathname === "/users"
+                ? "bg-white text-blue-700 font-semibold shadow"
+                : "hover:bg-blue-600"
+            }`}
+        >
+          <FaUsers className="text-blue-200" />
+          Users
+        </Link>
+            <Link
+         to="/price-settings"
+          onClick={closeSidebar}
+          className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+            location.pathname === "/price-settings"
+              ? "bg-white text-blue-700 font-semibold shadow"
+              : "hover:bg-blue-600"
+          }`}
+        >
+          <FaCog className="text-gray-200" />
+          Price Settings
+        </Link>
+            <Link
+        to="/customer-modification-settings"
+        onClick={closeSidebar}
+        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+          location.pathname === "/customer-modification-settings"
+            ? "bg-white text-blue-700 font-semibold shadow"
+            : "hover:bg-blue-600"
+        }`}
+      >
+        <FaCog className="text-cyan-300" />
+        Tiffin Modification Settings
+      </Link>
+          </div>
+        </section>
       </nav>
 
       {/* Footer */}

@@ -64,7 +64,7 @@ class Store {
     public function prepareEmployeeCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Employee setup requires a business transaction');
         $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
-        foreach(['employees','employeeattendance','employeepayroll','salarypayments','employeeaudit','employeecash','employeesettings','employeenotifications']as $name)$q->execute([$name]);
+        foreach(['employees','employeeattendance','employeepayroll','salarypayments','employeeaudit','employeecash','employeesettings','employeenotifications','employeeaccounts','employeeotps','employeefirstloginlogs']as $name)$q->execute([$name]);
     }
     public function prepareWalletCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Wallet setup requires a business transaction');
@@ -84,7 +84,7 @@ class Store {
         $q=$this->pdo->prepare('SELECT payload FROM omt_outbox WHERE event_key=?');$q->execute([$eventKey]);$existing=$q->fetchColumn();
         if($existing!==false){if(OutboxCrypto::decode($eventKey,$existing,$this->outboxKey())!=$payload)throw new HttpError(409,'Notification event already exists with different data');return;}
         $q=$this->pdo->prepare('INSERT INTO omt_outbox(event_key,payload,available_at) VALUES(?,?,UTC_TIMESTAMP(3))');$q->execute([$eventKey,OutboxCrypto::encode($eventKey,$payload,$this->outboxKey())]);
-        if(in_array($payload['kind']??null,['document-template','receipt-auto','employee-notification'],true))$this->instantDocumentEvents[]=$eventKey;
+        if(in_array($payload['kind']??null,['document-template','receipt-auto','employee-notification','employee-otp'],true))$this->instantDocumentEvents[]=$eventKey;
     }
     public function claimOutbox(string $eventKey):?array {
         if(!$this->pdo->inTransaction())throw new \LogicException('Outbox claim requires a business transaction');
@@ -145,12 +145,12 @@ class Store {
             $existing=$this->first('customerloginiddeliveries',fn($d)=>($d['whatsappMessageId']??null)===$providerId);
             if(!$existing)$this->put('customerloginiddeliveries',['customer'=>$p['customerId'],'customerAccount'=>$p['accountId'],'customerName'=>$p['customerName'],'userId'=>$p['userId'],'phone'=>$p['to'],'templateName'=>$p['templateName'],'whatsappMessageId'=>$providerId,'whatsappStatus'=>'accepted','sentAt'=>null,'deliveredAt'=>null,'readAt'=>null,'failedAt'=>null,'failureReason'=>''],true);
         }
-        if(($p['kind']??null)==='customer-otp'){
-            $otp=$this->get('customerotps',$p['otpId']);if(!$otp)throw new \RuntimeException('OTP record missing');$otp['whatsappStatus']=$status;
+        if(in_array($p['kind']??null,['customer-otp','employee-otp'],true)){$otpCollection=$p['kind']==='employee-otp'?'employeeotps':'customerotps';
+            $otp=$this->get($otpCollection,$p['otpId']);if(!$otp)throw new \RuntimeException('OTP record missing');$otp['whatsappStatus']=$status;
             $now=(new \DateTimeImmutable('now',new \DateTimeZone('UTC')))->format('Y-m-d\TH:i:s.v\Z');
             if($status==='accepted'){$otp['whatsappMessageId']=$notification['messageId']??null;$otp['whatsappSentAt']=$now;}
             elseif($status==='failed'){$otp['whatsappFailedAt']=$now;$otp['whatsappFailureReason']=$notification['error']??'Notification failed';}
-            $this->put('customerotps',$otp);
+            $this->put($otpCollection,$otp);
         }
     }
 }

@@ -61,6 +61,7 @@ const CustomerLogin = () => {
       <div className="om-auth-intro hidden lg:block"><span>OM TIFFIN SERVICE</span><h2>Good food.
 Simple everyday service.</h2><p>Manage your tiffin plan, view your bills and stay connected with OM Tiffin Service.</p><div className="om-auth-intro-rule" /><small>CUSTOMER PORTAL</small></div>
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8">
+        <a href="/employee/login" className="block text-center text-sm text-emerald-700 mb-4">Employee? Open your team workspace →</a>
         <div className="flex justify-center">
           <img
             src={logo}

@@ -1,7 +1,7 @@
 
 import { lazy, Suspense } from "react";
 import PageLoading from "./components/PageLoading";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
 const Home = lazy(() => import("./pages/Home"));
@@ -16,6 +16,7 @@ const CustomerLayout = lazy(() => import("./layouts/CustomerLayout"));
 const PublicWebsiteLayout = lazy(() => import("./layouts/PublicWebsiteLayout"));
 
 const Login = lazy(() => import("./pages/Login"));
+const EmployeePortal = lazy(() => import('./pages/EmployeePortal'));
 const CustomerLogin = lazy(() => import("./pages/CustomerLogin"));
 const CustomerAccountSetup = lazy(() => import("./pages/CustomerAccountSetup"));
 const CustomerDashboard = lazy(() => import("./pages/CustomerDashboard"));
@@ -61,6 +62,8 @@ const WebsiteOrders = lazy(() => import("./pages/WebsiteOrders"));
 const WebsiteMenu = lazy(() => import("./pages/WebsiteMenu"));
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
+function LoginEntry(){const location=useLocation();return new URLSearchParams(location.search).get('portal')==='employee'?<EmployeePortal/>:<Login/>;}
+
 
 
 export default function App() {
@@ -80,10 +83,11 @@ export default function App() {
       <Route path="/cart" element={<Cart />} />
       <Route path="/order-details" element={<OrderDetails />} />
 
+      <Route path="/employee/*" element={<EmployeePortal />} />
       {/* Public Routes */}
       <Route
         path="/login"
-        element={<Login />}
+        element={<LoginEntry />}
       />
 
 	<Route path="/customer-login" element={<CustomerLogin />} />

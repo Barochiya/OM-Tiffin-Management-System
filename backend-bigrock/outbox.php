@@ -32,7 +32,7 @@ final class OutboxWorker {
             // Claim commits BEFORE HTTP. A crash or ambiguous provider response must never auto-resend.
             try{
                 $eligible=true;
-                if(($payload['kind']??null)==='customer-otp'){$otp=$this->store->get('customerotps',$payload['otpId']);$eligible=$otp&&empty($otp['usedAt'])&&!empty($otp['expiresAt'])&&(float)(new \DateTimeImmutable($otp['expiresAt']))->format('U.u')>microtime(true);}
+                if(in_array($payload['kind']??null,['customer-otp','employee-otp'],true)){$otp=$this->store->get($payload['kind']==='employee-otp'?'employeeotps':'customerotps',$payload['otpId']);$eligible=$otp&&empty($otp['usedAt'])&&!empty($otp['expiresAt'])&&(float)(new \DateTimeImmutable($otp['expiresAt']))->format('U.u')>microtime(true);}
                 $notification=$eligible?($this->send)($payload):['status'=>'failed','error'=>'OTP expired or superseded before delivery.'];
             }
             catch(\Throwable){$notification=['status'=>'unknown','error'=>'Provider acknowledgement could not be confirmed. Check provider logs before any resend.'];}

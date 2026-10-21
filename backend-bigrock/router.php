@@ -26,6 +26,17 @@ final class Router {
         $announcements=new Announcements($store);
         $wallet=new Wallet($store);
         $staff=new Employees($store);
+        $employeeAccounts=new EmployeeAccounts($store);$employeeRecovery=new EmployeeRecovery($store);$employeeAuth=new EmployeeAuth($store,employeeSecret($settings));
+        $this->route('POST','/employee-auth/login','public',fn($p,$q,$b)=>$employeeAuth->employeeLogin($b));
+        foreach(['forgot-password'=>'PASSWORD_RESET','account-setup'=>'ACCOUNT_SETUP','forgot-user-id'=>'USER_ID_RECOVERY']as $prefix=>$purpose){$this->route('POST','/employee-auth/'.$prefix.'/send-otp','public',fn($p,$q,$b)=>$employeeRecovery->send($b,$purpose));$this->route('POST','/employee-auth/'.$prefix.'/verify-otp','public',fn($p,$q,$b)=>$employeeRecovery->verify($b,$purpose));}
+        $this->route('POST','/employee-auth/forgot-password/reset','public',fn($p,$q,$b)=>$employeeRecovery->password($b));
+        $this->route('POST','/employee-auth/account-setup/set-password','public',fn($p,$q,$b)=>$employeeRecovery->password($b,true));
+        $this->route('POST','/employee-auth/change-password','employee',fn($p,$q,$b,$u)=>$employeeAuth->changePassword($u['_id'],$b));
+        $this->route('GET','/employee-portal/dashboard','employee',fn($p,$q,$b,$u)=>$employeeAccounts->dashboard($u,(string)($q['month']??'current')));
+        $this->route('GET','/employee-portal/salary-payments/:id/pdf','employee',fn($p,$q,$b,$u)=>$employeeAccounts->slip($u,$p['id']));
+        $this->route('POST','/employees/:id/login/provision','admin',fn($p,$q,$b,$u)=>$employeeAccounts->ensure($p['id'],$u['_id']));
+        $this->route('PUT','/employees/:id/login','admin',fn($p,$q,$b,$u)=>$employeeAccounts->toggle($p['id'],$b,$u['_id']));
+
         $employeeNotifications=new EmployeeNotifications($store);
         $this->route('GET','/employee-notification-settings','admin',fn()=>success($employeeNotifications->settings()));
         $this->route('PUT','/employee-notification-settings','admin',fn($p,$q,$b,$u)=>$employeeNotifications->update($b,$u['_id']));
@@ -180,6 +191,7 @@ final class Router {
             if($route['method']!==$method||!preg_match($route['regex'],$path,$matches))continue;
             array_shift($matches);$params=array_combine($route['names'],array_map('rawurldecode',$matches))?:[];$user=null;
             if($route['access']==='admin')$user=requireAdmin($this->store,$this->settings,$token??'');
+            if($route['access']==='employee')$user=requireEmployee($this->store,$this->settings,$token??'');
             if($route['access']==='customer')$user=requireCustomer($this->store,true,$this->settings,$token??'');
             if($route['access']==='customer-first-login')$user=requireCustomer($this->store,false,$this->settings,$token??'');
             if(!in_array($method,['GET','HEAD','OPTIONS'],true)&&!in_array($path,['/admin/login','/document-design/preview'],true)&&empty($this->settings['migration']['writesEnabled']))throw new HttpError(503,'Migration staging is read-only. Please use the current service.');
@@ -188,7 +200,7 @@ final class Router {
                 if(!preg_match('/^[A-Za-z0-9._:-]{16,100}$/D',$idempotency))throw new HttpError(400,'Invalid idempotency key.');
                 $scope=$user['_id']??$route['access'];$key=hash('sha256',$scope.'|'.$method.'|'.$path.'|'.$idempotency);
                 // Password/session responses must never be cached in operations.
-                if(str_starts_with($path,'/customer-auth/')||str_starts_with($path,'/admin/')||str_contains($path,'regenerate-password')||str_ends_with($path,'/provision')||$path==='/document-design/preview')return $call();
+                if(str_starts_with($path,'/employee-auth/')||str_starts_with($path,'/customer-auth/')||str_starts_with($path,'/admin/')||str_contains($path,'regenerate-password')||str_ends_with($path,'/provision')||$path==='/document-design/preview')return $call();
                 return $this->store->operation($key,hash('sha256',serialize([$query,$body])),$call);
             }
             return $call();

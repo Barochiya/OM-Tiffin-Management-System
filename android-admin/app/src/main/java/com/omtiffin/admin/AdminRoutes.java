@@ -11,7 +11,7 @@ public final class AdminRoutes {
  }
  public static boolean allowed(String url) {
   if(!trustedOrigin(url))return false;
-  try{String path=new URI(url).getPath();return ROUTES.contains(path) || path.matches("/(customer|edit-customer|view-bills|payment-receipt)/[a-fA-F0-9]{24}");}catch(Exception ignored){return false;}
+  try{String path=new URI(url).getPath();return path.matches("/employee/(login|setup|forgot-password|forgot-id|dashboard|change-password)") || ROUTES.contains(path) || path.matches("/(customer|edit-customer|view-bills|payment-receipt)/[a-fA-F0-9]{24}");}catch(Exception ignored){return false;}
  }
  public static String tab(String path){if(path.startsWith("/customer/")||path.equals("/customers")||path.startsWith("/edit-customer"))return "Customers";if(path.equals("/barcode-entry")||path.equals("/daily-entry"))return "Scan";if(path.equals("/billing")||path.startsWith("/view-bills"))return "Billing";return path.equals("/dashboard")?"Home":"More";}
  private AdminRoutes(){}

@@ -183,6 +183,7 @@ export default function PublicWebsiteLayout() {
                 )}
               </Link>
             )}
+            <Link to="/employee/login" className="inline-flex items-center rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-emerald-800">Employee Login</Link>
             {settings.customerLoginEnabled && (
               <Link
                 to="/customer-login"
@@ -301,6 +302,7 @@ export default function PublicWebsiteLayout() {
                   </span>
                 </Link>
               )}
+              <Link to="/employee/login" onClick={closeMobileMenu} className="mt-3 block rounded-xl border border-slate-200 px-4 py-3.5 font-bold text-emerald-800">Employee Login</Link>
               {settings.customerLoginEnabled && (
                 <Link
                   to="/customer-login"

@@ -179,6 +179,7 @@ One clear workspace.</h2><p>Customers, meals, billing and payments — organised
           </button>
         </form>
 
+        <a href="/login?portal=employee" className="block text-center mt-6 text-sm font-semibold text-emerald-700">Employee Login →</a>
         <div className="text-center mt-8 text-sm text-gray-500">
           © 2026 OM Tiffin Service
         </div>

@@ -51,3 +51,5 @@ check($r->dispatch('GET','/api/wallets',[],[],$admin)[0]===200);
 echo "PASS wallet list is admin-only.\n";
 
 rejected(fn()=>$r->dispatch('GET','/api/employees'),401);rejected(fn()=>$r->dispatch('GET','/api/employees',[],[],$customer),401);rejected(fn()=>$r->dispatch('POST','/api/employees',[],[],$admin),503);echo "PASS employee records are admin-only and staging writes remain blocked.\n";
+
+rejected(fn()=>$r->dispatch('GET','/api/employee-notification-settings'),401);rejected(fn()=>$r->dispatch('GET','/api/employee-notification-settings',[],[],$customer),401);check($r->dispatch('GET','/api/employee-notification-settings',[],[],$admin)[1]['data']['enabled']===true);rejected(fn()=>$r->dispatch('PUT','/api/employee-notification-settings',[],[],$admin),503);echo "PASS employee message settings admin-only, read defaults, staging writes blocked.\n";

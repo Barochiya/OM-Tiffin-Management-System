@@ -26,6 +26,9 @@ final class Router {
         $announcements=new Announcements($store);
         $wallet=new Wallet($store);
         $staff=new Employees($store);
+        $employeeNotifications=new EmployeeNotifications($store);
+        $this->route('GET','/employee-notification-settings','admin',fn()=>success($employeeNotifications->settings()));
+        $this->route('PUT','/employee-notification-settings','admin',fn($p,$q,$b,$u)=>$employeeNotifications->update($b,$u['_id']));
         $this->route('GET','/employees','admin',fn()=>$staff->listing());
         $this->route('POST','/employees','admin',fn($p,$q,$b,$u)=>$staff->save($b,$u['_id']));
         $this->route('GET','/employees/:id','admin',fn($p,$q)=>$staff->detail($p['id'],(string)($q['month']??'current')));

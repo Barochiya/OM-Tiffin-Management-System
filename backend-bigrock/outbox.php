@@ -3,17 +3,28 @@ declare(strict_types=1);
 namespace OMT;
 require_once __DIR__.'/security.php';require_once __DIR__.'/store.php';
 final class OutboxWorker {
-    public function __construct(private readonly Store $store,private readonly array $settings,private readonly \Closure $send){}
+    public function __construct(private readonly Store $store,private readonly array $settings,private readonly \Closure $send,private readonly ?\Closure $employeeReady=null){}
     // Only exact event keys approved for sending may be passed. No catch-all queue drain.
     public function runApproved(array $eventKeys):array {
         if(empty($this->settings['migration']['workersEnabled'])||empty($this->settings['migration']['externalMessagesEnabled']))throw new HttpError(503,'External messages and workers are disabled.');
         if(!$eventKeys||count($eventKeys)>100)throw new \InvalidArgumentException('Provide the exact approved notification event keys');
-        $outcomes=[];
+        $outcomes=[];$employeeTemplateStatuses=[];
         foreach(array_unique($eventKeys)as $key){
             if(!is_string($key)||strlen($key)>191||!preg_match('/^[A-Za-z0-9:._-]+$/D',$key))throw new \InvalidArgumentException('Invalid event key');
             $event=$this->store->transaction(fn()=>$this->store->claimOutbox($key));
             if(!$event){$outcomes[$key]='not-claimed';continue;}
             $payload=$event['payload'];
+            if(($payload['kind']??null)==='employee-notification'){
+                require_once __DIR__.'/employee-notifications.php';$notifier=new EmployeeNotifications($this->store);
+                if(!$notifier->enabled($payload['notificationType'])){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','employeeStatus'=>'cancelled','error'=>'Cancelled: employee messages were turned OFF before sending.']));$outcomes[$key]='cancelled';continue;}
+                try{$template=$payload['templateId'];$ready=$employeeTemplateStatuses[$template]??=($this->employeeReady?($this->employeeReady)($payload):(new WhatsAppTransport($this->settings))->employeeTemplateStatus($payload));}
+                catch(\Throwable){$ready='UNKNOWN';}
+                if($ready!=='APPROVED'){$this->store->transaction(fn()=>$this->store->deferEmployeeOutbox($event,'Waiting for Meta template approval / availability: '.(in_array($ready,['PENDING','REJECTED','PAUSED','DISABLED'],true)?$ready:'UNKNOWN')));$outcomes[$key]='waiting_template';continue;}
+                try{$payload=$notifier->prepare($payload);}
+                catch(\Throwable){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','error'=>'Employee message or salary PDF could not be prepared; no message was sent.']));$outcomes[$key]='failed';continue;}
+                if(!$notifier->enabled($payload['notificationType'])){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','employeeStatus'=>'cancelled','error'=>'Cancelled: employee messages were turned OFF before sending.']));$outcomes[$key]='cancelled';continue;}
+            }
+
             if(($payload['kind']??null)==='receipt-auto'){
                 try{require_once __DIR__.'/catalog.php';require_once __DIR__.'/document-notifications.php';$payload=(new DocumentNotifications($this->store,new Documents($this->store)))->prepareAutomaticReceipt($payload['documentId']);}
                 catch(\Throwable){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','error'=>'Receipt PDF could not be prepared; no message was sent.']));$outcomes[$key]='failed';continue;}
@@ -34,6 +45,13 @@ final class OutboxWorker {
 }
 final class WhatsAppTransport {
     public function __construct(private readonly array $settings){}
+    public function employeeTemplateStatus(array $payload):string {
+        require_once __DIR__.'/employee-notifications.php';$expected=EmployeeNotifications::TEMPLATES[$payload['notificationType']??'']??null;
+        if(!$expected||($payload['templateId']??'')!==$expected['id']||($payload['templateName']??'')!==$expected['name'])return 'UNKNOWN';
+        $token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';$version=$this->settings['WHATSAPP_API_VERSION']??'v26.0';if(!$token||!preg_match('/^v\d+\.\d+$/D',$version)||!function_exists('curl_init'))return 'UNKNOWN';
+        $h=curl_init('https://graph.facebook.com/'.$version.'/'.$expected['id'].'?fields=name,language,status');curl_setopt_array($h,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token]]);$raw=curl_exec($h);$status=(int)curl_getinfo($h,CURLINFO_RESPONSE_CODE);curl_close($h);$data=is_string($raw)?json_decode($raw,true):null;
+        if($status!==200||($data['name']??'')!==$expected['name']||($data['language']??'')!=='en_GB')return 'UNKNOWN';return in_array($data['status']??'',['APPROVED','PENDING','REJECTED','PAUSED','DISABLED'],true)?$data['status']:'UNKNOWN';
+    }
     public function template(array $payload):array {
         $token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';$phoneId=$this->settings['WHATSAPP_PHONE_NUMBER_ID']??'';$version=$this->settings['WHATSAPP_API_VERSION']??'v26.0';
         if(!$token||!preg_match('/^\d+$/D',$phoneId)||!preg_match('/^v\d+\.\d+$/D',$version))throw new \RuntimeException('WhatsApp configuration unavailable');

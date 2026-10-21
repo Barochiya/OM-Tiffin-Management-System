@@ -15,7 +15,7 @@ try {
     $input=fopen('php://input','rb');$raw=stream_get_contents($input,10*1024*1024+1);fclose($input);
     $application=new HttpApplication(new Router($store,$settings),new Webhook($store,$settings),new WhatsApp($store,$settings),!empty($settings['migration']['stagingOriginEnabled']));
     [$status,$responseHeaders,$bytes]=$application->handle($_SERVER['REQUEST_METHOD']??'GET',$_SERVER['REQUEST_URI']??'/',$headers,$raw,$query,$_POST,$files);
-    // Only documents enqueued by this successful authenticated request. Never drain older queue items.
+    // Only notifications enqueued by this successful authenticated request. Never drain older queue items.
     $instant=$status>=200&&$status<300?$store->instantDocumentEvents():[];
     if($instant&&!empty($settings['migration']['workersEnabled'])&&!empty($settings['migration']['externalMessagesEnabled'])){
         register_shutdown_function(static function()use($store,$settings,$instant){

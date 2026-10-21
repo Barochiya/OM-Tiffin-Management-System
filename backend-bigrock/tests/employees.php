@@ -2,13 +2,14 @@
 declare(strict_types=1);
 require dirname(__DIR__).'/router.php';
 final class StaffMemory extends OMT\Store {
- public array $records=[];
+ public array $records=[],$events=[];
  public function __construct(){}
  public function all(string $c):array{return array_values($this->records[$c]??[]);}
  public function get(string $c,string $id):?array{return $this->records[$c][$id]??null;}
  public function put(string $c,array $d,bool $insert=false):array{$d['_id']??=bin2hex(random_bytes(12));$d['createdAt']??=gmdate('c');$this->records[$c][$d['_id']]=$d;return $d;}
+ public function queue(string $key,array $payload):void{$this->events[$key]=['status'=>'pending','payload'=>$payload];}
  public function prepareEmployeeCollections():void{}
- public function transaction(callable $fn):mixed{$before=$this->records;try{return $fn($this);}catch(Throwable $e){$this->records=$before;throw $e;}}
+ public function transaction(callable $fn):mixed{$before=$this->records;$events=$this->events;try{return $fn($this);}catch(Throwable $e){$this->records=$before;$this->events=$events;throw $e;}}
 }
 function check(bool $ok):void{if(!$ok)throw new RuntimeException('Employee test assertion failed');}
 function denied(callable $fn,int $status):void{try{$fn();}catch(OMT\HttpError $e){check($e->status===$status);return;}throw new RuntimeException('Expected rejection');}

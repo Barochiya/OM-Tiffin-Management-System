@@ -41,7 +41,7 @@ final class Webhook {
     private function delivery(array $event):void {
         $id=$event['id']??null;$status=$event['status']??null;$ranks=['pending'=>0,'accepted'=>0,'sent'=>1,'delivered'=>2,'read'=>3,'failed'=>0];
         if(!is_string($id)||!in_array($status,['sent','delivered','read','failed'],true))return;$date=$this->date($event['timestamp']??null);$reason=(string)($event['errors'][0]['title']??$event['errors'][0]['message']??'Message failed');
-        foreach(['bills','payments','announcementdeliveries','customerotps','customerloginiddeliveries']as $collection){
+        foreach(['bills','payments','announcementdeliveries','customerotps','customerloginiddeliveries','employeenotifications']as $collection){
             $record=$this->store->first($collection,fn($d)=>(in_array($collection,['bills','payments'],true)?($d['whatsappDelivery']['messageId']??null):($d['whatsappMessageId']??null))===$id);if(!$record)continue;
             $field=match($collection){'bills'=>'status','announcementdeliveries'=>'status',default=>'whatsappStatus'};$current=in_array($collection,['bills','payments'],true)?($record['whatsappDelivery']['status']??'pending'):($record[$field]??'pending');
             if($status!=='failed'&&($ranks[$status]??0)<($ranks[$current]??0))continue;

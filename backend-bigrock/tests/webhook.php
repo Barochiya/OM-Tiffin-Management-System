@@ -19,3 +19,5 @@ $receiptBody=$statusBody;$receiptBody['entry'][0]['changes'][0]['value']['status
 $w->receive($receiptBody);$delivery=$s->get('payments',$receipt['_id'])['whatsappDelivery'];check($delivery['status']==='read'&&$delivery['delivered']===true&&isset($delivery['deliveredAt'],$delivery['readAt']));
 $w->receive($receiptBody);check($s->get('payments',$receipt['_id'])['whatsappDelivery']['status']==='read');
 echo "PASS receipt delivery/read timestamps, monotonic status and duplicate callbacks; no customer sends.\n";
+
+$staff=$s->put('employeenotifications',['whatsappMessageId'=>'synthetic-staff','whatsappStatus'=>'sent'],true);$staffBody=$receiptBody;foreach($staffBody['entry'][0]['changes'][0]['value']['statuses'] as &$status)$status['id']='synthetic-staff';unset($status);$w->receive($staffBody);$n=$s->get('employeenotifications',$staff['_id']);check($n['whatsappStatus']==='read'&&isset($n['deliveredAt'],$n['readAt']));echo "PASS employee message delivery/read callbacks remain monotonic; no employee sends.\n";

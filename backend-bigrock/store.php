@@ -64,7 +64,7 @@ class Store {
     public function prepareEmployeeCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Employee setup requires a business transaction');
         $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
-        foreach(['employees','employeeattendance','employeepayroll','salarypayments','employeeaudit','employeecash']as $name)$q->execute([$name]);
+        foreach(['employees','employeeattendance','employeepayroll','salarypayments','employeeaudit','employeecash','employeesettings','employeenotifications']as $name)$q->execute([$name]);
     }
     public function prepareWalletCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Wallet setup requires a business transaction');
@@ -84,7 +84,7 @@ class Store {
         $q=$this->pdo->prepare('SELECT payload FROM omt_outbox WHERE event_key=?');$q->execute([$eventKey]);$existing=$q->fetchColumn();
         if($existing!==false){if(OutboxCrypto::decode($eventKey,$existing,$this->outboxKey())!=$payload)throw new HttpError(409,'Notification event already exists with different data');return;}
         $q=$this->pdo->prepare('INSERT INTO omt_outbox(event_key,payload,available_at) VALUES(?,?,UTC_TIMESTAMP(3))');$q->execute([$eventKey,OutboxCrypto::encode($eventKey,$payload,$this->outboxKey())]);
-        if(in_array($payload['kind']??null,['document-template','receipt-auto'],true))$this->instantDocumentEvents[]=$eventKey;
+        if(in_array($payload['kind']??null,['document-template','receipt-auto','employee-notification'],true))$this->instantDocumentEvents[]=$eventKey;
     }
     public function claimOutbox(string $eventKey):?array {
         if(!$this->pdo->inTransaction())throw new \LogicException('Outbox claim requires a business transaction');
@@ -94,6 +94,11 @@ class Store {
         if($q->rowCount()!==1)return null;
         $event['payload']=OutboxCrypto::decode($event['event_key'],$event['payload'],$this->outboxKey());return $event;
     }
+    public function deferEmployeeOutbox(array $event,string $reason):void {
+        if(!$this->pdo->inTransaction()||($event['payload']['kind']??null)!=='employee-notification')throw new \LogicException('Only unsent employee events may await template approval');
+        $q=$this->pdo->prepare("UPDATE omt_outbox SET status='pending',available_at=DATE_ADD(UTC_TIMESTAMP(3),INTERVAL 120 SECOND),claimed_at=NULL WHERE id=? AND status='processing'");$q->execute([$event['id']]);if($q->rowCount()!==1)throw new \RuntimeException('Outbox claim no longer active');
+        $record=$this->get('employeenotifications',$event['payload']['notificationId']);if($record){$record['whatsappStatus']='waiting_template';$record['failureReason']=$reason;$this->put('employeenotifications',$record);}
+    }
     public function finishOutbox(array $event,array $notification):void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Outbox completion requires a business transaction');
         $status=$notification['status']??'unknown';
@@ -101,6 +106,12 @@ class Store {
         $q=$this->pdo->prepare("UPDATE omt_outbox SET status=?,provider_id=?,completed_at=UTC_TIMESTAMP(3) WHERE id=? AND status='processing'");$q->execute([$status,$notification['messageId']??null,$event['id']]);
         if($q->rowCount()!==1)throw new \RuntimeException('Outbox claim is no longer active');
         $p=$event['payload'];
+        if(($p['kind']??null)==='employee-notification'){
+            $record=$this->get('employeenotifications',$p['notificationId']);if(!$record)throw new \RuntimeException('Employee notification target missing');
+            $record['whatsappStatus']=$notification['employeeStatus']??($status==='accepted'?'sent':$status);$record['failureReason']=$status==='accepted'?'Message sent to Meta':($notification['error']??'Delivery could not be confirmed');
+            if($status==='accepted'){$record['whatsappMessageId']=$notification['messageId'];$record['sentAt']=gmdate('Y-m-d\TH:i:s.000\Z');}else $record['failedAt']=gmdate('Y-m-d\TH:i:s.000\Z');$this->put('employeenotifications',$record);
+        }
+
           if(in_array($p['kind']??null,['document-template','receipt-auto'],true)&&in_array($p['documentType']??null,['bill','receipt'],true)){
               $collection=$p['documentType']==='bill'?'bills':'payments';$bill=$this->get($collection,$p['documentId']);if(!$bill)throw new \RuntimeException('Bill notification target missing');
               if(($bill['whatsappDelivery']['eventKey']??null)===$event['event_key']){$bill['whatsappDelivery']=array_replace($bill['whatsappDelivery'],['messageId'=>$notification['messageId']??null,'status'=>$status==='accepted'?'sent':($status==='failed'?'failed':'pending'),'reason'=>$status==='accepted'?'Message sent to Meta':($notification['error']??'Provider acknowledgement uncertain')]);$bill['whatsappDelivery'][$status==='accepted'?'sentAt':'failedAt']=gmdate('Y-m-d\TH:i:s.000\Z');$this->put($collection,$bill);}

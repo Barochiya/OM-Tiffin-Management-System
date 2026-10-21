@@ -29,7 +29,7 @@ final class HttpApplication {
             }
             if($raw!==''){
                 $type=strtolower(trim(explode(';',$headers['content-type']??'')[0]));
-                $limit=str_starts_with($path,'/api/document-design')?800*1024:100*1024;
+                $limit=str_starts_with($path,'/api/document-design')?1200*1024:100*1024;
                 if(strlen($raw)>$limit)throw new HttpError(413,'Request body is too large.');
                 if($type==='application/json'){
                     try{$value=json_decode($raw,false,64,JSON_THROW_ON_ERROR);}catch(\JsonException){throw new HttpError(400,'Invalid JSON request.');}

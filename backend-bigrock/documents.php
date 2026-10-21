@@ -26,20 +26,20 @@ final class PdfRenderer {
             if($pdf&&!str_starts_with($bytes,'%PDF-'))throw new HttpError(503,'Invalid document response.');return $bytes;
         }finally{foreach($pipes as $pipe)if(is_resource($pipe))fclose($pipe);if(is_resource($process)){proc_terminate($process);proc_close($process);}if(is_resource($output))fclose($output);if(is_resource($errors))fclose($errors);}
     }
-    public function validate(array $design):array{if($design!==[]&&array_is_list($design))throw new HttpError(400,'Invalid design settings');return json_decode($this->run(['operation'=>'validate-design','design'=>(object)$design],false),true,512,JSON_THROW_ON_ERROR);}
+    public function validate(array $design,string $type='bill'):array{if($design!==[]&&array_is_list($design))throw new HttpError(400,'Invalid design settings');return json_decode($this->run(['operation'=>'validate-design','type'=>$type,'design'=>(object)$design],false),true,512,JSON_THROW_ON_ERROR);}
 }
 final class Documents {
     private const DEFAULTS=['enabled'=>false,'primary'=>'#1d4ed8','text'=>'#0f172a','font'=>'Helvetica','fontSize'=>10,'logoPosition'=>'left','showLogo'=>true,'layout'=>'modern','businessName'=>'OM TIFFIN SERVICE','tagline'=>'Healthy • Fresh • Homemade','contact'=>'+91 70162 97983','footer'=>'Thank you for choosing OM Tiffin Service.','terms'=>'Payment due within 7 days. Meals once delivered cannot be refunded.','showQr'=>true,'signatureImage'=>'','upiId'=>'malaybarochiya-5@oksbi'];
     public function __construct(private readonly Store $store,private readonly PdfRenderer $renderer=new PdfRenderer()){}
-    public function settings():array {$saved=$this->store->first('documentdesigns',fn($d)=>($d['key']??null)==='documents');return success(['bill'=>array_replace(self::DEFAULTS,$saved['bill']??[]),'receipt'=>array_replace(self::DEFAULTS,$saved['receipt']??[]),'revision'=>$saved['revision']??0]);}
+    public function settings():array {$saved=$this->store->first('documentdesigns',fn($d)=>($d['key']??null)==='documents');return success(['bill'=>array_replace(self::DEFAULTS,$saved['bill']??[]),'receipt'=>array_replace(self::DEFAULTS,$saved['receipt']??[]),'salary'=>array_replace(self::DEFAULTS,['primary'=>'#163f35','text'=>'#18372e','showQr'=>false,'footer'=>'Thank you for your contribution to OM Tiffin Service.','terms'=>'This slip records a salary payment. Figures reflect the saved payment-time snapshot.'],$saved['salary']??[]),'revision'=>$saved['revision']??0]);}
     public function update(array $body):array {
-        if(!is_array($body['bill']??null)||!is_array($body['receipt']??null))throw new HttpError(400,'Invalid design settings');
-        $bill=$this->renderer->validate($body['bill']);$receipt=$this->renderer->validate($body['receipt']);$revision=$body['revision']??null;
+        if(!is_array($body['bill']??null)||!is_array($body['receipt']??null)||(array_key_exists('salary',$body)&&!is_array($body['salary'])))throw new HttpError(400,'Invalid design settings');
+        $bill=$this->renderer->validate($body['bill']);$receipt=$this->renderer->validate($body['receipt']);$salary=array_key_exists('salary',$body)?$this->renderer->validate($body['salary'],'salary'):null;$revision=$body['revision']??null;
         if(!is_int($revision)||$revision<0)throw new HttpError(400,'Invalid revision');
-        return $this->store->transaction(function()use($bill,$receipt,$revision){
+        return $this->store->transaction(function()use($bill,$receipt,$salary,$revision){
             $saved=$this->store->first('documentdesigns',fn($d)=>($d['key']??null)==='documents');
             if(($saved===null&&$revision!==0)||($saved!==null&&($revision===0||($saved['revision']??0)!==$revision)))throw new HttpError(409,'Settings changed on another device. Reload before saving.');
-            $this->store->put('documentdesigns',array_replace($saved??[],['key'=>'documents','bill'=>$bill,'receipt'=>$receipt,'revision'=>$revision+1]),$saved===null);return success(['bill'=>$bill,'receipt'=>$receipt,'revision'=>$revision+1]);
+            $this->store->put('documentdesigns',array_replace($saved??[],['key'=>'documents','bill'=>$bill,'receipt'=>$receipt,'salary'=>$salary??($saved['salary']??[]),'revision'=>$revision+1]),$saved===null);return $this->settings();
         });
     }
     public function bill(string $id,?string $customerId=null):array {
@@ -52,7 +52,8 @@ final class Documents {
         return [200,new PdfResponse($this->renderer->run(['type'=>'receipt','data'=>$payment,'customer'=>$customer,'design'=>$this->settings()[1]['data']['receipt']]),'OM-Tiffin-Receipt-'.$id.'.pdf')];
     }
     public function preview(array $body):array {
-        $type=$body['type']??null;if(!in_array($type,['bill','receipt'],true))throw new HttpError(400,'Invalid document type');if(!is_array($body['design']??null))throw new HttpError(400,'Invalid design settings');$design=$this->renderer->validate($body['design']);
+        $type=$body['type']??null;if(!in_array($type,['bill','receipt','salary'],true))throw new HttpError(400,'Invalid document type');if(!is_array($body['design']??null))throw new HttpError(400,'Invalid design settings');$design=$this->renderer->validate($body['design'],$type);
+        if($type==='salary'){$data=['slipNo'=>'DEMO-SALARY-001','month'=>'2026-10','date'=>'2026-11-14','method'=>'Cash','amountPaise'=>3020000,'advanceRecoveredPaise'=>80000,'snapshot'=>['employee'=>['name'=>'Demo Employee','phone'=>'0000000000','joiningDate'=>'2026-10-15'],'payroll'=>['periodStart'=>'2026-10-15','periodEnd'=>'2026-11-14','accruedDays'=>31,'absentShifts'=>0,'grossPaise'=>3100000,'absenceDeductionPaise'=>0,'netPaise'=>3100000,'settings'=>['allowancePaise'=>0,'deductionPaise'=>0]],'paidAfterPaise'=>3100000,'balanceAfterPaise'=>0]];return [200,new PdfResponse($this->renderer->run(['type'=>'salary','data'=>$data,'design'=>array_replace($design,['enabled'=>true])]),'OM-Tiffin-Salary-Preview.pdf')];}
         $customer=['customerName'=>'Demo Customer','phone'=>'0000000000','address'=>'Demo address, Gandhinagar'];$bill=['invoiceNo'=>'PREVIEW-001','month'=>10,'year'=>2026,'cycle'=>'1','totalAmount'=>2400,'paidAmount'=>1200,'pendingAmount'=>1200,'status'=>'Partial','dailyDetails'=>[['date'=>'2026-10-10','breakfastQty'=>0,'lunchQty'=>1,'dinnerQty'=>1,'dailyTotal'=>240]]];$data=$type==='bill'?$bill:['receiptNo'=>'PREVIEW-001','paymentDate'=>'2026-10-10','amount'=>1200,'paymentMethod'=>'UPI','bill'=>$bill,'customer'=>$customer];
         return [200,new PdfResponse($this->renderer->run(['type'=>$type,'data'=>$data,'customer'=>$customer,'design'=>$design]),'OM-Tiffin-Preview.pdf')];
     }

@@ -35,6 +35,10 @@ jobs:
           npm run build --prefix frontend
           node frontend/scripts/verify-seo.cjs
           node deployment/build-release.cjs
+      - name: Verify document designs and salary signatures
+        env:
+          DESIGN_TEST_OUTPUT: ${{ runner.temp }}/omtiffin-design-tests
+        run: node backend/tests/document-design.test.cjs
       - name: Publish code-only release
         env:
           GH_TOKEN: ${{ github.token }}

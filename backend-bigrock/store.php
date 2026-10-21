@@ -64,7 +64,7 @@ class Store {
     public function prepareEmployeeCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Employee setup requires a business transaction');
         $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
-        foreach(['employees','employeeattendance','employeepayroll','salarypayments','employeeaudit']as $name)$q->execute([$name]);
+        foreach(['employees','employeeattendance','employeepayroll','salarypayments','employeeaudit','employeecash']as $name)$q->execute([$name]);
     }
     public function prepareWalletCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Wallet setup requires a business transaction');

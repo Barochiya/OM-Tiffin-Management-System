@@ -33,6 +33,7 @@ final class Router {
         $this->route('PUT','/employees/:id/attendance','admin',fn($p,$q,$b,$u)=>$staff->mark($p['id'],$b,$u['_id']));
         $this->route('PUT','/employees/:id/payroll','admin',fn($p,$q,$b,$u)=>$staff->adjustments($p['id'],$b,$u['_id']));
         $this->route('POST','/employees/:id/salary-payments','admin',fn($p,$q,$b,$u)=>$staff->payment($p['id'],$b,$u['_id']));
+        $this->route('POST','/employees/:id/cash','admin',fn($p,$q,$b,$u)=>$staff->cash($p['id'],$b,$u['_id']));
         $this->route('GET','/employee-salary-payments/:id/pdf','admin',fn($p)=>$staff->slip($p['id']));
         $this->route('GET','/customer-portal/wallet','customer',fn($p,$q,$b,$user)=>$wallet->statement($user['customer'],$q));
         $this->route('GET','/wallets','admin',fn($p,$q)=>$wallet->customers($q));

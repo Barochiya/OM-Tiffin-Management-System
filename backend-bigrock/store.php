@@ -3,6 +3,8 @@ declare(strict_types=1);
 namespace OMT;
 require_once __DIR__.'/outbox-crypto.php';
 class Store {
+    private array $instantDocumentEvents=[];
+    public function instantDocumentEvents():array{return $this->instantDocumentEvents;}
     public function __construct(private readonly \PDO $pdo,private readonly ?string $outboxSecret=null) {}
     private function outboxKey():string {return $this->outboxSecret??(function_exists(__NAMESPACE__.'\\config')?(config()['JWT_SECRET']??''):'');}
     public function all(string $collection): array {
@@ -77,6 +79,7 @@ class Store {
         $q=$this->pdo->prepare('SELECT payload FROM omt_outbox WHERE event_key=?');$q->execute([$eventKey]);$existing=$q->fetchColumn();
         if($existing!==false){if(OutboxCrypto::decode($eventKey,$existing,$this->outboxKey())!=$payload)throw new HttpError(409,'Notification event already exists with different data');return;}
         $q=$this->pdo->prepare('INSERT INTO omt_outbox(event_key,payload,available_at) VALUES(?,?,UTC_TIMESTAMP(3))');$q->execute([$eventKey,OutboxCrypto::encode($eventKey,$payload,$this->outboxKey())]);
+        if(in_array($payload['kind']??null,['document-template','receipt-auto'],true))$this->instantDocumentEvents[]=$eventKey;
     }
     public function claimOutbox(string $eventKey):?array {
         if(!$this->pdo->inTransaction())throw new \LogicException('Outbox claim requires a business transaction');

@@ -15,6 +15,19 @@ try {
     $input=fopen('php://input','rb');$raw=stream_get_contents($input,10*1024*1024+1);fclose($input);
     $application=new HttpApplication(new Router($store,$settings),new Webhook($store,$settings),new WhatsApp($store,$settings),!empty($settings['migration']['stagingOriginEnabled']));
     [$status,$responseHeaders,$bytes]=$application->handle($_SERVER['REQUEST_METHOD']??'GET',$_SERVER['REQUEST_URI']??'/',$headers,$raw,$query,$_POST,$files);
+    // Only documents enqueued by this successful authenticated request. Never drain older queue items.
+    $instant=$status>=200&&$status<300?$store->instantDocumentEvents():[];
+    if($instant&&!empty($settings['migration']['workersEnabled'])&&!empty($settings['migration']['externalMessagesEnabled'])){
+        register_shutdown_function(static function()use($store,$settings,$instant){
+            ignore_user_abort(true);
+            if(function_exists('fastcgi_finish_request'))fastcgi_finish_request();
+            elseif(function_exists('litespeed_finish_request'))litespeed_finish_request();
+            else {while(ob_get_level()>0)ob_end_flush();flush();}
+            try{require_once __DIR__.'/outbox.php';$transport=new WhatsAppTransport($settings);(new OutboxWorker($store,$settings,fn($payload)=>$transport->template($payload)))->runApproved($instant);}
+            catch(\Throwable){error_log('OM_TIFFIN_INSTANT_DISPATCH_DEFERRED');}
+        });
+        header('Content-Length: '.strlen($bytes));
+    }
     http_response_code($status);foreach($responseHeaders as $key=>$value)header($key.': '.$value);echo $bytes;
 }catch(HttpError $e){http_response_code($e->status);header('Content-Type: application/json');header('Cache-Control: no-store');echo json_encode(['success'=>false,'message'=>$e->getMessage()]);}
 catch(\Throwable){http_response_code(503);header('Content-Type: application/json');header('Cache-Control: no-store');echo '{"success":false,"message":"OM Tiffin API is unavailable."}';}

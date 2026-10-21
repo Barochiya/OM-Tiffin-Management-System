@@ -10,7 +10,7 @@ final class OutboxTestStore extends OMT\Store {
 }
 function check(bool $v):void{if(!$v)throw new RuntimeException('Outbox assertion failed');}
 $s=new OutboxTestStore();foreach(['approved','unapproved','timeout','crash']as $key)$s->events[$key]=['status'=>'pending','payload'=>['synthetic'=>$key]];
-$calls=0;$sender=function($payload)use(&$calls){$calls++;if($payload['synthetic']==='timeout')throw new RuntimeException('Synthetic lost response');return ['status'=>'accepted','messageId'=>'synthetic-provider-id'];};
+$calls=0;$sender=function($payload)use(&$calls){$calls++;if(($payload['synthetic']??null)==='timeout')throw new RuntimeException('Synthetic lost response');return ['status'=>'accepted','messageId'=>'synthetic-provider-id'];};
 $blocked=new OMT\OutboxWorker($s,['migration'=>['workersEnabled'=>false,'externalMessagesEnabled'=>false]],$sender);
 try{$blocked->runApproved(['approved']);throw new RuntimeException('Expected gate');}catch(OMT\HttpError $e){check($e->status===503);}check($calls===0);
 $settings=['migration'=>['workersEnabled'=>true,'externalMessagesEnabled'=>true]];$worker=new OMT\OutboxWorker($s,$settings,$sender);
@@ -27,3 +27,12 @@ $s->events['receipt-render-failure']=['status'=>'pending','payload'=>['kind'=>'r
 check($worker->runApproved(['receipt-render-failure'])['receipt-render-failure']==='failed');check($calls===3);
 check($worker->runApproved(['receipt-render-failure'])['receipt-render-failure']==='not-claimed');check($calls===3);
 echo "PASS receipt rendering failure records failure without calling the provider or resending.\n";
+
+$s->records['tiffins']['demo']=['_id'=>'demo','phone'=>'9999999999'];
+$s->records['customeraccounts']['account']=['customer'=>'demo','userId'=>'OMT-TEST','loginEnabled'=>true];
+$login=['kind'=>'login-id','customerId'=>'demo','accountId'=>'account','userId'=>'OMT-TEST','to'=>'9999999999'];
+$s->events['login-good']=['status'=>'pending','payload'=>$login];$before=$calls;
+check($worker->runApproved(['login-good'])['login-good']==='accepted');check($calls===$before+1);
+unset($s->records['tiffins']['demo']);$s->events['login-deleted']=['status'=>'pending','payload'=>$login];
+check($worker->runApproved(['login-deleted'])['login-deleted']==='failed');check($calls===$before+1);
+echo "PASS customer Login ID recipient/account validation and deleted demo never sends.\n";

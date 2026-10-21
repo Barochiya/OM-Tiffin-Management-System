@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace OMT;
 require_once __DIR__.'/barcodes.php';
+require_once __DIR__.'/customer-login-message.php';
 final class Customers {
     public function __construct(private readonly Store $store){}
     private function pricing(mixed $incoming):array {
@@ -40,8 +41,8 @@ final class Customers {
             $provision=['success'=>false,'created'=>false,'whatsappSent'=>false];
             try{
                 $result=$this->ensureAccount($doc['_id']);$provision['created']=$result['created'];$provision['success']=true;
-                if($create&&$result['created']){$account=$result['account'];$text='Your OM Tiffin Customer User ID: '.$account['userId'].'. Tap the button below to set up your account and create your password.';
-                    $this->store->queue('login-id:'.$account['_id'].':initial',['kind'=>'login-id','customerId'=>$doc['_id'],'accountId'=>$account['_id'],'userId'=>$account['userId'],'customerName'=>$doc['customerName'],'to'=>$doc['phone'],'templateName'=>'om_tiffin_custom_announcement','languageCode'=>'en_GB','components'=>[['type'=>'body','parameters'=>[['type'=>'text','text'=>$doc['customerName']],['type'=>'text','text'=>$text]]]]]);$provision['whatsappQueued']=true;
+                if($create&&$result['created']){
+                    $this->store->queue('login-id:'.$result['account']['_id'].':initial',CustomerLoginMessage::payload($doc,$result['account']));$provision['whatsappQueued']=true;
                 }
             }catch(HttpError){/* Match legacy update: preserve customer when account reconciliation is unavailable. */}
             $response=['success'=>true,'data'=>(new ReadModels($this->store))->hydrate('tiffins',$doc)];if($create)$response['accountProvisioning']=$provision;return [$create?201:200,$response];

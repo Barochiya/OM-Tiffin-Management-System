@@ -22,8 +22,7 @@ final class Accounts {
         return $this->store->transaction(function()use($customer,$body){$account=$this->store->first('customeraccounts',fn($a)=>($a['customer']??null)===$customer);if(!$account)throw new HttpError(404,'Customer account not found');$account['loginEnabled']=$body['enabled'];$account=$this->store->put('customeraccounts',$account);return [200,['success'=>true,'message'=>$body['enabled']?'Customer login enabled':'Customer login disabled','account'=>['id'=>$account['_id'],'customer'=>$account['customer'],'userId'=>$account['userId'],'loginEnabled'=>$account['loginEnabled'],'isFirstLogin'=>$account['isFirstLogin']]]];});
     }
     private function queueLogin(array $customer,array $account,string $key):void {
-        $text='Your OM Tiffin Customer User ID: '.$account['userId'].'. This is your login detail. Please set up your customer account. Please click here to set up your account. Click on button to set up your account.';
-        $this->store->queue($key,['kind'=>'login-id','customerId'=>$customer['_id'],'accountId'=>$account['_id'],'userId'=>$account['userId'],'customerName'=>$customer['customerName']??'Customer','to'=>$customer['phone'],'templateName'=>'om_tiffin_custom_announcement','languageCode'=>'en_GB','components'=>[['type'=>'body','parameters'=>[['type'=>'text','text'=>$customer['customerName']??'Customer'],['type'=>'text','text'=>$text]]]]]);
+        $this->store->queue($key,CustomerLoginMessage::payload($customer,$account));
     }
     public function regenerate(string $customerId):array {
         return $this->store->transaction(function()use($customerId){

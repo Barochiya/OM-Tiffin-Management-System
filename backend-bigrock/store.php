@@ -84,7 +84,7 @@ class Store {
         $q=$this->pdo->prepare('SELECT payload FROM omt_outbox WHERE event_key=?');$q->execute([$eventKey]);$existing=$q->fetchColumn();
         if($existing!==false){if(OutboxCrypto::decode($eventKey,$existing,$this->outboxKey())!=$payload)throw new HttpError(409,'Notification event already exists with different data');return;}
         $q=$this->pdo->prepare('INSERT INTO omt_outbox(event_key,payload,available_at) VALUES(?,?,UTC_TIMESTAMP(3))');$q->execute([$eventKey,OutboxCrypto::encode($eventKey,$payload,$this->outboxKey())]);
-        if(in_array($payload['kind']??null,['document-template','receipt-auto','employee-notification','employee-otp'],true))$this->instantDocumentEvents[]=$eventKey;
+        if(in_array($payload['kind']??null,['document-template','receipt-auto','employee-notification','employee-otp','login-id'],true))$this->instantDocumentEvents[]=$eventKey;
     }
     public function claimOutbox(string $eventKey):?array {
         if(!$this->pdo->inTransaction())throw new \LogicException('Outbox claim requires a business transaction');

@@ -19,11 +19,9 @@ import {
   sendLoginIdsWhatsApp,
 } from "../services/customerLoginIdService";
 const MESSAGE_PREVIEW =
-  "Your OM Tiffin Customer User ID: {USER_ID}. " +
-  "This is your login detail. " +
-  "Please set up your customer account. " +
-  "Please click here to set up your account. " +
-  "Click on button to set up your account.";
+  "Your OM Tiffin Service customer account is ready. Customer Login ID: {USER_ID}. " +
+  "Portal: https://www.omtiffinservices.com/customer-login . " +
+  "First time: select Set up your account and create your own password. Never share your password or OTP.";
 const CustomerLoginIdSender = () => {
   const [customers, setCustomers] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -624,7 +622,7 @@ const CustomerLoginIdSender = () => {
                     WhatsApp Preview
                   </h2>
                   <p className="text-xs text-slate-500">
-                    Uses the existing OM Tiffin template
+                    Uses the approved OM Tiffin service-update template
                   </p>
                 </div>
               </div>

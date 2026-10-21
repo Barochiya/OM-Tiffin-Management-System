@@ -33,7 +33,11 @@ final class OutboxWorker {
             try{
                 $eligible=true;
                 if(in_array($payload['kind']??null,['customer-otp','employee-otp'],true)){$otp=$this->store->get($payload['kind']==='employee-otp'?'employeeotps':'customerotps',$payload['otpId']);$eligible=$otp&&empty($otp['usedAt'])&&!empty($otp['expiresAt'])&&(float)(new \DateTimeImmutable($otp['expiresAt']))->format('U.u')>microtime(true);}
-                $notification=$eligible?($this->send)($payload):['status'=>'failed','error'=>'OTP expired or superseded before delivery.'];
+                if(($payload['kind']??null)==='login-id'){
+                    $customer=$this->store->get('tiffins',$payload['customerId']);$account=$this->store->get('customeraccounts',$payload['accountId']);
+                    $eligible=$customer&&$account&&!empty($account['loginEnabled'])&&($account['customer']??null)===$customer['_id']&&($account['userId']??null)===$payload['userId']&&preg_replace('/\D/','',$customer['phone']??'')===preg_replace('/\D/','',$payload['to']??'');
+                }
+                $notification=$eligible?($this->send)($payload):['status'=>'failed','error'=>'Notification target expired, was removed, or changed before delivery.'];
             }
             catch(\Throwable){$notification=['status'=>'unknown','error'=>'Provider acknowledgement could not be confirmed. Check provider logs before any resend.'];}
             if(!in_array($notification['status']??null,['accepted','failed','unknown'],true))$notification=['status'=>'unknown','error'=>'Provider acknowledgement missing. Check provider logs before resending.'];

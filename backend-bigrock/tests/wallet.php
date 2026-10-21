@@ -80,3 +80,12 @@ $billing->generate(['customer'=>$legacy,'month'=>8,'year'=>2026,'cycle'=>'1']);$
 $current=$w->statement($legacy)[1]['data'];check(count(array_filter($current['history'],fn($t)=>$t['type']==='meal'))===16,'Only legacy billed opening days archived');
 $all=[];$query=['mode'=>'all'];do{$page=$w->statement($legacy,$query)[1]['data'];$all=array_merge($all,$page['history']);$query['before']=$page['nextBefore'];}while($query['before']);check(count($all)===32&&count(array_unique(array_column($all,'_id')))===32,'Opening history pagination loses no rows');
 echo "PASS wallet statement: grouped edits, no-op saves, same-price audit, clear/restore, billing archive, post-bill edits, historical filters, grouped/tied pagination, legacy opening rows, list filters and ledger balance invariants. Synthetic only.\n";
+
+$demoStore=new WalletStore();$customers=new OMT\Customers($demoStore);
+$created=$customers->save(['customerName'=>'Synthetic dinner','phone'=>'9999999999','address'=>'Synthetic test only','mealType'=>'Dinner']);
+$demo=$created[1]['data'];check($created[1]['accountProvisioning']['whatsappQueued']===true,'New customer automatically queues login');
+check(count($demoStore->events)===1,'Only one initial message');$event=array_values($demoStore->events)[0];
+check($event['to']==='9999999999'&&$event['customerId']===$demo['_id'],'Message targets created customer only');
+check($event['templateName']==='om_tiffin_service_update','Approved service update template');
+$customers->save(['customerName'=>'Synthetic edited'],$demo['_id']);check(count($demoStore->events)===1,'Editing never resends initial message');
+check(!str_contains(json_encode($event),'passwordHash'),'No credential hash in notification');

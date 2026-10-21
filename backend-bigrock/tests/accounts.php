@@ -20,3 +20,5 @@ $regenerate=$a->regenerate($id)[1];$updated=$s->all('customeraccounts')[0];check
 foreach($s->events as $event){check(!str_contains(json_encode($event),$regenerate['temporaryPassword']));check(!isset($event['passwordHash']));}
 check($a->recipients()[1]['data'][0]['loginEnabled']===false);check($a->recipients()[1]['readyCount']===1);
 echo "PASS account provisioning, safe fields, strict enable flags, deduplicated selected recipients, password reset preserves identity/login flag, no credentials in notifications, honest queued state. Synthetic records only.\n";
+
+foreach($s->events as $event){check($event['templateName']==='om_tiffin_service_update');check(str_contains($event['components'][0]['parameters'][1]['text'],'https://www.omtiffinservices.com/customer-login'));check(str_contains($event['components'][0]['parameters'][1]['text'],$account['userId']));}

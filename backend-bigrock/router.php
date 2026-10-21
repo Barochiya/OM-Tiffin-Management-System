@@ -28,7 +28,7 @@ final class Router {
         $staff=new Employees($store);
         $this->route('GET','/employees','admin',fn()=>$staff->listing());
         $this->route('POST','/employees','admin',fn($p,$q,$b,$u)=>$staff->save($b,$u['_id']));
-        $this->route('GET','/employees/:id','admin',fn($p,$q)=>$staff->detail($p['id'],(string)($q['month']??gmdate('Y-m'))));
+        $this->route('GET','/employees/:id','admin',fn($p,$q)=>$staff->detail($p['id'],(string)($q['month']??'current')));
         $this->route('PUT','/employees/:id','admin',fn($p,$q,$b,$u)=>$staff->save($b,$u['_id'],$p['id']));
         $this->route('PUT','/employees/:id/attendance','admin',fn($p,$q,$b,$u)=>$staff->mark($p['id'],$b,$u['_id']));
         $this->route('PUT','/employees/:id/payroll','admin',fn($p,$q,$b,$u)=>$staff->adjustments($p['id'],$b,$u['_id']));

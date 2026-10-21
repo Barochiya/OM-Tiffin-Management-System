@@ -35,6 +35,7 @@ final class Router {
         $this->route('GET','/employee-portal/dashboard','employee',fn($p,$q,$b,$u)=>$employeeAccounts->dashboard($u,(string)($q['month']??'current')));
         $this->route('GET','/employee-portal/salary-payments/:id/pdf','employee',fn($p,$q,$b,$u)=>$employeeAccounts->slip($u,$p['id']));
         $this->route('POST','/employees/:id/login/provision','admin',fn($p,$q,$b,$u)=>$employeeAccounts->ensure($p['id'],$u['_id']));
+        $this->route('POST','/employees/:id/login/send','admin',fn($p,$q,$b,$u)=>$employeeAccounts->sendLogin($p['id'],$b,$u['_id']));
         $this->route('PUT','/employees/:id/login','admin',fn($p,$q,$b,$u)=>$employeeAccounts->toggle($p['id'],$b,$u['_id']));
 
         $employeeNotifications=new EmployeeNotifications($store);

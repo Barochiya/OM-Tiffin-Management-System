@@ -31,6 +31,7 @@ const CustomerForgotUserId = lazy(() => import("./pages/CustomerForgotUserId"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const CustomerLoginIdSender = lazy(() => import("./pages/CustomerLoginIdSender"));
 const Customers = lazy(() => import("./pages/CustomerDirectory"));
+const Employees = lazy(() => import('./pages/Employees'));
 const AdminWallets = lazy(() => import("./pages/AdminWallets"));
 const Users = lazy(() => import("./pages/Users"));
 const AddCustomer = lazy(() => import("./pages/AddCustomer"));
@@ -296,6 +297,7 @@ export default function App() {
           }
         />
         <Route path="/receipt-delivery-status" element={<ProtectedRoute><BillDeliveryStatus documentType="receipt" /></ProtectedRoute>} />
+        <Route path="/employees" element={<ProtectedRoute><Employees /></ProtectedRoute>} />
         <Route path="/wallets" element={<ProtectedRoute><AdminWallets /></ProtectedRoute>} />
         <Route
           path="/announcement-delivery-status"

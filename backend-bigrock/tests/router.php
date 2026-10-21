@@ -49,3 +49,5 @@ echo "PASS receipt delivery report is admin-only and never invents historical de
 rejected(fn()=>$r->dispatch('GET','/api/wallets',[],[],$customer),401);
 check($r->dispatch('GET','/api/wallets',[],[],$admin)[0]===200);
 echo "PASS wallet list is admin-only.\n";
+
+rejected(fn()=>$r->dispatch('GET','/api/employees'),401);rejected(fn()=>$r->dispatch('GET','/api/employees',[],[],$customer),401);rejected(fn()=>$r->dispatch('POST','/api/employees',[],[],$admin),503);echo "PASS employee records are admin-only and staging writes remain blocked.\n";

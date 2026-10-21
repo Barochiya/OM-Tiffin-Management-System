@@ -18,12 +18,22 @@ require_once __DIR__.'/announcements.php';
 require_once __DIR__.'/webhook.php';
 require_once __DIR__.'/whatsapp.php';
 require_once __DIR__.'/document-notifications.php';
+require_once __DIR__.'/employees.php';
 final class Router {
     private array $routes=[];
     public function __construct(private readonly Store $store,private readonly array $settings){
         $c=new Catalog($store);$r=new ReadModels($store);$a=new Auth($store,$settings['JWT_SECRET']??'',$settings['CUSTOMER_JWT_SECRET']??'');$billing=new Billing($store);
         $announcements=new Announcements($store);
         $wallet=new Wallet($store);
+        $staff=new Employees($store);
+        $this->route('GET','/employees','admin',fn()=>$staff->listing());
+        $this->route('POST','/employees','admin',fn($p,$q,$b,$u)=>$staff->save($b,$u['_id']));
+        $this->route('GET','/employees/:id','admin',fn($p,$q)=>$staff->detail($p['id'],(string)($q['month']??gmdate('Y-m'))));
+        $this->route('PUT','/employees/:id','admin',fn($p,$q,$b,$u)=>$staff->save($b,$u['_id'],$p['id']));
+        $this->route('PUT','/employees/:id/attendance','admin',fn($p,$q,$b,$u)=>$staff->mark($p['id'],$b,$u['_id']));
+        $this->route('PUT','/employees/:id/payroll','admin',fn($p,$q,$b,$u)=>$staff->adjustments($p['id'],$b,$u['_id']));
+        $this->route('POST','/employees/:id/salary-payments','admin',fn($p,$q,$b,$u)=>$staff->payment($p['id'],$b,$u['_id']));
+        $this->route('GET','/employee-salary-payments/:id/pdf','admin',fn($p)=>$staff->slip($p['id']));
         $this->route('GET','/customer-portal/wallet','customer',fn($p,$q,$b,$user)=>$wallet->statement($user['customer'],$q));
         $this->route('GET','/wallets','admin',fn($p,$q)=>$wallet->customers($q));
         $this->route('GET','/wallets/:id','admin',fn($p,$q)=>$wallet->statement($p['id'],$q));

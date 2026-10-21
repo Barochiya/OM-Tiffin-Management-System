@@ -83,7 +83,7 @@ const closeSidebar = () => {
           to="/customers"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/customers" && !walletsActive
+            location.pathname === "/customers" && !walletsActive && new URLSearchParams(location.search).get("view") !== "employees"
               ? "bg-white text-blue-700 font-semibold shadow"
               : "hover:bg-blue-600"
           }`}
@@ -91,6 +91,7 @@ const closeSidebar = () => {
           <FaUsers className="text-blue-200" />
           Customers
         </Link>
+        <p className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-blue-200">Team &amp; payroll</p><Link to="/customers?view=employees" onClick={closeSidebar} className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-blue-600"><FaUsers />Employee Management</Link>
         <p className="px-4 pt-4 text-xs font-semibold uppercase tracking-wide text-blue-200">Wallets & balances</p>
         <Link to="/customers?view=wallets" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${walletsActive ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaWallet />Customer Wallets</Link>
         <Link

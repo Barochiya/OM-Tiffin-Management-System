@@ -9,10 +9,11 @@ process.stdin.on('end',async()=>{
   const payload=JSON.parse(Buffer.concat(chunks).toString('utf8'));
   const designModule=require('./backend/utils/documentDesign');
   if(payload.operation==='validate-design'){process.stdout.write(JSON.stringify(designModule.validate(payload.design)));return;}
-  if(!['bill','receipt'].includes(payload.type)||!payload.data||typeof payload.data!=='object')throw Error('Invalid PDF payload');
+  if(!['bill','receipt','salary'].includes(payload.type)||!payload.data||typeof payload.data!=='object')throw Error('Invalid PDF payload');
   const design=designModule.validate(payload.design||designModule.defaults());designModule.load=async()=>design;
   let bytes;
-  if(payload.type==='bill')bytes=await require('./backend/utils/billPdfGenerator')(payload.data,payload.customer||payload.data.customer||{});
+  if(payload.type==='salary')bytes=await require('./backend/utils/salarySlipPdf')(payload.data);
+  else if(payload.type==='bill')bytes=await require('./backend/utils/billPdfGenerator')(payload.data,payload.customer||payload.data.customer||{});
   else bytes=await require('./backend/utils/receiptPdfGenerator')({...payload.data,customer:payload.customer||payload.data.customer||{}});
   if(!Buffer.isBuffer(bytes)||!bytes.subarray(0,5).equals(Buffer.from('%PDF-')))throw Error('Invalid PDF result');
   process.stdout.write(bytes);

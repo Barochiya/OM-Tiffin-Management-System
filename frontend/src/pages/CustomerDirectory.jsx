@@ -1,8 +1,10 @@
 import { lazy } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 const Customers = lazy(() => import('./Customers'));
+const Employees = lazy(() => import('./Employees'));
 const Wallets = lazy(() => import('./AdminWallets'));
 export default function CustomerDirectory() {
   const [query] = useSearchParams();
-  return query.get('view') === 'wallets' ? <Wallets /> : <Customers />;
+  if(query.get('view') === 'employees') return <Employees />;
+  return query.get('view') === 'wallets' ? <Wallets /> : <><div className="mb-4 flex justify-end"><Link className="rounded-xl bg-emerald-800 px-4 py-3 font-semibold text-white" to="/customers?view=employees">Employee Management</Link></div><Customers /></>;
 }

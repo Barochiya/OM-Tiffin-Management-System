@@ -83,3 +83,22 @@ foreach([[90,0,'Pending'],[40,50,'Partial'],[0,90,'Paid']] as [$pending,$paid,$e
 }
 check(count($statusStore->all('payments'))===0&&count($statusStore->all('bills'))===1);
 echo "PASS customer payment status: no bill means No dues; actual unpaid/partial/zero balances agree in list and detail without changing financial records.\n";
+
+// Today meal value uses the same saved charge/custom-rate rules as wallet billing.
+$dashStore=new BillingMemoryStore();$dash=new OMT\Dashboard($dashStore);
+$custom=$dashStore->put('tiffins',['customerName'=>'Custom','status'=>'Active','pricing'=>['pricingType'=>'custom','breakfastPrice'=>50,'lunchPrice'=>100,'dinnerPrice'=>80,'extraCharge'=>5]],true);
+$standard=$dashStore->put('tiffins',['customerName'=>'Standard','status'=>'Active'],true);
+$dashStore->put('prices',['breakfast'=>40,'lunch'=>90,'dinner'=>90],true);
+foreach([
+ ['customer'=>$custom['_id'],'date'=>'2026-10-22T00:00:00Z','dinnerQty'=>1,'extraItems'=>[['description'=>'Extra','amount'=>10]]],
+ ['customer'=>$standard['_id'],'date'=>'2026-10-22T00:00:00Z','lunchQty'=>1,'walletBasis'=>['chargePaise'=>12345]],
+ ['customer'=>$standard['_id'],'date'=>'2026-10-22T00:00:00Z','dinnerQty'=>1,'walletBasis'=>['chargePaise'=>0]],
+ ['customer'=>$standard['_id'],'date'=>'2026-10-21T18:45:00Z','breakfastQty'=>1],
+ ['customer'=>$standard['_id'],'date'=>'2026-10-21T00:00:00Z','dinnerQty'=>5],
+ ['customer'=>$standard['_id'],'date'=>'2026-10-23T00:00:00Z','dinnerQty'=>9],
+] as $entry)$dashStore->put('dailyentries',$entry,true);
+$dashStore->put('payments',['customer'=>$standard['_id'],'status'=>'Success','amount'=>99,'paymentDate'=>'2026-10-22T01:00:00Z'],true);
+$metrics=$dash->get([],new DateTimeImmutable('2026-10-22T10:00:00+05:30'))[1];
+check($metrics['todayMeals']===4.0&&$metrics['todayMealAmount']===258.45&&$metrics['growth']['meals']['percent']===-20.0&&$metrics['todayCollection']===99.0);
+check($dash->get([],new DateTimeImmutable('2026-10-24T10:00:00+05:30'))[1]['todayMealAmount']==0);
+echo "PASS dashboard meal value: IST day boundary, custom/default prices, extras, saved charge including zero, day exclusion, unchanged count growth and independent collections.\n";

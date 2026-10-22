@@ -2,6 +2,7 @@
 declare(strict_types=1);
 namespace OMT;
 require_once __DIR__.'/read-models.php';
+require_once __DIR__.'/wallet.php';
 final class Dashboard {
     private const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     public function __construct(private readonly Store $store){}
@@ -35,6 +36,14 @@ final class Dashboard {
         $mealSum=function($start,$end)use($entries){$total=0.0;foreach($entries as $d)if(self::inPeriod($d['date']??null,$start,$end))$total+=(float)($d['breakfastQty']??0)+(float)($d['lunchQty']??0)+(float)($d['dinnerQty']??0);return $total;};
         $revenue=$sum($p['start'],$p['end']);$previous=$p['start']?$sum($p['previousStart'],$p['start']):0.0;
         $today=$sum($p['todayStart'],$p['tomorrow']);$yesterday=$sum($p['yesterday'],$p['todayStart']);$meals=$mealSum($p['todayStart'],$p['tomorrow']);$previousMeals=$mealSum($p['yesterday'],$p['todayStart']);
+        $wallet=new Wallet($this->store);$people=[];foreach($customers as $person)$people[$person['_id']]=$person;$rates=[];$todayMealPaise=0;
+        foreach($entries as $entry){
+            if(!self::inPeriod($entry['date']??null,$p['todayStart'],$p['tomorrow']))continue;
+            if(isset($entry['walletBasis']['chargePaise'])){$todayMealPaise+=(int)$entry['walletBasis']['chargePaise'];continue;}
+            $customer=$entry['customer']??'';$rates[$customer]??=$wallet->rates($people[$customer]??[]);
+            $todayMealPaise+=$wallet->charge($entry,$rates[$customer]);
+        }
+        $todayMealAmount=$todayMealPaise/100;
         $active=count(array_filter($customers,fn($d)=>($d['status']??null)==='Active'));$count=count($customers);
         $pending=array_map(fn($d)=>$r->populate($r->hydrate('bills',$d),'customer','tiffins'),$this->store->find('bills',fn($d)=>(float)($d['pendingAmount']??0)>0&&($d['carriedForward']??false)!==true));
         $recent=array_map(fn($d)=>$r->populate($r->hydrate('payments',$d),'customer','tiffins'),array_slice(sorted($payments,['createdAt'=>-1]),0,5));
@@ -55,6 +64,6 @@ final class Dashboard {
         arsort($top,SORT_NUMERIC);$topCustomers=[];foreach(array_slice($top,0,5,true)as $id=>$total){$item=['_id'=>$id?:null,'totalPaid'=>$total];$customer=$id?$this->store->get('tiffins',$id):null;if($customer)$item['customer']=$customer;$topCustomers[]=$item;}
         $years=array_values(array_unique($years));rsort($years,SORT_NUMERIC);
         $revenueGrowth=$p['start']&&$p['start']>$p['todayStart']?['percent'=>null,'label'=>'Future period']:($p['start']?self::change($revenue,$previous,($p['end']>$p['tomorrow']?'period so far ':'').$p['comparisonLabel']):['percent'=>null,'label'=>'All-time successful collections']);
-        return [200,['success'=>true,'stats'=>['totalCustomers'=>$count,'activeCustomers'=>$active,'totalRevenue'=>$revenue,'totalPending'=>array_sum(array_column($pending,'pendingAmount'))],'period'=>array_intersect_key($p,array_flip(['year','month','label','chartYear'])),'availableYears'=>$years,'growth'=>['revenue'=>$revenueGrowth,'active'=>['percent'=>$count?floor($active/$count*1000+0.5)/10:0,'label'=>'of registered customers','share'=>true],'pending'=>['percent'=>null,'label'=>'Current balance; historical balances unavailable'],'customers'=>['percent'=>null,'label'=>'Registered customers (current total)'],'collection'=>self::change($today,$yesterday,'today so far vs yesterday'),'meals'=>self::change($meals,$previousMeals,'today so far vs yesterday')],'todayCollection'=>$today,'todayMeals'=>$meals,'revenueChart'=>$chart,'recentPayments'=>$recent,'pendingBills'=>$pending,'topCustomers'=>$topCustomers]];
+        return [200,['success'=>true,'stats'=>['totalCustomers'=>$count,'activeCustomers'=>$active,'totalRevenue'=>$revenue,'totalPending'=>array_sum(array_column($pending,'pendingAmount'))],'period'=>array_intersect_key($p,array_flip(['year','month','label','chartYear'])),'availableYears'=>$years,'growth'=>['revenue'=>$revenueGrowth,'active'=>['percent'=>$count?floor($active/$count*1000+0.5)/10:0,'label'=>'of registered customers','share'=>true],'pending'=>['percent'=>null,'label'=>'Current balance; historical balances unavailable'],'customers'=>['percent'=>null,'label'=>'Registered customers (current total)'],'collection'=>self::change($today,$yesterday,'today so far vs yesterday'),'meals'=>self::change($meals,$previousMeals,'today so far vs yesterday')],'todayCollection'=>$today,'todayMeals'=>$meals,'todayMealAmount'=>$todayMealAmount,'revenueChart'=>$chart,'recentPayments'=>$recent,'pendingBills'=>$pending,'topCustomers'=>$topCustomers]];
     }
 }

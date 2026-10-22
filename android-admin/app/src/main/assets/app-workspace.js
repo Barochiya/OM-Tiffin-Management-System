@@ -32,7 +32,7 @@
     <main class="app-home-content">
       <div class="app-section-heading"><h2>Today at a glance</h2><span class="app-live-note" role="status">Loading…</span></div>
       <div class="app-today-grid">
-        <button class="app-metric app-meals" data-path="/daily-entry"><span class="app-metric-icon">${icon('meals')}</span><span class="app-metric-label">Meals recorded</span><strong data-stat="Today's Meals">—</strong><span class="app-metric-footer">Today's entries ${icon('arrow')}</span></button>
+        <button class="app-metric app-meals" data-path="/daily-entry"><span class="app-metric-icon">${icon('meals')}</span><span class="app-metric-label">Meals recorded</span><strong data-stat="Today's Meals">—</strong><span class="app-meal-value" aria-label="Today’s meal value">—</span><span class="app-meal-change">—</span><span class="app-metric-footer">Today's entries ${icon('arrow')}</span></button>
         <button class="app-metric" data-path="/payments"><span class="app-metric-icon">${icon('payment')}</span><span class="app-metric-label">Collected today</span><strong data-stat="Today's Collection">—</strong><span class="app-metric-footer">View payments ${icon('arrow')}</span></button>
       </div>
       <p class="app-data-status" role="status"></p>
@@ -45,7 +45,10 @@
           ['payment', 'Payments', 'Record & review', '/payments'],
           ['bill', 'Billing', 'Create & view bills', '/billing'],
           ['plus', 'Add customer', 'Start a new plan', '/add-customer'],
-          ['message', 'Deliveries', 'Dispatch & confirm', '/meal-deliveries']
+          ['message', 'Deliveries', 'Dispatch & confirm', '/meal-deliveries'],
+          ['payment', 'Wallets', 'Balances & history', '/customers?view=wallets'],
+          ['people', 'Employees', 'Attendance & payroll', '/customers?view=employees'],
+          ['message', 'Review invitations', 'Personal review links', '/customers?view=review-invitations']
         ].map(([glyph, title, detail, path]) => `<button class="app-tool" data-path="${path}"><span class="app-tool-icon app-tool-${glyph}">${icon(glyph)}</span><strong>${title}</strong><small>${detail}</small></button>`).join('')}
       </div>
       <div class="app-section-heading"><h2>Follow up</h2><span>Keep things moving</span></div>
@@ -90,6 +93,17 @@
         if (output.textContent !== value) output.textContent = value;
         if (number) found++;
       });
+      const mealsHeading = main && Array.from(main.querySelectorAll('p')).find(p => p.textContent.trim() === "Today's Meals");
+      const mealsCard = mealsHeading && mealsHeading.parentElement;
+      const amount = mealsCard && mealsCard.querySelector('[data-dashboard-meal-value]');
+      const amountText = amount ? '₹' + Number(amount.dataset.dashboardMealValue).toLocaleString('en-IN', {maximumFractionDigits:2}) : '—';
+      const amountOutput = home.querySelector('.app-meal-value');
+      if (amountOutput.textContent !== amountText) amountOutput.textContent = amountText;
+      const growth = mealsCard && mealsCard.querySelector('[data-dashboard-growth] span');
+      const growthOutput = home.querySelector('.app-meal-change');
+      const growthText = growth ? growth.textContent.trim() : '—';
+      if (growthOutput.textContent !== growthText) growthOutput.textContent = growthText;
+      growthOutput.dataset.tone = growthText.startsWith('↓') ? 'down' : growthText.startsWith('↑') ? 'up' : 'neutral';
       const state = main && main.textContent;
       const failed = state && /Unable to load dashboard|Dashboard Error/.test(state);
       const updating = state && /Updating report/.test(state);

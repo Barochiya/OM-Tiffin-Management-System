@@ -105,3 +105,10 @@ Migration from 0.8.0 and earlier needs one uninstall/reinstall because old EAS
 debug signing keys were disposable. Updates from 0.8.1 use this same signing key
 and a higher versionCode. Android still asks the user to approve installation.
 Reference: https://docs.expo.dev/eas/environment-variables/ (secret file variables).
+
+## Pending0.9.0 feature parity —22October2026
+- Website changes remain shared through the existing live backend: customer No dues, Previous Bill labels, wallet/payroll/review pages, bill/receipt PDFs and instant approved-template sends.
+- Native Home now mirrors today meal count, total value and comparison from rendered website analytics, with no financial calculation/API writes.
+- Native Home and More include Wallets, Employee Management and Review Invitations. Query-based sections retain their full route and select More.
+- Synthetic WebView UI verified at320/390/430widths. Native unit/lint validation runs in public GitHub CI without signing secrets or producing a release APK.
+- Expo latest finished build remains15October2026;0.9.0 release APK remains pending free build quota. No paid plan/build started. Source changes are not an installed APK update.

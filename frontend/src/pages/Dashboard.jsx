@@ -214,7 +214,7 @@ const todayMeals =
   color: "text-orange-600",
   bg: "bg-orange-100",
   icon: <FaUtensils />,
-  subtitle: <>Meals Recorded Today<span className="block mt-2 text-lg font-bold text-orange-600">₹{Number(dashboard?.todayMealAmount ?? 0).toLocaleString("en-IN", {maximumFractionDigits: 2})}<span className="ml-1 text-xs font-normal text-slate-500">Today’s meal value</span></span></>,
+  subtitle: <>Meals Recorded Today<span data-dashboard-meal-value={Number(dashboard?.todayMealAmount ?? 0)} className="block mt-2 text-lg font-bold text-orange-600">₹{Number(dashboard?.todayMealAmount ?? 0).toLocaleString("en-IN", {maximumFractionDigits: 2})}<span className="ml-1 text-xs font-normal text-slate-500">Today’s meal value</span></span></>,
   growth: dashboard?.growth?.meals,
 },
 ];

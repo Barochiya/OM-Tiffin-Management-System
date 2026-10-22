@@ -181,7 +181,7 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
     private void installAppHooks(){
         String script="(function(){if(window.__omNativeInstalled)return;window.__omNativeInstalled=true;document.body.dataset.omNative='true';"
           +"var send=function(data){if(window.OMAdminNative)window.OMAdminNative.postMessage(JSON.stringify(data));};"
-          +"var last='';var nav=function(){var current=location.pathname+'|'+Boolean(sessionStorage.getItem('token'));if(current!==last){last=current;send({type:'navigation',path:location.pathname,authenticated:Boolean(sessionStorage.getItem('token'))});}};"
+          +"var last='';var nav=function(){var current=location.pathname+location.search+'|'+Boolean(sessionStorage.getItem('token'));if(current!==last){last=current;send({type:'navigation',path:location.pathname+location.search,authenticated:Boolean(sessionStorage.getItem('token'))});}};"
           +"['pushState','replaceState'].forEach(function(name){var original=history[name];history[name]=function(){var value=original.apply(this,arguments);nav();return value;};});window.addEventListener('popstate',nav);setInterval(nav,1000);nav();"
           +"window.__omDownloadPdf=async function(url,name){try{var blob=await(await fetch(url)).blob();if(blob.size>16*1024*1024)throw Error('PDF too large');var reader=new FileReader();reader.onload=function(){send({type:'pdf',name:name||'OM-Tiffin.pdf',data:reader.result.split(',')[1]});};reader.readAsDataURL(blob);}catch(error){alert('PDF could not be opened. Please retry.');}};"
           +"document.addEventListener('click',function(event){var anchor=event.target.closest&&event.target.closest('a[download]');if(anchor&&anchor.href.startsWith('blob:')&&window.OMAdminNative){event.preventDefault();window.__omDownloadPdf(anchor.href,anchor.download);}},true);"
@@ -204,7 +204,7 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
         if(locked)return;
         if(!AdminRoutes.allowed(AdminRoutes.ORIGIN+path))return;
         if(!AdminRoutes.trustedOrigin(web.getUrl())){web.loadUrl(AdminRoutes.ORIGIN+path);return;}
-        guardDrafts(()->web.evaluateJavascript("(function(){var path="+JSONObject.quote(path)+";var link=Array.from(document.querySelectorAll('a[href]')).find(function(a){return new URL(a.href).pathname===path;});if(link){link.click();}else{history.pushState({idx:(history.state&&history.state.idx||0)+1,key:String(Date.now()),usr:null},'',path);window.dispatchEvent(new PopStateEvent('popstate',{state:history.state}));}if(path==='/dashboard'&&window.__omWorkspaceHome)window.__omWorkspaceHome("+JSONObject.quote(mode)+");})();",null));
+        guardDrafts(()->web.evaluateJavascript("(function(){var path="+JSONObject.quote(path)+";var link=Array.from(document.querySelectorAll('a[href]')).find(function(a){return new URL(a.href).pathname+new URL(a.href).search===path;});if(link){link.click();}else{history.pushState({idx:(history.state&&history.state.idx||0)+1,key:String(Date.now()),usr:null},'',path);window.dispatchEvent(new PopStateEvent('popstate',{state:history.state}));}if(path==='/dashboard'&&window.__omWorkspaceHome)window.__omWorkspaceHome("+JSONObject.quote(mode)+");})();",null));
     }
     private void guardDrafts(Runnable action){
         if(locked)return;
@@ -229,6 +229,7 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
           {"Customers","Customers","/customers"},{"Customers","Add customer","/add-customer"},
           {"Daily work","Tiffin deliveries","/meal-deliveries"},{"Daily work","Daily entry","/daily-entry"},{"Daily work","Scan a tiffin","/barcode-entry"},{"Daily work","Tiffin requests","/customer-modification-requests"},
           {"Team & payroll","Employee Management","/customers?view=employees"},
+          {"Wallets & balances","Customer wallets","/customers?view=wallets"},
           {"Billing & receipts","Generate bills","/billing"},{"Billing & receipts","View bills","/view-bills"},{"Billing & receipts","Payments","/payments"},{"Billing & receipts","Bill & Receipt Design","/document-design"},
           {"Delivery status","Bill delivery","/bill-delivery-status"},{"Delivery status","Receipt delivery","/receipt-delivery-status"},{"Delivery status","Announcement delivery","/announcement-delivery-status"},
           {"WhatsApp & announcements","WhatsApp inbox","/whatsapp-inbox"},{"WhatsApp & announcements","Payment approvals","/whatsapp-payment-approval"},{"WhatsApp & announcements","Announcements","/announcement"},{"WhatsApp & announcements","Customer login IDs","/customer-login-id-sender"},

@@ -102,3 +102,27 @@ $metrics=$dash->get([],new DateTimeImmutable('2026-10-22T10:00:00+05:30'))[1];
 check($metrics['todayMeals']===4.0&&$metrics['todayMealAmount']===258.45&&$metrics['growth']['meals']['percent']===-20.0&&$metrics['todayCollection']===99.0);
 check($dash->get([],new DateTimeImmutable('2026-10-24T10:00:00+05:30'))[1]['todayMealAmount']==0);
 echo "PASS dashboard meal value: IST day boundary, custom/default prices, extras, saved charge including zero, day exclusion, unchanged count growth and independent collections.\n";
+
+// Revenue belongs to the bill period, with like-for-like previous-month cycles.
+$periodStore=new BillingMemoryStore();$periodDash=new OMT\Dashboard($periodStore);
+foreach([[2026,9,1,100],[2026,9,2,200],[2026,10,1,150],[2026,10,2,450],[2025,12,1,50],[2026,1,1,100]] as [$year,$month,$cycle,$amount]){
+ $bill=$periodStore->put('bills',['year'=>$year,'month'=>$month,'cycle'=>(string)$cycle],true);
+ $periodStore->put('payments',['bill'=>$bill['_id'],'status'=>'Success','amount'=>$amount,'paymentDate'=>'2026-10-22T01:00:00Z'],true);
+}
+$at=new DateTimeImmutable('2026-10-22T10:00:00+05:30');
+$both=$periodDash->get(['year'=>2026,'month'=>10],$at)[1];
+check($both['stats']['totalRevenue']===600.0&&$both['growth']['revenue']['previous']===300.0&&$both['growth']['revenue']['percent']===100.0);
+foreach([[1,150.0,100.0,50.0],[2,450.0,200.0,125.0]] as [$cycle,$total,$previous,$growth]){
+ $result=$periodDash->get(['year'=>2026,'month'=>10,'cycle'=>$cycle],$at)[1];
+ check($result['stats']['totalRevenue']===$total&&$result['growth']['revenue']['previous']===$previous&&$result['growth']['revenue']['percent']===$growth);
+ check($result['revenueChart'][9]['revenue']===$total&&$result['revenueChart'][8]['revenue']===$previous);
+ check($result['todayCollection']===1050.0);
+}
+$jan=$periodDash->get(['year'=>2026,'month'=>1,'cycle'=>1],$at)[1];
+check($jan['growth']['revenue']['previous']===50.0&&$jan['growth']['revenue']['percent']===100.0);
+$periodStore->put('payments',['status'=>'Success','amount'=>77,'paymentDate'=>'2026-10-22T01:00:00Z'],true);
+$periodStore->put('payments',['status'=>'Failed','amount'=>999],true);
+$checked=$periodDash->get(['year'=>2026,'month'=>10],$at)[1];
+check($checked['stats']['totalRevenue']===600.0&&$checked['unassignedPayments']['count']===1&&$checked['unassignedPayments']['amount']===77.0);
+denied(fn()=>$periodDash->get(['year'=>2026,'month'=>10,'cycle'=>3],$at),400);
+echo "PASS bill-period revenue, both/individual cycles, previous-month comparison and January year rollover; receipt date stays independent.\n";

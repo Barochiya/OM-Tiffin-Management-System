@@ -29,6 +29,7 @@ export default function Dashboard() {
 
   const [year, setYear] = useState('all');
   const [month, setMonth] = useState('all');
+  const [cycle, setCycle] = useState('all');
   const requestVersion = useRef(0);
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,7 +45,7 @@ export default function Dashboard() {
       setLoading(true);
 
       const response =
-        await getDashboardAnalytics({ year, month });
+        await getDashboardAnalytics({ year, month, cycle });
       if(version !== requestVersion.current) return;
 
       setDashboard(response);
@@ -63,7 +64,7 @@ export default function Dashboard() {
     } finally {
       if(version === requestVersion.current) setLoading(false);
     }
-  }, [year, month]);
+  }, [year, month, cycle]);
 
   useEffect(() => {
     loadDashboard();
@@ -273,10 +274,12 @@ const todayMeals =
 
 {/* Reporting controls */}
 <section aria-label="Revenue filters" className="mb-6 flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-white p-5">
-  <div className="mr-auto"><h2 className="font-bold text-slate-900">Revenue reporting</h2><p className="mt-1 text-sm text-slate-500">Successful payments · India time · current customer counts and balances</p></div>
+  <div className="mr-auto"><h2 className="font-bold text-slate-900">Revenue reporting</h2><p className="mt-1 text-sm text-slate-500">Successful payments by bill month/year and cycle · Today’s collection stays by payment date</p></div>
   <label className="text-sm font-semibold text-slate-600">Year<select aria-label="Revenue year" className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-2.5" value={year} onChange={event=>{setYear(event.target.value);setMonth('all');}}><option value="all">All time</option>{(dashboard?.availableYears || [new Date().getFullYear()]).map(value=><option key={value} value={value}>{value}</option>)}</select></label>
   <label className="text-sm font-semibold text-slate-600">Month<select aria-label="Revenue month" disabled={year==='all'} className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-2.5 disabled:opacity-50" value={month} onChange={event=>setMonth(event.target.value)}><option value="all">Whole year</option>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((name,index)=><option key={name} value={index+1}>{name}</option>)}</select></label>
+  <label className="text-sm font-semibold text-slate-600">Cycle<select aria-label="Revenue cycle" className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-2.5" value={cycle} onChange={event=>setCycle(event.target.value)}><option value="all">Both cycles</option><option value="1">Cycle 1 (1–15)</option><option value="2">Cycle 2 (16–End)</option></select></label>
   <button type="button" disabled={loading} onClick={loadDashboard} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{loading?'Updating…':'Refresh'}</button>
+  {dashboard?.unassignedPayments?.count > 0 && <p className="w-full text-sm text-amber-700">₹{Number(dashboard.unassignedPayments.amount).toLocaleString("en-IN")} across {dashboard.unassignedPayments.count} payments have no valid bill link and are excluded from bill-period revenue.</p>}
   {error && <p role="alert" className="w-full text-sm text-red-600">{error} Showing the last loaded report.</p>}
   {loading && <p role="status" className="w-full text-sm text-slate-500">Updating report…</p>}
 </section>

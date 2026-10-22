@@ -89,7 +89,7 @@ const closeSidebar = () => {
           to="/customers"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/customers" && !walletsActive && new URLSearchParams(location.search).get("view") !== "employees"
+            location.pathname === "/customers" && !walletsActive && new URLSearchParams(location.search).get("view") !== "employees" && new URLSearchParams(location.search).get("view") !== "review-invitations"
               ? "bg-white text-blue-700 font-semibold shadow"
               : "hover:bg-blue-600"
           }`}
@@ -288,6 +288,10 @@ const closeSidebar = () => {
          Customer Login ID Sender
        </Link>
           </div>
+        </section>
+        <section aria-labelledby="admin-nav-reviews" className="mb-4">
+          <h2 id="admin-nav-reviews" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Customer feedback</h2>
+          <Link to="/customers?view=review-invitations" onClick={closeSidebar} className={`flex items-center gap-3 px-4 py-3 rounded-lg ${new URLSearchParams(location.search).get('view')==='review-invitations'?'bg-white text-blue-700 font-semibold':'hover:bg-blue-600'}`}><FaStar/>Review Invitations</Link>
         </section>
         <section aria-labelledby="admin-nav-8" className="mb-4">
           <h2 id="admin-nav-8" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Website</h2>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import ReviewLanding from "./ReviewLanding";
 import {
   ArrowRight,
   CheckCircle2,
@@ -107,7 +108,7 @@ const faqs = [
   },
 ];
 
-export default function Home() {
+function HomeContent() {
   const [openFaq, setOpenFaq] = useState(null);
   const {
   cartItems,
@@ -750,178 +751,7 @@ export default function Home() {
                 </div>
               )}
 
-              <div className="mx-auto mt-12 max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-                <div>
-                  <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-orange-700">
-                    Share your experience
-                  </p>
-                  <h3 className="mt-2 text-2xl font-black text-slate-900">
-                    Write a Review
-                  </h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Your review will be published after approval by OM Tiffin Service.
-                  </p>
-                </div>
 
-                <form
-                  className="mt-6 space-y-5"
-                  onSubmit={async (event) => {
-                    event.preventDefault();
-                    setReviewError("");
-                    setReviewSuccess("");
-
-                    const customerName = reviewForm.customerName.trim();
-                    const reviewText = reviewForm.reviewText.trim();
-
-                    if (!customerName) {
-                      setReviewError("Please enter your name.");
-                      return;
-                    }
-
-                    if (!reviewText) {
-                      setReviewError("Please write your review.");
-                      return;
-                    }
-
-                    if (reviewForm.rating < 1 || reviewForm.rating > 5) {
-                      setReviewError("Please select a rating from 1 to 5 stars.");
-                      return;
-                    }
-
-                    try {
-                      setReviewSubmitting(true);
-
-                      const response = await createPublicReview({
-                        customerName,
-                        rating: reviewForm.rating,
-                        reviewText,
-                      });
-
-                      if (!response?.success) {
-                        throw new Error(response?.message || "Unable to submit your review.");
-                      }
-
-                      setReviewForm({
-                        customerName: "",
-                        rating: 0,
-                        reviewText: "",
-                      });
-
-                      setReviewSuccess(
-                        "Thank you! Your review has been submitted and is waiting for approval."
-                      );
-                    } catch (error) {
-                      console.error("Public Review Submission Error:", error);
-                      setReviewError(
-                        error?.response?.data?.message ||
-                          error?.message ||
-                          "Unable to submit your review. Please try again."
-                      );
-                    } finally {
-                      setReviewSubmitting(false);
-                    }
-                  }}
-                >
-                  <div>
-                    <label
-                      htmlFor="review-customer-name"
-                      className="mb-2 block text-sm font-bold text-slate-800"
-                    >
-                      Your Name
-                    </label>
-                    <input
-                      id="review-customer-name"
-                      type="text"
-                      maxLength={100}
-                      value={reviewForm.customerName}
-                      onChange={(event) =>
-                        setReviewForm((current) => ({
-                          ...current,
-                          customerName: event.target.value,
-                        }))
-                      }
-                      placeholder="Enter your name"
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      disabled={reviewSubmitting}
-                    />
-                  </div>
-
-                  <div>
-                    <span className="mb-2 block text-sm font-bold text-slate-800">
-                      Your Rating
-                    </span>
-                    <div className="flex items-center gap-2">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() =>
-                            setReviewForm((current) => ({
-                              ...current,
-                              rating: star,
-                            }))
-                          }
-                          disabled={reviewSubmitting}
-                          aria-label={`Rate ${star} out of 5 stars`}
-                          className="rounded-lg p-1 text-orange-700 transition hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          <Star
-                            size={28}
-                            className={star <= reviewForm.rating ? "fill-current" : "text-slate-300"}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="review-text"
-                      className="mb-2 block text-sm font-bold text-slate-800"
-                    >
-                      Your Review
-                    </label>
-                    <textarea
-                      id="review-text"
-                      rows={5}
-                      maxLength={1000}
-                      value={reviewForm.reviewText}
-                      onChange={(event) =>
-                        setReviewForm((current) => ({
-                          ...current,
-                          reviewText: event.target.value,
-                        }))
-                      }
-                      placeholder="Tell us about your experience..."
-                      className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      disabled={reviewSubmitting}
-                    />
-                    <p className="mt-1 text-right text-xs text-slate-600">
-                      {reviewForm.reviewText.length}/1000
-                    </p>
-                  </div>
-
-                  {reviewError && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                      {reviewError}
-                    </div>
-                  )}
-
-                  {reviewSuccess && (
-                    <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
-                      {reviewSuccess}
-                    </div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={reviewSubmitting}
-                    className="inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-5 py-3 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {reviewSubmitting ? "Submitting..." : "Submit Review"}
-                  </button>
-                </form>
-              </div>
             </div>
           </section>
         )}
@@ -1101,3 +931,5 @@ export default function Home() {
 
 
 
+
+export default function Home(){const [query]=useSearchParams();const token=query.get("review");return token!==null?<ReviewLanding token={token}/>:<HomeContent/>;}

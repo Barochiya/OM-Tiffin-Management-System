@@ -50,14 +50,16 @@ final class Catalog {
             return success($this->store->put('websitemenus',$doc,$id===null),$id?'Menu item updated successfully.':'Menu item created successfully.',$id?200:201);
         });
     }
-    public function reviews(bool $public):array{return success(sorted($this->store->find('websitereviews',fn($r)=>!$public||$r['status']==='Approved'),['createdAt'=>-1]));}
+    public function reviews(bool $public):array{$rows=sorted($this->store->find('websitereviews',fn($r)=>!$public||$r['status']==='Approved'),['createdAt'=>-1]);return success($public?array_map(fn($r)=>array_intersect_key($r,array_flip(['_id','customerName','rating','reviewText','createdAt'])),$rows):$rows);}
     public function saveReview(array $body,?string $id=null):array {
         return $this->store->transaction(function()use($body,$id){
             $doc=$id?$this->store->get('websitereviews',$id):['status'=>'Pending'];if(!$doc)throw new HttpError(404,'Review not found.');
             foreach(['customerName'=>100,'reviewText'=>1000]as $key=>$limit){if(!$id||array_key_exists($key,$body)){$value=trim((string)($body[$key]??''));if($value===''||mb_strlen($value)>$limit)throw new HttpError(400,$key==='customerName'?'Customer name must be between 1 and 100 characters.':'Review must be between 1 and 1000 characters.');$doc[$key]=$value;}}
             if(!$id||array_key_exists('rating',$body)){$rating=filter_var($body['rating']??null,FILTER_VALIDATE_INT);if($rating===false||$rating<1||$rating>5)throw new HttpError(400,'Rating must be a whole number between 1 and 5.');$doc['rating']=$rating;}
             if($id&&isset($body['status'])){if(!in_array($body['status'],['Pending','Approved','Rejected'],true))throw new HttpError(400,'Invalid review status.');$doc['status']=$body['status'];}
-            return success($this->store->put('websitereviews',$doc,$id===null),$id?'Review updated successfully.':'Thank you for your review. It has been submitted for approval.',$id?200:201);
+            $doc=$this->store->put('websitereviews',$doc,$id===null);
+            if($id&&($body['status']??'')==='Approved'){require_once __DIR__.'/review-invitations.php';(new ReviewInvitations($this->store,[]))->thankYou($doc);}
+            return success($doc,$id?'Review updated successfully.':'Thank you for your review. It has been submitted for approval.',$id?200:201);
         });
     }
     public function orders(?string $phone=null):array {

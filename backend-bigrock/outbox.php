@@ -25,6 +25,15 @@ final class OutboxWorker {
                 if(!$notifier->enabled($payload['notificationType'])){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','employeeStatus'=>'cancelled','error'=>'Cancelled: employee messages were turned OFF before sending.']));$outcomes[$key]='cancelled';continue;}
             }
 
+            if(($payload['kind']??null)==='review-thank-you'){
+                require_once __DIR__.'/review-invitations.php';$reviews=new ReviewInvitations($this->store,$this->settings);
+                if(!$reviews->eligibleThanks($payload)){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','error'=>'Review approval or recipient changed. No thank-you sent.']));$outcomes[$key]='cancelled';continue;}
+                if($reviews->status(true)!=='APPROVED'){$this->store->transaction(fn()=>$this->store->deferReviewOutbox($event));$outcomes[$key]='waiting_template';continue;}
+            }
+            if(($payload['kind']??null)==='review-invitation'){
+                require_once __DIR__.'/review-invitations.php';$reviews=new ReviewInvitations($this->store,$this->settings);
+                if(!$reviews->eligible($payload)||$reviews->status()!=='APPROVED'){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','error'=>'Review received, recipient changed, or review template unavailable. No invitation sent.']));$outcomes[$key]='cancelled';continue;}
+            }
             if(($payload['kind']??null)==='receipt-auto'){
                 try{require_once __DIR__.'/catalog.php';require_once __DIR__.'/document-notifications.php';$payload=(new DocumentNotifications($this->store,new Documents($this->store)))->prepareAutomaticReceipt($payload['documentId']);}
                 catch(\Throwable){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','error'=>'Receipt PDF could not be prepared; no message was sent.']));$outcomes[$key]='failed';continue;}

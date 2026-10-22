@@ -232,6 +232,7 @@ public class MainActivity extends androidx.fragment.app.FragmentActivity {
           {"Billing & receipts","Generate bills","/billing"},{"Billing & receipts","View bills","/view-bills"},{"Billing & receipts","Payments","/payments"},{"Billing & receipts","Bill & Receipt Design","/document-design"},
           {"Delivery status","Bill delivery","/bill-delivery-status"},{"Delivery status","Receipt delivery","/receipt-delivery-status"},{"Delivery status","Announcement delivery","/announcement-delivery-status"},
           {"WhatsApp & announcements","WhatsApp inbox","/whatsapp-inbox"},{"WhatsApp & announcements","Payment approvals","/whatsapp-payment-approval"},{"WhatsApp & announcements","Announcements","/announcement"},{"WhatsApp & announcements","Customer login IDs","/customer-login-id-sender"},
+          {"Customer feedback","Review invitations","/customers?view=review-invitations"},
           {"Reports","Revenue reports","/dashboard"},
           {"Website","Website orders","/website-orders"},{"Website","Website menu","/website-menu"},{"Website","Website reviews","/website-reviews"},{"Website","Website settings","/website-settings"},
           {"Administration & settings","Price settings","/price-settings"},{"Administration & settings","Users","/users"},{"Administration & settings","Tiffin request settings","/customer-modification-settings"},{"Administration & settings","Business information","/business-info"}

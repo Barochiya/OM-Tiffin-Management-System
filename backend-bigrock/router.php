@@ -19,11 +19,20 @@ require_once __DIR__.'/webhook.php';
 require_once __DIR__.'/whatsapp.php';
 require_once __DIR__.'/document-notifications.php';
 require_once __DIR__.'/employees.php';
+require_once __DIR__.'/review-invitations.php';
 final class Router {
     private array $routes=[];
     public function __construct(private readonly Store $store,private readonly array $settings){
         $c=new Catalog($store);$r=new ReadModels($store);$a=new Auth($store,$settings['JWT_SECRET']??'',$settings['CUSTOMER_JWT_SECRET']??'');$billing=new Billing($store);
         $announcements=new Announcements($store);
+        $reviews=new ReviewInvitations($store,$settings);
+        $this->route('GET','/review-invitations','admin',fn()=>$reviews->listing());
+        $this->route('GET','/review-invitations/template','admin',fn()=>$reviews->templateStatus());
+        $this->route('POST','/review-invitations/send','admin',fn($p,$q,$b)=>$reviews->send($b));
+        $this->route('POST','/review-invitations/:id/link','admin',fn($p)=>$reviews->link($p['id']));
+        $this->route('POST','/review-invitations/:id/received','admin',fn($p,$q,$b)=>$reviews->mark($p['id'],$b));
+        $this->route('GET','/review-invitations/public/:token','public',fn($p)=>$reviews->publicView($p['token']));
+        $this->route('POST','/review-invitations/public/submit','public',fn($p,$q,$b)=>$reviews->submit($b));
         $wallet=new Wallet($store);
         $staff=new Employees($store);
         $employeeAccounts=new EmployeeAccounts($store);$employeeRecovery=new EmployeeRecovery($store);$employeeAuth=new EmployeeAuth($store,employeeSecret($settings));
@@ -142,7 +151,7 @@ final class Router {
         $this->route('PUT','/website-menu/:id','admin',fn($p,$q,$b)=>$c->saveMenu($b,$p['id']));
         $this->route('DELETE','/website-menu/:id','admin',fn($p)=>$c->remove('websitemenus',$p['id'],'Menu item'));
         $this->route('GET','/website-reviews/public','public',fn()=>$c->reviews(true));
-        $this->route('POST','/website-reviews/public','public',fn($p,$q,$b)=>$c->saveReview($b));
+        $this->route('POST','/website-reviews/public','public',fn()=>throw new HttpError(403,'A personal review invitation link is required.'));
         $this->route('GET','/website-reviews','admin',fn()=>$c->reviews(false));
         $this->route('PUT','/website-reviews/:id','admin',fn($p,$q,$b)=>$c->saveReview($b,$p['id']));
         $this->route('DELETE','/website-reviews/:id','admin',fn($p)=>$c->remove('websitereviews',$p['id'],'Review'));

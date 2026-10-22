@@ -66,6 +66,15 @@ class Store {
         $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
         foreach(['employees','employeeattendance','employeepayroll','salarypayments','employeeaudit','employeecash','employeesettings','employeenotifications','employeeaccounts','employeeotps','employeefirstloginlogs']as $name)$q->execute([$name]);
     }
+    public function prepareReviewCollections():void {
+        if(!$this->pdo->inTransaction())throw new \LogicException('Review setup requires a transaction');
+        $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
+        foreach(['reviewinvitations','reviewinvitationdeliveries','reviewthankyoudeliveries']as $name)$q->execute([$name]);
+    }
+    public function deferReviewOutbox(array $event):void {
+        if(!$this->pdo->inTransaction())throw new \LogicException('Transaction required');
+        $q=$this->pdo->prepare("UPDATE omt_outbox SET status='pending',available_at=DATE_ADD(UTC_TIMESTAMP(3),INTERVAL 120 SECOND),claimed_at=NULL WHERE id=? AND status='processing'");$q->execute([$event['id']]);
+    }
     public function prepareWalletCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Wallet setup requires a business transaction');
         $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
@@ -84,7 +93,7 @@ class Store {
         $q=$this->pdo->prepare('SELECT payload FROM omt_outbox WHERE event_key=?');$q->execute([$eventKey]);$existing=$q->fetchColumn();
         if($existing!==false){if(OutboxCrypto::decode($eventKey,$existing,$this->outboxKey())!=$payload)throw new HttpError(409,'Notification event already exists with different data');return;}
         $q=$this->pdo->prepare('INSERT INTO omt_outbox(event_key,payload,available_at) VALUES(?,?,UTC_TIMESTAMP(3))');$q->execute([$eventKey,OutboxCrypto::encode($eventKey,$payload,$this->outboxKey())]);
-        if(in_array($payload['kind']??null,['document-template','receipt-auto','employee-notification','employee-otp','customer-otp','login-id'],true))$this->instantDocumentEvents[]=$eventKey;
+        if(in_array($payload['kind']??null,['document-template','receipt-auto','employee-notification','employee-otp','customer-otp','login-id','review-invitation','review-thank-you'],true))$this->instantDocumentEvents[]=$eventKey;
     }
     public function claimOutbox(string $eventKey):?array {
         if(!$this->pdo->inTransaction())throw new \LogicException('Outbox claim requires a business transaction');
@@ -127,6 +136,9 @@ class Store {
               if($status!=='accepted')$record['failureReason']=$notification['error']??'Provider acknowledgement uncertain; check before resending.';
               $this->put('announcementdeliveries',$record);
           }
+        if(in_array($p['kind']??null,['review-invitation','review-thank-you'],true)){
+            $collection=$p['kind']==='review-thank-you'?'reviewthankyoudeliveries':'reviewinvitationdeliveries';$r=$this->get($collection,$p['documentId']);if($r){$r['whatsappStatus']=$status==='accepted'?'sent':$status;$r['failureReason']=$notification['error']??'';if($status==='accepted'){$r['whatsappMessageId']=$notification['messageId'];$r['sentAt']=gmdate('c');}$this->put($collection,$r);}
+        }
         if(($p['kind']??null)==='meal-delivery'){
             if(($p['collection']??null)!=='mealdeliveries'||!in_array($p['notificationField']??null,['dispatchNotification','notification'],true))throw new \LogicException('Invalid delivery notification target');
             $record=$this->get('mealdeliveries',$p['documentId']);

@@ -69,3 +69,17 @@ foreach([false,true]as $pendingOnly){$options=$picker->billsForPayment($id,$pend
 denied(fn()=>$pickerBilling->addPayment(['customer'=>$id,'bill'=>$old,'amount'=>50,'paymentMethod'=>'Cash']),409);
 check(count($pickerStore->all('bills'))===2&&count($pickerStore->all('payments'))===0);
 echo "PASS payment selection: 50 carried plus 900 current exposes only 950 current invoice; superseded invoice payment rejected and history retained.\n";
+// Customer list/detail must not invent an outstanding payment before any bill exists.
+$statusStore=new BillingMemoryStore();$statusRead=new OMT\ReadModels($statusStore);
+$newCustomer=$statusStore->put('tiffins',['customerName'=>'Synthetic new customer','status'=>'Active'],true);$newId=$newCustomer['_id'];
+check($statusRead->customers([])[1]['data'][0]['paymentStatus']==='No dues');
+check($statusRead->customer($newId)[1]['data']['paymentStatus']==='No dues');
+check($statusRead->customer($newId)[1]['data']['pendingAmount']===0);
+$statusBill=$statusStore->put('bills',['customer'=>$newId,'totalAmount'=>90,'pendingAmount'=>90,'paidAmount'=>0,'status'=>'Pending'],true);
+foreach([[90,0,'Pending'],[40,50,'Partial'],[0,90,'Paid']] as [$pending,$paid,$expected]){
+ $statusBill['pendingAmount']=$pending;$statusBill['paidAmount']=$paid;$statusBill['status']='Pending';$statusStore->put('bills',$statusBill);
+ check($statusRead->customers([])[1]['data'][0]['paymentStatus']===$expected);
+ check($statusRead->customer($newId)[1]['data']['paymentStatus']===$expected);
+}
+check(count($statusStore->all('payments'))===0&&count($statusStore->all('bills'))===1);
+echo "PASS customer payment status: no bill means No dues; actual unpaid/partial/zero balances agree in list and detail without changing financial records.\n";

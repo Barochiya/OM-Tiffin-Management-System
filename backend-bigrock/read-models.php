@@ -16,6 +16,11 @@ final class ReadModels {
         return $doc;
     }
     public function latestBill(string $customer):?array{$bill=sorted($this->store->find('bills',fn($b)=>$b['customer']===$customer),['createdAt'=>-1])[0]??null;return $bill?$this->hydrate('bills',$bill):null;}
+    private function customerPaymentStatus(?array $bill):string {
+        if($bill===null)return 'No dues';
+        if((float)($bill['pendingAmount']??0)<=0)return 'Paid';
+        return (float)($bill['paidAmount']??0)>0?'Partial':'Pending';
+    }
     public function customers(array $query):array {
         $page=max(1,(int)($query['page']??1));$limit=max(1,(int)($query['limit']??5));
         $search=(string)($query['search']??'');$status=$query['status']??null;
@@ -26,7 +31,7 @@ final class ReadModels {
         });
         $total=count($items);$sort=(string)($query['sort']??'createdAt');$direction=str_starts_with($sort,'-')?-1:1;$sort=ltrim($sort,'-');
         $items=array_slice(sorted($items,[$sort=>$direction]),($page-1)*$limit,$limit);
-        $items=array_map(function($d){$d=$this->hydrate('tiffins',$d);$bill=$this->latestBill($d['_id']);return [...$d,'latestBill'=>$bill,'price'=>$bill['totalAmount']??0,'paymentStatus'=>$bill['status']??'Pending','pendingAmount'=>$bill['pendingAmount']??0];},$items);
+        $items=array_map(function($d){$d=$this->hydrate('tiffins',$d);$bill=$this->latestBill($d['_id']);return [...$d,'latestBill'=>$bill,'price'=>$bill['totalAmount']??0,'paymentStatus'=>$this->customerPaymentStatus($bill),'pendingAmount'=>$bill['pendingAmount']??0];},$items);
         return [200,['success'=>true,'page'=>$page,'totalPages'=>(int)ceil($total/$limit),'totalCustomers'=>$total,'count'=>count($items),'data'=>$items]];
     }
     public function customer(string $id):array {
@@ -36,7 +41,7 @@ final class ReadModels {
             $doc['pricing']=['pricingType'=>'default','breakfastPrice'=>$p['breakfast']??40,'lunchPrice'=>$p['lunch']??90,'dinnerPrice'=>$p['dinner']??90,'extraCharge'=>0,'extraReason'=>'','discountType'=>'fixed','discount'=>0];
         }
         $bill=$this->latestBill($id);$doc['latestBill']=$bill;
-        $doc['price']=$bill['totalAmount']??($doc['price']??0);$doc['paymentStatus']=$bill['status']??'Pending';$doc['pendingAmount']=$bill['pendingAmount']??0;
+        $doc['price']=$bill['totalAmount']??($doc['price']??0);$doc['paymentStatus']=$this->customerPaymentStatus($bill);$doc['pendingAmount']=$bill['pendingAmount']??0;
         return success($doc);
     }
     public function customerStats():array {

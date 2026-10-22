@@ -459,12 +459,12 @@ How can we help you today?`;
                       <td className="px-2 py-4">
                         <span
                           className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                            customer.paymentStatus === "Paid"
+                            Number(customer.pendingAmount || 0) <= 0
                               ? "bg-green-100 text-green-700"
                               : "bg-red-100 text-red-700"
                           }`}
                         >
-                          {customer.paymentStatus || "Pending"}
+                          {customer.paymentStatus || (Number(customer.pendingAmount || 0) > 0 ? "Pending" : "No dues")}
                         </span>
                       </td>
                       <td className="px-2 py-4">
@@ -499,7 +499,7 @@ How can we help you today?`;
                             title="Mark Payment Paid"
                             disabled={
                               payingId === customer._id ||
-                              customer.paymentStatus === "Paid"
+                              Number(customer.pendingAmount || 0) <= 0
                             }
                             onClick={() =>
                               handlePayment(
@@ -508,7 +508,7 @@ How can we help you today?`;
                               )
                             }
                             className={`p-2 rounded-lg ${
-                              customer.paymentStatus === "Paid"
+                              Number(customer.pendingAmount || 0) <= 0
                                 ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                                 : "bg-green-100 hover:bg-green-200 text-green-700"
                             }`}
@@ -623,12 +623,12 @@ How can we help you today?`;
                       </p>
                       <span
                         className={`inline-flex mt-1 px-2.5 py-1 rounded-full text-xs font-bold ${
-                          customer.paymentStatus === "Paid"
+                          Number(customer.pendingAmount || 0) <= 0
                             ? "bg-green-100 text-green-700"
                             : "bg-red-100 text-red-700"
                         }`}
                       >
-                        {customer.paymentStatus || "Pending"}
+                        {customer.paymentStatus || (Number(customer.pendingAmount || 0) > 0 ? "Pending" : "No dues")}
                       </span>
                     </div>
                     <div className="rounded-xl bg-blue-50 p-3">
@@ -661,7 +661,7 @@ How can we help you today?`;
                       title="Mark Payment Paid"
                       disabled={
                         payingId === customer._id ||
-                        customer.paymentStatus === "Paid"
+                        Number(customer.pendingAmount || 0) <= 0
                       }
                       onClick={() =>
                         handlePayment(
@@ -670,7 +670,7 @@ How can we help you today?`;
                         )
                       }
                       className={`flex items-center justify-center py-3 rounded-xl ${
-                        customer.paymentStatus === "Paid"
+                        Number(customer.pendingAmount || 0) <= 0
                           ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                           : "bg-green-100 hover:bg-green-200 text-green-700"
                       }`}

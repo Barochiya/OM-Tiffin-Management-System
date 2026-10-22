@@ -62,3 +62,8 @@
  input:not([type="checkbox"]):not([type="radio"]),select,textarea{font-size:16px!important}
  img,video,canvas{max-width:100%}
 }
+
+/* Explicit contrast overrides shared table heading styles. */
+.daily-entry-table thead th,.daily-entry-table thead th svg,.daily-entry-table thead th span{color:#fff!important}
+.daily-entry-table thead th{font-size:14px;line-height:1.5;vertical-align:middle}
+.daily-entry-table thead th svg{margin-bottom:4px}

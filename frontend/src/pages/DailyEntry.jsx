@@ -1,3 +1,4 @@
+import { getPrices } from "../services/customerService";
 import { Link } from "react-router-dom";
 import { notify } from "../services/notifications";
 import { getBusinessDate } from "../utils/businessDate";
@@ -23,6 +24,22 @@ import {
 } from "../services/dailyEntryService";
 
 export default function DailyEntry() {
+  const dayTotal = (customer) => {
+    const entry = entries[customer._id] || {};
+    if (!dirtyRows[customer._id] && entry.walletBasis?.chargePaise != null) return Number(entry.walletBasis.chargePaise) / 100;
+    const custom = customer.pricing?.pricingType === 'custom';
+    if (!custom && !prices) return null;
+    let paise = 0, active = false;
+    for (const meal of ['breakfast','lunch','dinner']) {
+      const qty = Number(entry[meal+'Qty'] || 0);
+      const rate = Number(custom ? customer.pricing?.[meal+'Price'] || 0 : prices[meal] || 0);
+      paise += Math.round(qty * Math.round(rate * 100)); active ||= qty > 0;
+    }
+    for (const item of entry.extraItems || []) { const amount = Math.round(Number(item.amount || 0)*100); paise += amount; active ||= amount > 0; }
+    if (active) paise += Math.round(Number(customer.pricing?.extraCharge || 0)*100);
+    return paise/100;
+  };
+  const totalLabel = customer => { const total=dayTotal(customer); return total == null ? 'Price unavailable' : '₹'+total.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); };
   // =========================================
   // STATES
   // =========================================
@@ -31,6 +48,7 @@ export default function DailyEntry() {
     getBusinessDate()
   );
 
+  const [prices, setPrices] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [entries, setEntries] = useState({});
   const [loading, setLoading] = useState(false);
@@ -63,6 +81,7 @@ const [search, setSearch] = useState("");
 
       const customerRes = await getCustomersForEntry();
       const entryRes = await getEntriesByDate(date);
+      try { const priceRes = await getPrices(); setPrices(priceRes.data || null); } catch { setPrices(null); }
 
       const customerList = customerRes?.data || [];
       setCustomers(customerList);
@@ -80,6 +99,7 @@ const [search, setSearch] = useState("");
             ? item.extraItems
             : [],
           remark: item.remark || "",
+          walletBasis: item.walletBasis,
         };
       });
 
@@ -121,7 +141,7 @@ const [search, setSearch] = useState("");
         remark:
           prev[customerId]?.remark || "",
 
-        ...prev[customerId],
+        ...prev[customerId], walletBasis: undefined,
 
         [field]:
           field === "remark"
@@ -159,7 +179,7 @@ const [search, setSearch] = useState("");
         remark:
           prev[customerId]?.remark || "",
 
-        ...prev[customerId],
+        ...prev[customerId], walletBasis: undefined,
 
         extraItems: [
           ...(prev[customerId]?.extraItems || []),
@@ -194,7 +214,7 @@ const [search, setSearch] = useState("");
       return {
         ...prev,
         [customerId]: {
-          ...prev[customerId],
+          ...prev[customerId], walletBasis: undefined,
           extraItems: items,
         },
       };
@@ -234,7 +254,7 @@ const [search, setSearch] = useState("");
       return {
         ...prev,
         [customerId]: {
-          ...prev[customerId],
+          ...prev[customerId], walletBasis: undefined,
           extraItems: items,
         },
       };
@@ -758,6 +778,7 @@ const filteredCustomers = customers.filter(
                      <div className="px-4 py-4 border-b border-slate-200 bg-slate-50">
                        <div className="font-bold text-lg text-slate-800 break-words">
                          {customer.customerName}
+<span className="block mt-2 text-sm font-bold text-emerald-700" data-day-total={customer._id}>Day total: {totalLabel(customer)}</span>
                        </div>
                        {customer.phone && (
                          <div className="text-sm text-slate-400 mt-1">
@@ -1106,7 +1127,7 @@ const filteredCustomers = customers.filter(
            {/* Responsive Table Area */}
             <div className="hidden md:block w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden overscroll-x-contain">
 
-              <table className="w-full min-w-[900px] table-fixed">
+              <table className="daily-entry-table w-full min-w-[900px] table-fixed">
 
                 <colgroup>
   <col className="w-[20%]" />
@@ -1215,6 +1236,7 @@ const filteredCustomers = customers.filter(
 
                             <div className="font-semibold text-slate-800 break-words leading-5 whitespace-normal">
                               {customer.customerName}
+<span className="block mt-2 text-sm font-bold text-emerald-700" data-day-total={customer._id}>Day total: {totalLabel(customer)}</span>
                             </div>
 
                             {customer.phone && (

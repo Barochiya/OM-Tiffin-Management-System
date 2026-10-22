@@ -3,10 +3,10 @@ declare(strict_types=1);
 namespace OMT;
 require_once __DIR__.'/catalog.php';
 final class ReviewInvitations {
-    public const TEMPLATE='om_tiffin_review_invitation';
-    public const THANK_YOU_TEMPLATE='om_tiffin_review_thank_you';
-    public const THANK_YOU_ID='1473983484597192';
-    public const TEMPLATE_ID='2535769336906235'; // Set only after Meta has created the dedicated template.
+    public const TEMPLATE='om_tiffin_review_invitation_utility';
+    public const THANK_YOU_TEMPLATE='om_tiffin_review_thank_you_utility';
+    public const THANK_YOU_ID='1646576013849373';
+    public const TEMPLATE_ID='1751199879905547'; // Set only after Meta has created the dedicated template.
     public function __construct(private readonly Store $store,private readonly array $settings){}
     private function token(array $i):string { $secret=$this->settings['JWT_SECRET']??'';if(strlen($secret)<16)throw new HttpError(503,'Review links unavailable');return $i['_id'].'.'.hash_hmac('sha256','review-invitation-v1:'.$i['_id'],$secret); }
     private function url(array $i):string{return 'https://www.omtiffinservices.com/?review='.$this->token($i);}
@@ -41,7 +41,7 @@ final class ReviewInvitations {
     public function status(bool $thankYou=false):string {
         $templateId=$thankYou?self::THANK_YOU_ID:self::TEMPLATE_ID;$templateName=$thankYou?self::THANK_YOU_TEMPLATE:self::TEMPLATE;
         if($templateId===''||!function_exists('curl_init'))return 'NOT_CONFIGURED';$token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';$v=$this->settings['WHATSAPP_API_VERSION']??'v26.0';if(!$token||!preg_match('/^v\d+\.\d+$/D',$v))return 'UNKNOWN';
-        $h=curl_init('https://graph.facebook.com/'.$v.'/'.$templateId.'?fields=name,language,status');curl_setopt_array($h,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token]]);$raw=curl_exec($h);$http=(int)curl_getinfo($h,CURLINFO_RESPONSE_CODE);curl_close($h);$d=is_string($raw)?json_decode($raw,true):null;return $http===200&&($d['name']??'')===$templateName&&($d['language']??'')==='en_GB'?($d['status']??'UNKNOWN'):'UNKNOWN';
+        $h=curl_init('https://graph.facebook.com/'.$v.'/'.$templateId.'?fields=name,language,status,category');curl_setopt_array($h,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token]]);$raw=curl_exec($h);$http=(int)curl_getinfo($h,CURLINFO_RESPONSE_CODE);curl_close($h);$d=is_string($raw)?json_decode($raw,true):null;return $http===200&&($d['name']??'')===$templateName&&($d['language']??'')==='en_GB'?(($d['category']??'')==='UTILITY'?($d['status']??'UNKNOWN'):'CATEGORY_CHANGED'):'UNKNOWN';
     }
     public function send(array $b,?string $verifiedStatus=null):array {
         if(($verifiedStatus??$this->status())!=='APPROVED')throw new HttpError(409,'The dedicated WhatsApp review template is not approved yet. You can copy personal links meanwhile.');
@@ -62,7 +62,7 @@ final class ReviewInvitations {
         $this->store->prepareReviewCollections();$this->store->put('reviewthankyoudeliveries',['_id'=>$key,'customer'=>$id,'review'=>$review['_id'],'invitation'=>$i['_id'],'whatsappStatus'=>'pending','whatsappMessageId'=>null,'failureReason'=>'Waiting for approved thank-you template'],true);
         $this->store->queue('review-thanks:'.$key,['kind'=>'review-thank-you','customerId'=>$id,'invitationId'=>$i['_id'],'reviewId'=>$review['_id'],'documentId'=>$key,'to'=>$phone,'templateName'=>self::THANK_YOU_TEMPLATE,'languageCode'=>'en_GB','components'=>[['type'=>'header','parameters'=>[['type'=>'image','image'=>['link'=>'https://www.omtiffinservices.com/review-thank-you.png']]]],['type'=>'body','parameters'=>[['type'=>'text','text'=>preg_replace('/\s+/u',' ',trim($review['customerName']))]]]]]);
     }
-    public function eligibleThanks(array $p):bool {$c=$this->store->get('tiffins',$p['customerId']??'');$r=$this->store->get('websitereviews',$p['reviewId']??'');return $c&&$r&&($r['customer']??'')===$c['_id']&&($r['status']??'')==='Approved'&&preg_replace('/\D/','',$c['phone']??'')===($p['to']??'');}
+    public function eligibleThanks(array $p):bool {$c=$this->store->get('tiffins',$p['customerId']??'');$r=$this->store->get('websitereviews',$p['reviewId']??'');return ($p['templateName']??'')===self::THANK_YOU_TEMPLATE&&$c&&$r&&($r['customer']??'')===$c['_id']&&($r['status']??'')==='Approved'&&preg_replace('/\D/','',$c['phone']??'')===($p['to']??'');}
 
-    public function eligible(array $p):bool {$i=$this->store->get('reviewinvitations',$p['invitationId']??'');$c=$this->store->get('tiffins',$p['customerId']??'');return $c&&$i&&$i['customer']===$c['_id']&&!$this->received($c,$i)&&preg_replace('/\D/','',$c['phone']??'')===($p['to']??'');}
+    public function eligible(array $p):bool {$i=$this->store->get('reviewinvitations',$p['invitationId']??'');$c=$this->store->get('tiffins',$p['customerId']??'');return ($p['templateName']??'')===self::TEMPLATE&&$c&&$i&&$i['customer']===$c['_id']&&!$this->received($c,$i)&&preg_replace('/\D/','',$c['phone']??'')===($p['to']??'');}
 }

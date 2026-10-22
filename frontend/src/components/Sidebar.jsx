@@ -64,6 +64,7 @@ const closeSidebar = () => {
         </div>
       </div>
 
+      <button type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} className="absolute right-2 top-2 rounded-lg p-2 text-white lg:hidden">✕</button>
       {/* Menu */}
       <nav aria-label="Admin navigation" className="flex-1 mt-4 px-3 overflow-y-auto pb-6">
         <section aria-labelledby="admin-nav-0" className="mb-4">

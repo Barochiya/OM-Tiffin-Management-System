@@ -43,3 +43,22 @@
     max-width: 100%;
   }
 }
+/* Keep mobile browser controls from changing the app's scroll area. */
+.om-admin-shell{height:100dvh;min-height:0;overflow:hidden}
+.om-admin-shell>div.flex-1{height:100dvh;min-height:0}
+.om-admin-shell main{min-height:0;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+.om-admin-shell aside,.om-customer-shell aside{height:100dvh;max-height:100dvh;overflow:hidden}
+.om-admin-shell aside>nav,.om-customer-shell aside>nav{min-height:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+.om-admin-shell aside>div,.om-customer-shell aside>div{flex-shrink:0}
+@media(max-width:1023px){
+ .om-admin-shell aside,.om-customer-shell aside{z-index:200!important}
+ .om-admin-shell button[aria-label="Close sidebar"],.om-customer-shell button[aria-label="Close customer menu"]{z-index:150!important}
+ .om-admin-shell aside{padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+ .om-customer-shell{min-width:0;max-width:100%}
+ .om-customer-shell>div{min-width:0;max-width:100%}
+}
+@media(max-width:767px){
+ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+ input:not([type="checkbox"]):not([type="radio"]),select,textarea{font-size:16px!important}
+ img,video,canvas{max-width:100%}
+}

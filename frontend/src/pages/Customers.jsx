@@ -422,7 +422,7 @@ How can we help you today?`;
                   <th className="px-4 py-4 text-left">Customer</th>
                   <th className="px-4 py-4 text-left">Phone</th>
                   <th className="px-4 py-4 text-left">Meal</th>
-                  <th className="px-4 py-4 text-left">Price</th>
+                  <th className="px-4 py-4 text-left">Previous Bill</th>
                   <th className="px-4 py-4 text-left">Payment</th>
                   <th className="px-4 py-4 text-left">Status</th>
                   <th className="px-2 py-4 text-center">Actions</th>
@@ -611,7 +611,7 @@ How can we help you today?`;
                     </div>
                     <div className="rounded-xl bg-green-50 p-3">
                       <p className="text-xs text-slate-400">
-                        Price
+                        Previous Bill
                       </p>
                       <p className="font-bold text-green-600 text-lg mt-1">
                         Rs. {customer.price || 0}

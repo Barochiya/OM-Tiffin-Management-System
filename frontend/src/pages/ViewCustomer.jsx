@@ -460,7 +460,7 @@ const handleSaveDailyEntry = async (entryId) => {
 
                   <div>
                     <p className="text-sm text-gray-500">
-                      Monthly Price
+                      Previous Bill
                     </p>
                     <p className="font-semibold text-green-600 mt-1">
                       ₹{customer.price || 0}

@@ -29,6 +29,7 @@ final class Router {
         $this->route('GET','/pg/templates','admin',fn()=>$pg->statuses());
         $this->route('GET','/pg','admin',fn($p,$q)=>$pg->listing($q));
         $this->route('POST','/pg/sync','admin',function()use($pg){$pg->sync();return success(['synced'=>true]);});
+        $this->route('POST','/pg/students/:id/fee','admin',fn($p,$q,$b)=>$pg->prepareFee($p['id'],$b));
         $this->route('POST','/pg/students','admin',fn($p,$q,$b,$u)=>$pg->save($b,$u['_id']));
         $this->route('PUT','/pg/students/:id','admin',fn($p,$q,$b,$u)=>$pg->save($b,$u['_id'],$p['id']));
         $this->route('POST','/pg/charges/:id/payments','admin',fn($p,$q,$b,$u)=>$pg->payment($p['id'],$b,$u['_id']));

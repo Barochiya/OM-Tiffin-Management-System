@@ -10,7 +10,7 @@ process.stdin.on('end',async()=>{
   const designModule=require('./backend/utils/documentDesign');
   if(payload.operation==='validate-design'){process.stdout.write(JSON.stringify(designModule.validate(payload.design,payload.type)));return;}
   if(!['bill','receipt','salary','pg'].includes(payload.type)||!payload.data||typeof payload.data!=='object')throw Error('Invalid PDF payload');
-  const design=designModule.validate(payload.design||designModule.defaults(payload.type),payload.type==='pg'?'receipt':payload.type);designModule.load=async()=>design;
+  const design=designModule.validate(payload.design||designModule.defaults(payload.type),payload.type);designModule.load=async()=>design;
   let bytes;
   if(payload.type==='pg')bytes=await require('./backend/utils/pgReceiptPdf')(payload.data,design);
   else if(payload.type==='salary')bytes=await require('./backend/utils/salarySlipPdf')(payload.data,design);

@@ -90,7 +90,7 @@ const closeSidebar = () => {
           to="/customers"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/customers" && !walletsActive && new URLSearchParams(location.search).get("view") !== "employees" && new URLSearchParams(location.search).get("view") !== "review-invitations"
+            location.pathname === "/customers" && !walletsActive && new URLSearchParams(location.search).get("view") !== "pg" && new URLSearchParams(location.search).get("view") !== "employees" && new URLSearchParams(location.search).get("view") !== "review-invitations"
               ? "bg-white text-blue-700 font-semibold shadow"
               : "hover:bg-blue-600"
           }`}
@@ -159,6 +159,7 @@ const closeSidebar = () => {
             <Link to="/customers?view=employees" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${(location.pathname === "/employees" || (location.pathname === "/customers" && new URLSearchParams(location.search).get("view") === "employees")) ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaUsers />Employee Management</Link>
           </div>
         </section>
+        <section aria-labelledby="admin-nav-pg" className="mb-4"><h2 id="admin-nav-pg" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">PG Management</h2><Link to="/customers?view=pg" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 ${new URLSearchParams(location.search).get('view')==='pg'?'bg-white text-blue-700 font-semibold':'hover:bg-blue-600'}`}><FaUsers/>Students & Payments</Link></section>
         <section aria-labelledby="admin-nav-4" className="mb-4">
           <h2 id="admin-nav-4" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Wallets &amp; balances</h2>
           <div className="space-y-1">

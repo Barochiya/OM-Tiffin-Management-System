@@ -10,6 +10,7 @@ try{
     if($mode==='--scheduled'){
         if(($flags['scheduledMessagesApproved']??false)!==true)throw new \RuntimeException('Scheduled customer messages need explicit activation approval');
         $minimum=$flags['minimumOutboxId']??null;if(!is_int($minimum)||$minimum<1)throw new \RuntimeException('Notification cutover boundary is required');
+        require_once __DIR__.'/pg.php';(new Pg($store,$settings))->reminders();
         $query=db()->prepare("SELECT event_key FROM omt_outbox WHERE id>=? AND status='pending' AND available_at<=UTC_TIMESTAMP(3) ORDER BY id LIMIT 25");$query->execute([$minimum]);$keys=$query->fetchAll(\PDO::FETCH_COLUMN);
     }elseif($mode==='--approved-events'){
         $file=realpath($argv[2]??'');$private=realpath('/home1/maapn1f6/omtiffin-private/private');

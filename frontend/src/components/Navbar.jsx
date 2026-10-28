@@ -19,6 +19,7 @@ const Navbar = ({ setSidebarOpen }) => {
   const getPageInfo = () => {
     const path = location.pathname;
     if(path === "/customers" && new URLSearchParams(location.search).get("view") === "review-invitations") return {title:"Review Invitations",subtitle:"Personal review links and WhatsApp invitations"};
+    if(path==='/customers' && new URLSearchParams(location.search).get('view')==='pg') return {title:'PG Students & Payments',subtitle:'Monthly fees, reminders and receipts'};
     if (path === "/wallets" || (path === "/customers" && new URLSearchParams(location.search).get("view") === "wallets")) return { title: "Customer Wallets", subtitle: "Balances, current entries and wallet history" };
     if(path === "/employees" || (path === "/customers" && new URLSearchParams(location.search).get("view") === "employees")) return {title:'Employee Management',subtitle:'Attendance, salaries and payment slips'};
     if(path === "/document-design") return {title:"Document Design",subtitle:"Shared bill and receipt appearance"};

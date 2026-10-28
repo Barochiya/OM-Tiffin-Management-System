@@ -19,11 +19,20 @@ require_once __DIR__.'/webhook.php';
 require_once __DIR__.'/whatsapp.php';
 require_once __DIR__.'/document-notifications.php';
 require_once __DIR__.'/employees.php';
+require_once __DIR__.'/pg.php';
 require_once __DIR__.'/review-invitations.php';
 final class Router {
     private array $routes=[];
     public function __construct(private readonly Store $store,private readonly array $settings){
         $c=new Catalog($store);$r=new ReadModels($store);$a=new Auth($store,$settings['JWT_SECRET']??'',$settings['CUSTOMER_JWT_SECRET']??'');$billing=new Billing($store);
+        $pg=new Pg($store,$settings);
+        $this->route('GET','/pg/templates','admin',fn()=>$pg->statuses());
+        $this->route('GET','/pg','admin',fn($p,$q)=>$pg->listing($q));
+        $this->route('POST','/pg/sync','admin',function()use($pg){$pg->sync();return success(['synced'=>true]);});
+        $this->route('POST','/pg/students','admin',fn($p,$q,$b,$u)=>$pg->save($b,$u['_id']));
+        $this->route('PUT','/pg/students/:id','admin',fn($p,$q,$b,$u)=>$pg->save($b,$u['_id'],$p['id']));
+        $this->route('POST','/pg/charges/:id/payments','admin',fn($p,$q,$b,$u)=>$pg->payment($p['id'],$b,$u['_id']));
+        $this->route('GET','/pg/payments/:id/pdf','admin',fn($p)=>$pg->receipt($p['id']));
         $announcements=new Announcements($store);
         $reviews=new ReviewInvitations($store,$settings);
         $this->route('GET','/review-invitations','admin',fn()=>$reviews->listing());

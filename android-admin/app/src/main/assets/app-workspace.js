@@ -47,6 +47,7 @@
           ['plus', 'Add customer', 'Start a new plan', '/add-customer'],
           ['message', 'Deliveries', 'Dispatch & confirm', '/meal-deliveries'],
           ['payment', 'Wallets', 'Balances & history', '/customers?view=wallets'],
+          ['people', 'PG students', 'Monthly fees & receipts', '/customers?view=pg'],
           ['people', 'Employees', 'Attendance & payroll', '/customers?view=employees'],
           ['message', 'Review invitations', 'Personal review links', '/customers?view=review-invitations']
         ].map(([glyph, title, detail, path]) => `<button class="app-tool" data-path="${path}"><span class="app-tool-icon app-tool-${glyph}">${icon(glyph)}</span><strong>${title}</strong><small>${detail}</small></button>`).join('')}

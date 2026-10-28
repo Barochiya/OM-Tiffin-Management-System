@@ -14,6 +14,15 @@ final class OutboxWorker {
             $event=$this->store->transaction(fn()=>$this->store->claimOutbox($key));
             if(!$event){$outcomes[$key]='not-claimed';continue;}
             $payload=$event['payload'];
+            if(($payload['kind']??null)==='pg-notification'){
+                require_once __DIR__.'/pg.php';$pg=new Pg($this->store,$this->settings);
+                try{
+                    $prepared=$pg->prepare($payload);
+                    if(!$prepared){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','error'=>'Cancelled: fee paid, student inactive, messages OFF or phone changed']));$outcomes[$key]='cancelled';continue;}
+                    if($pg->templateStatus($payload['notificationType'])!=='APPROVED'){$this->store->transaction(fn()=>$this->store->deferPgOutbox($event));$outcomes[$key]='waiting_template';continue;}
+                    $payload=$prepared;
+                }catch(\Throwable){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','error'=>'PG notification could not be prepared']));$outcomes[$key]='failed';continue;}
+            }
             if(($payload['kind']??null)==='employee-notification'){
                 require_once __DIR__.'/employee-notifications.php';$notifier=new EmployeeNotifications($this->store);
                 if(!$notifier->enabled($payload['notificationType'])){$this->store->transaction(fn()=>$this->store->finishOutbox($event,['status'=>'failed','employeeStatus'=>'cancelled','error'=>'Cancelled: employee messages were turned OFF before sending.']));$outcomes[$key]='cancelled';continue;}

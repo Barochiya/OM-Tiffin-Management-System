@@ -6,9 +6,10 @@ $person=$s->get('tiffins',$id);
 $person['phone']='9999999999';
 $s->put('tiffins',$person);
 $topups=new OMT\WalletTopUps($s,$w,[
-    'WALLET_UPI_ID'=>'demo@example','WALLET_QR_TEMPLATE'=>'om_tiffin_wallet_topup_qr',
+    'WALLET_QR_TEMPLATE'=>'om_tiffin_wallet_topup_qr',
     'migration'=>['workersEnabled'=>true,'externalMessagesEnabled'=>true],
 ]);
+$design=$s->put('documentdesigns',['key'=>'documents','bill'=>['upiId'=>'demo@example']],true);
 $before=$w->account($id)['balancePaise'];
 $input=['amount'=>'500.25','requestId'=>'11111111-1111-4111-8111-111111111111'];
 $row=$topups->create($id,$input)[1]['data'];
@@ -25,7 +26,12 @@ $approval=['action'=>'approved','detail'=>'SYNTHETIC-UTR'];
 $topups->decide($row['_id'],$approval,'admin');
 denied(fn()=>$topups->decide($row['_id'],$approval,'admin'),409);
 check($w->account($id)['balancePaise']===$before+50025,'Exactly one wallet credit');
+$design['bill']['upiId']='updated@example';
+$s->put('documentdesigns',$design);
 $second=$topups->create($id,array_replace($input,['requestId'=>'22222222-2222-4222-8222-222222222222']))[1]['data'];
+parse_str(parse_url($second['upiUri'],PHP_URL_QUERY),$updatedQr);
+check($updatedQr['pa']==='updated@example','New QR follows saved Payment UPI ID');
+check($topups->create($id,$input)[1]['data']['upiUri']===$row['upiUri'],'Existing request keeps original payment details');
 denied(fn()=>$topups->decide($second['_id'],$approval,'admin'),409);
 $topups->decide($second['_id'],['action'=>'rejected','detail'=>'Synthetic rejection'],'admin');
 check($w->account($id)['balancePaise']===$before+50025,'Rejected request does not credit wallet');

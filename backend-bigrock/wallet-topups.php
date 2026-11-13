@@ -15,11 +15,9 @@ final class WalletTopUps {
         if(!is_scalar($raw)||!preg_match('/^\d{1,5}(?:\.\d{1,2})?$/D',(string)$raw))throw new HttpError(400,'Enter a valid top-up amount');
         $amount=Wallet::paise($raw);
         if($amount<100||$amount>5000000)throw new HttpError(400,'Enter an amount from ₹1 to ₹50,000');
-        $upi=$this->settings['WALLET_UPI_ID']??'';
-        if(!preg_match('/^[a-z0-9._-]+@[a-z0-9.-]+$/iD',$upi))throw new HttpError(503,'Wallet UPI is not configured');
         $key=$body['requestId']??'';
         if(!is_string($key)||!preg_match('/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/iD',$key))throw new HttpError(400,'Invalid request identity');
-        return $this->store->transaction(function()use($customer,$amount,$upi,$key){
+        return $this->store->transaction(function()use($customer,$amount,$key){
             $id=substr(hash('sha256','wallet-topup:'.$customer.':'.strtolower($key)),0,24);
             if($existing=$this->store->get('wallettopups',$id)){
                 if($existing['amountPaise']!==$amount)throw new HttpError(409,'Request already exists with another amount');
@@ -27,6 +25,8 @@ final class WalletTopUps {
             }
             $person=$this->store->get('tiffins',$customer);
             if(!$person||!$this->wallet->account($customer))throw new HttpError(409,'Wallet is awaiting activation');
+            $upi=trim((string)((new Documents($this->store))->settings()[1]['data']['bill']['upiId']??''));
+            if(!preg_match('/^[a-z0-9._-]+@[a-z0-9.-]+$/iD',$upi))throw new HttpError(503,'Set a valid Payment UPI ID in Bill Design');
             $qr='upi://pay?'.http_build_query(['pa'=>$upi,'pn'=>'OM Tiffin Service','am'=>number_format($amount/100,2,'.',''),'cu'=>'INR','tr'=>$id], '', '&', PHP_QUERY_RFC3986);
             $this->store->prepareWalletCollections();
             return success($this->store->put('wallettopups',['_id'=>$id,'customer'=>$customer,'name'=>$person['customerName']??'','userId'=>$person['barcode']??'','phone'=>$person['phone']??'','amountPaise'=>$amount,'upiUri'=>$qr,'status'=>'pending'],true));

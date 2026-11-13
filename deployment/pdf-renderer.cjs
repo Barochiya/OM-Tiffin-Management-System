@@ -7,6 +7,19 @@ process.stdin.on('data',chunk=>{size+=chunk.length;if(size>5*1024*1024){process.
 process.stdin.on('end',async()=>{
  try{
   const payload=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  if(payload.type==='wallet-qr'){
+   if(typeof payload.uri!=='string'||!payload.uri.startsWith('upi://pay?')||payload.uri.length>512)throw Error('Invalid UPI QR');
+   const QRCode=require('qrcode'), PDFDocument=require('pdfkit');
+   const image=await QRCode.toBuffer(payload.uri,{width:480,margin:4});
+   const pdf=new PDFDocument({size:'A5'});
+   pdf.pipe(process.stdout);
+   pdf.fontSize(20).text('OM Tiffin Service', {align:'center'});
+   pdf.moveDown().fontSize(13).text('Wallet top-up payment QR', {align:'center'});
+   pdf.image(image,86,150,{width:246});
+   pdf.fontSize(10).text('Wallet credit follows payment verification.',60,430,{align:'center'});
+   pdf.end();
+   return;
+  }
   const designModule=require('./backend/utils/documentDesign');
   if(payload.operation==='validate-design'){process.stdout.write(JSON.stringify(designModule.validate(payload.design,payload.type)));return;}
   if(!['bill','receipt','salary','pg'].includes(payload.type)||!payload.data||typeof payload.data!=='object')throw Error('Invalid PDF payload');

@@ -20,6 +20,7 @@ require_once __DIR__.'/whatsapp.php';
 require_once __DIR__.'/document-notifications.php';
 require_once __DIR__.'/employees.php';
 require_once __DIR__.'/pg.php';
+require_once __DIR__.'/wallet-topups.php';
 require_once __DIR__.'/review-invitations.php';
 final class Router {
     private array $routes=[];
@@ -44,6 +45,7 @@ final class Router {
         $this->route('GET','/review-invitations/public/:token','public',fn($p)=>$reviews->publicView($p['token']));
         $this->route('POST','/review-invitations/public/submit','public',fn($p,$q,$b)=>$reviews->submit($b));
         $wallet=new Wallet($store);
+        $topUps=new WalletTopUps($store,$wallet,$settings);
         $staff=new Employees($store);
         $employeeAccounts=new EmployeeAccounts($store);$employeeRecovery=new EmployeeRecovery($store);$employeeAuth=new EmployeeAuth($store,employeeSecret($settings));
         $this->route('POST','/employee-auth/login','public',fn($p,$q,$b)=>$employeeAuth->employeeLogin($b));
@@ -70,6 +72,11 @@ final class Router {
         $this->route('POST','/employees/:id/cash','admin',fn($p,$q,$b,$u)=>$staff->cash($p['id'],$b,$u['_id']));
         $this->route('GET','/employee-salary-payments/:id/pdf','admin',fn($p)=>$staff->slip($p['id']));
         $this->route('GET','/customer-portal/wallet','customer',fn($p,$q,$b,$user)=>$wallet->statement($user['customer'],$q));
+        $this->route('GET','/customer-portal/wallet/top-ups','customer',fn($p,$q,$b,$user)=>$topUps->listing($user['customer']));
+        $this->route('POST','/customer-portal/wallet/top-ups','customer',fn($p,$q,$b,$user)=>$topUps->create($user['customer'],$b));
+        $this->route('POST','/customer-portal/wallet/top-ups/:id/whatsapp','customer',fn($p,$q,$b,$user)=>$topUps->sendQr($user['customer'],$p['id']));
+        $this->route('GET','/wallet-top-ups','admin',fn()=> $topUps->listing());
+        $this->route('POST','/wallet-top-ups/:id/decision','admin',fn($p,$q,$b,$user)=>$topUps->decide($p['id'],$b,$user['_id']));
         $this->route('GET','/wallets','admin',fn($p,$q)=>$wallet->customers($q));
         $this->route('GET','/wallets/:id','admin',fn($p,$q)=>$wallet->statement($p['id'],$q));
         $this->route('GET','/wallets/:id/reconciliation','admin',function($p)use($wallet){$proposal=$wallet->preview($p['id']);unset($proposal['basis']);return [200,['success'=>true,'data'=>$proposal]];});

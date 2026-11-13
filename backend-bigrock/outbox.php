@@ -50,6 +50,33 @@ final class OutboxWorker {
             // Claim commits BEFORE HTTP. A crash or ambiguous provider response must never auto-resend.
             try{
                 $eligible=true;
+                if(($payload['kind']??null)==='wallet-qr'){
+                    require_once __DIR__.'/wallet-topups.php';
+                    require_once __DIR__.'/document-notifications.php';
+                    require_once __DIR__.'/documents.php';
+                    $row=$this->store->get('wallettopups',$payload['requestId']);
+                    $phone=$row?WalletTopUps::phone($this->store->get('tiffins',$row['customer'])['phone']??''):'';
+                    $eligible=$row&&$row['status']==='pending'&&$phone===$payload['to']
+                        &&($this->settings['WALLET_QR_TEMPLATE']??null)===$payload['templateName'];
+                    if($eligible){
+                        if(!(new WhatsAppTransport($this->settings))->walletTemplateApproved($payload['templateName'])){
+                            $result=['status'=>'failed','error'=>'Wallet QR Utility template is not approved or available.'];
+                            $this->store->transaction(fn()=>$this->store->finishOutbox($event,$result));
+                            $outcomes[$key]='failed';
+                            continue;
+                        }
+                        $pdf=(new PdfRenderer())->run(['type'=>'wallet-qr','uri'=>$row['upiUri']]);
+                        $payload['kind']='document-template';
+                        $payload['attachment']=(new DocumentNotifications($this->store,new Documents($this->store)))->storePdf($pdf);
+                        $payload['filename']='Wallet-top-up-QR.pdf';
+                        $payload['components']=[['type'=>'body','parameters'=>[
+                            ['type'=>'text','text'=>$row['name']?:'Customer'],
+                            ['type'=>'text','text'=>$row['userId']?:'Customer account'],
+                            ['type'=>'text','text'=>number_format($row['amountPaise']/100,2,'.','')],
+                            ['type'=>'text','text'=>$row['_id']],
+                        ]]];
+                    }
+                }
                 if(in_array($payload['kind']??null,['customer-otp','employee-otp'],true)){$otp=$this->store->get($payload['kind']==='employee-otp'?'employeeotps':'customerotps',$payload['otpId']);$eligible=$otp&&empty($otp['usedAt'])&&!empty($otp['expiresAt'])&&(float)(new \DateTimeImmutable($otp['expiresAt']))->format('U.u')>microtime(true);}
                 if(($payload['kind']??null)==='login-id'){
                     $customer=$this->store->get('tiffins',$payload['customerId']);$account=$this->store->get('customeraccounts',$payload['accountId']);
@@ -73,6 +100,20 @@ final class WhatsAppTransport {
         $token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';$version=$this->settings['WHATSAPP_API_VERSION']??'v26.0';if(!$token||!preg_match('/^v\d+\.\d+$/D',$version)||!function_exists('curl_init'))return 'UNKNOWN';
         $h=curl_init('https://graph.facebook.com/'.$version.'/'.$expected['id'].'?fields=name,language,status');curl_setopt_array($h,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token]]);$raw=curl_exec($h);$status=(int)curl_getinfo($h,CURLINFO_RESPONSE_CODE);curl_close($h);$data=is_string($raw)?json_decode($raw,true):null;
         if($status!==200||($data['name']??'')!==$expected['name']||($data['language']??'')!=='en_GB')return 'UNKNOWN';return in_array($data['status']??'',['APPROVED','PENDING','REJECTED','PAUSED','DISABLED'],true)?$data['status']:'UNKNOWN';
+    }
+    public function walletTemplateApproved(string $name):bool {
+        $id=$this->settings['WALLET_QR_TEMPLATE_ID']??'';
+        $token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';
+        $version=$this->settings['WHATSAPP_API_VERSION']??'v26.0';
+        if(!$token||!ctype_digit((string)$id)||!preg_match('/^v\d+\.\d+$/D',$version)||!function_exists('curl_init'))return false;
+        $handle=curl_init('https://graph.facebook.com/'.$version.'/'.$id.'?fields=name,language,status,category');
+        curl_setopt_array($handle,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>5,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token]]);
+        $raw=curl_exec($handle);
+        $http=curl_getinfo($handle,CURLINFO_RESPONSE_CODE);
+        curl_close($handle);
+        $data=is_string($raw)?json_decode($raw,true):null;
+        return $http===200&&($data['name']??null)===$name&&($data['language']??null)==='en_GB'
+            &&($data['category']??null)==='UTILITY'&&($data['status']??null)==='APPROVED';
     }
     public function template(array $payload):array {
         $token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';$phoneId=$this->settings['WHATSAPP_PHONE_NUMBER_ID']??'';$version=$this->settings['WHATSAPP_API_VERSION']??'v26.0';

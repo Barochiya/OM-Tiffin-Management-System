@@ -83,6 +83,10 @@ final class Wallet {
         $this->store->put('wallettransactions',['_id'=>$id,'customer'=>$customer,'event'=>$event,'type'=>$type,'amountPaise'=>$delta,'balancePaise'=>$account['balancePaise'],'sequence'=>$account['sequence'],'reason'=>$reason,'actor'=>$actor,'source'=>$source],true);
         $this->store->put('walletaccounts',$account);
     }
+    public function creditTopUp(array $request,string $actor):void {
+        $this->post($request['customer'],'topup:'.$request['_id'],'topup',$request['amountPaise'],
+            'Verified UPI top-up',$actor,['requestId'=>$request['_id'],'reference'=>$request['reference']]);
+    }
     private function entryState(array $entry):string {
         return json_encode([numeric($entry['breakfastQty']??0),numeric($entry['lunchQty']??0),numeric($entry['dinnerQty']??0),array_map(fn($i)=>[(string)($i['description']??''),self::paise($i['amount']??0)],$entry['extraItems']??[]),(string)($entry['remark']??'')],JSON_THROW_ON_ERROR);
     }

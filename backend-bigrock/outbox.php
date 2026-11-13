@@ -65,10 +65,7 @@ final class OutboxWorker {
                             $outcomes[$key]='failed';
                             continue;
                         }
-                        $pdf=(new PdfRenderer())->run(['type'=>'wallet-qr','uri'=>$row['upiUri']]);
-                        $payload['kind']='document-template';
-                        $payload['attachment']=(new DocumentNotifications($this->store,new Documents($this->store)))->storePdf($pdf);
-                        $payload['filename']='Wallet-top-up-QR.pdf';
+                        $payload['imageBytes']=(new PdfRenderer())->run(['type'=>'wallet-qr','uri'=>$row['upiUri']],false);
                         $payload['components']=[['type'=>'body','parameters'=>[
                             ['type'=>'text','text'=>$row['name']?:'Customer'],
                             ['type'=>'text','text'=>$row['userId']?:'Customer account'],
@@ -129,6 +126,23 @@ final class WhatsAppTransport {
             if($failed)return ['status'=>'unknown','error'=>'PDF upload acknowledgement uncertain; check provider logs before resending.'];
             if($http<200||$http>=300||empty($uploaded['id']))return ['status'=>'failed','error'=>'WhatsApp PDF upload failed.'];
             array_unshift($payload['components'],['type'=>'header','parameters'=>[['type'=>'document','document'=>['id'=>$uploaded['id'],'filename'=>$payload['filename']]]]]);
+        }
+        if(($payload['kind']??null)==='wallet-qr'){
+            $bytes=$payload['imageBytes']??'';
+            if(!str_starts_with($bytes,"\x89PNG\r\n\x1a\n")||strlen($bytes)>5*1024*1024)throw new \RuntimeException('Invalid QR image');
+            $image=tmpfile();
+            if(!$image)throw new \RuntimeException('QR image temporary storage unavailable');
+            try {
+                if(fwrite($image,$bytes)!==strlen($bytes))throw new \RuntimeException('Could not store QR image');
+                $upload=curl_init('https://graph.facebook.com/'.$version.'/'.$phoneId.'/media');
+                curl_setopt_array($upload,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>10,CURLOPT_TIMEOUT=>30,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token],CURLOPT_POSTFIELDS=>['messaging_product'=>'whatsapp','type'=>'image/png','file'=>new \CURLFile(stream_get_meta_data($image)['uri'],'image/png','Wallet-top-up-QR.png')]]);
+                $raw=curl_exec($upload);
+                $http=curl_getinfo($upload,CURLINFO_RESPONSE_CODE);
+                curl_close($upload);
+                $media=is_string($raw)?json_decode($raw,true):null;
+                if($http<200||$http>=300||empty($media['id']))return ['status'=>'failed','error'=>'Wallet QR image upload failed.'];
+                array_unshift($payload['components'],['type'=>'header','parameters'=>[['type'=>'image','image'=>['id'=>$media['id']]]]]);
+            } finally {fclose($image);}
         }
         $body=in_array($payload['kind']??null,['text','inbox-reply'],true)
             ?['messaging_product'=>'whatsapp','to'=>$phone,'type'=>'text','text'=>['preview_url'=>false,'body'=>$payload['message']]]

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import QRCode from 'react-qr-code';
 import api from '../services/api';
 import customerApi from '../services/customerAuthService';
+import { getWhatsAppMedia } from '../services/whatsappInboxService';
 
 export default function WalletTopUps({ admin = false }) {
   const client = admin ? api : customerApi;
@@ -13,6 +14,17 @@ export default function WalletTopUps({ admin = false }) {
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState(null);
   const request = useRef(null);
+  const [proof, setProof] = useState(null);
+  useEffect(() => () => { if (proof) URL.revokeObjectURL(proof.url); }, [proof]);
+  async function openProof(row, screenshot) {
+    try {
+      const blob = await getWhatsAppMedia(screenshot._id);
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(blob.type)) throw new Error('Unsupported screenshot');
+      setProof({ id: row._id, url: URL.createObjectURL(blob) });
+    } catch {
+      setError('Could not load the WhatsApp screenshot.');
+    }
+  }
   const refresh = useCallback(async () => {
     const { data } = await client.get(path);
     setRows(data.data);
@@ -43,7 +55,7 @@ export default function WalletTopUps({ admin = false }) {
   }
   const money = (paise) => (paise / 100).toLocaleString('en-IN', { style: 'currency', currency: 'INR' });
   return <section className="my-4 space-y-3 rounded-xl border bg-white p-4">
-    <h2 className="font-bold">{admin ? 'Wallet Top-up Approvals' : 'Add money'}</h2>
+    <h2 className="font-bold">{admin ? 'Wallet Payment Approvals' : 'Add money'}</h2>
     {error && <p role="alert" className="text-red-700">{error}</p>}
     {admin ? <p className="text-sm">Verify the payment in your bank or UPI account before approving.</p> :
       <form onSubmit={create} className="flex flex-wrap items-end gap-2">
@@ -57,6 +69,14 @@ export default function WalletTopUps({ admin = false }) {
       <p className="font-semibold">{money(row.amountPaise)} · {row.status}</p>
       <p className="break-all text-xs">{row._id} · {new Date(row.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</p>
       {admin && <p>{row.name} · {row.userId} · {row.phone}</p>}
+      {admin && row.status === 'pending' && <div className="space-y-2">
+        <p className="text-sm font-semibold">Recent WhatsApp images from this customer</p>
+        {(row.screenshots || []).map(screenshot => <button key={screenshot._id} type="button" className="mr-2 rounded border p-2 text-sm" onClick={() => openProof(row, screenshot)}>
+          View image · {new Date(screenshot.whatsappTimestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+        </button>)}
+        {!row.screenshots?.length && <p className="text-sm text-slate-500">No images received since this request.</p>}
+        {proof?.id === row._id && <><img src={proof.url} alt="Customer WhatsApp screenshot" className="max-h-96 max-w-full object-contain" /><button type="button" onClick={() => setProof(null)}>Close image</button></>}
+      </div>}
       {row.reference && <p className="break-words">Payment reference {row.reference}</p>}
       {row.rejectionReason && <p className="break-words">{row.rejectionReason}</p>}
       {row.whatsappStatus && <p className="text-sm">WhatsApp · {row.whatsappStatus}</p>}

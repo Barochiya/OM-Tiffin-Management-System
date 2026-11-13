@@ -3,7 +3,6 @@ import { Wallet } from 'lucide-react';
 import api from '../services/api';
 import { walletMoney } from '../components/WalletPanel';
 import WalletDialog from '../components/WalletDialog';
-import WalletTopUps from '../components/WalletTopUps';
 
 export default function AdminWallets() {
   const [search, setSearch] = useState(''), [filter, setFilter] = useState('all');
@@ -30,7 +29,6 @@ export default function AdminWallets() {
     {error && <p role="alert" className="mb-4 text-red-700">{error}</p>}
     <div className="overflow-x-auto rounded-xl border bg-white"><table className="w-full text-left text-sm"><caption className="sr-only">All customer wallet balances</caption><thead className="bg-slate-50"><tr><th className="p-4">Customer</th><th className="p-4">Wallet balance</th><th className="p-4">Unused advance</th><th className="p-4">Manage</th></tr></thead><tbody>{rows.map(row => <tr key={row.customer} className="border-t"><td className="p-4"><p className="font-semibold">{row.name}</p><p className="text-xs text-slate-500">{row.barcode}</p></td><td className={`p-4 whitespace-nowrap font-bold ${row.balancePaise < 0 ? 'text-red-700' : 'text-emerald-700'}`}>{row.active ? walletMoney(row.balancePaise) : 'Awaiting reconciliation'}</td><td className="p-4 whitespace-nowrap">{walletMoney(row.advancePaise)}</td><td className="p-4"><button aria-label={`Open wallet for ${row.name}`} onClick={() => setSelected(row)} className="whitespace-nowrap rounded-lg bg-blue-700 px-3 py-2 font-semibold text-white">Open wallet</button></td></tr>)}{!rows.length && <tr><td colSpan={4} className="p-8 text-center text-slate-500">{loading ? 'Loading wallets…' : 'No matching customers.'}</td></tr>}</tbody></table></div>
     <p className="mt-3 text-xs text-slate-500">Unused advance is already included in the wallet balance; do not add the two values together.</p>
-    <WalletTopUps admin />
     {selected && <WalletDialog customerId={selected.customer} name={selected.name} onClose={() => { setSelected(null); setRevision(value => value + 1); }} />}
   </main>;
 }

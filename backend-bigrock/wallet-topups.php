@@ -7,6 +7,19 @@ final class WalletTopUps {
 
     public function listing(?string $customer=null):array {
         $rows=$this->store->find('wallettopups',fn($row)=>$customer===null||$row['customer']===$customer);
+        if($customer===null){
+            $messages=sorted($this->store->find('whatsappmessages',fn($message)=>
+                ($message['direction']??null)==='incoming'&&($message['type']??null)==='image'
+                &&!empty($message['mediaId'])),['whatsappTimestamp'=>-1]);
+            foreach($rows as &$row){
+                if($row['status']!=='pending')continue;
+                $row['screenshots']=array_slice(array_values(array_filter($messages,fn($message)=>
+                    ($message['customer']??null)===$row['customer']
+                    &&strtotime($message['whatsappTimestamp']??'')>=strtotime($row['createdAt']))),0,10);
+                $row['screenshots']=array_map(fn($message)=>array_intersect_key($message,array_flip(['_id','whatsappTimestamp','mediaCaption'])),$row['screenshots']);
+            }
+            unset($row);
+        }
         return success(sorted($rows,['createdAt'=>-1]));
     }
 
@@ -35,7 +48,7 @@ final class WalletTopUps {
 
     public function sendQr(string $customer,string $id):array {
         $template=$this->settings['WALLET_QR_TEMPLATE']??'';
-        if($template!=='om_tiffin_wallet_topup_qr')throw new HttpError(503,'WhatsApp QR template is not enabled');
+        if($template!=='om_tiffin_wallet_topup_qr_image')throw new HttpError(503,'WhatsApp QR template is not enabled');
         if(empty($this->settings['migration']['workersEnabled'])||empty($this->settings['migration']['externalMessagesEnabled']))throw new HttpError(503,'WhatsApp delivery is unavailable');
         return $this->store->transaction(function()use($customer,$id,$template){
             $row=$this->store->get('wallettopups',$id);

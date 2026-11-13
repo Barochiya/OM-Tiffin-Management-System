@@ -6,7 +6,7 @@ $person=$s->get('tiffins',$id);
 $person['phone']='9999999999';
 $s->put('tiffins',$person);
 $topups=new OMT\WalletTopUps($s,$w,[
-    'WALLET_QR_TEMPLATE'=>'om_tiffin_wallet_topup_qr',
+    'WALLET_QR_TEMPLATE'=>'om_tiffin_wallet_topup_qr_image',
     'migration'=>['workersEnabled'=>true,'externalMessagesEnabled'=>true],
 ]);
 $design=$s->put('documentdesigns',['key'=>'documents','bill'=>['upiId'=>'demo@example']],true);

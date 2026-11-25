@@ -60,11 +60,6 @@
     padding-inline: clamp(0px, calc((100vw - 320px) / 5), 24px);
   }
 
-  .om-admin-shell main > main:has(input[aria-label="Reference (optional) or reason for rejection"]) > section article {
-    min-inline-size: 0;
-    overflow-wrap: anywhere;
-  }
-
   .om-admin-shell main input[aria-label="Reference (optional) or reason for rejection"] {
     inline-size: 100%;
     min-inline-size: 0;
@@ -78,28 +73,33 @@
   }
 
   /* WhatsApp invoice approvals. Keep message, invoice and select within the card. */
-  .om-admin-shell main > div:has(img[alt="Payment screenshot"], .whitespace-pre-wrap) {
+  .om-admin-shell main > div:has(.overflow-hidden.rounded-2xl [class~="min-h-[250px]"]) {
     padding-inline: clamp(0px, calc((100vw - 320px) / 5), 16px);
   }
 
 }
 
-.om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) {
+.om-admin-shell main > main:has(> section > header dl) > section article {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.om-admin-shell main .overflow-hidden.rounded-2xl:has([class~="min-h-[250px]"]):has(.whitespace-pre-wrap) {
   overflow-wrap: anywhere;
 }
 
 @media (max-width: 1023px) {
-  .om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) > div {
+  .om-admin-shell main .overflow-hidden.rounded-2xl:has([class~="min-h-[250px]"]):has(.whitespace-pre-wrap) > div {
     padding-inline: clamp(12px, 4vw, 24px);
   }
 }
 
-.om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) .grid > *,
-.om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) :is(select, input, button) {
+.om-admin-shell main .overflow-hidden.rounded-2xl:has([class~="min-h-[250px]"]):has(.whitespace-pre-wrap) .grid > *,
+.om-admin-shell main .overflow-hidden.rounded-2xl:has([class~="min-h-[250px]"]):has(.whitespace-pre-wrap) :is(select, input, button) {
   min-inline-size: 0;
   max-inline-size: 100%;
 }
 
-.om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) .flex.justify-between {
+.om-admin-shell main .overflow-hidden.rounded-2xl:has([class~="min-h-[250px]"]):has(.whitespace-pre-wrap) .flex.justify-between {
   flex-wrap: wrap;
 }

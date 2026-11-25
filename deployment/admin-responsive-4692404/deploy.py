@@ -13,7 +13,7 @@ ASSET_HASH = "461d0817a5a0557ef720f488b11422bb3a9b67a41b19d2e2258ddb1526dc757f"
 ASSET_PATH = "assets/index-Bf6IPQiN.js"
 CSS_NAME = "admin-responsive-4692404.css"
 LINK = f'<link rel="stylesheet" href="/assets/{CSS_NAME}">'.encode()
-CSS_HASH = "6d8f96666bcdb518c919147a36f2523e0708d4038ff5f9f466a38447ddd83771"
+CSS_HASH = "e1abe46ca4060f8d76d600fcf4d801b956973630b98170210ff8b898b73d11d7"
 
 
 def digest(data):

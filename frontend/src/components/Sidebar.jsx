@@ -17,15 +17,9 @@ import {
   FaStar,
 } from "react-icons/fa";
 
-const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
+const Sidebar = ({ sidebarOpen, closeSidebar, sidebarRef, closeButtonRef, onKeyDown }) => {
   const location = useLocation();
   const walletsActive = location.pathname === "/wallets" || (location.pathname === "/customers" && new URLSearchParams(location.search).get("view") === "wallets");
-
-const closeSidebar = () => {
-  if (window.innerWidth < 1024) {
-    setSidebarOpen(false);
-  }
-};
 
   return (
     <>
@@ -34,14 +28,22 @@ const closeSidebar = () => {
         <button
           type="button"
           aria-label="Close sidebar"
-          onClick={() => setSidebarOpen(false)}
+          tabIndex={-1}
+          aria-hidden="true"
+          onClick={closeSidebar}
           className="fixed inset-0 z-40 bg-black/40 lg:hidden"
         />
       )}
 
       <aside
+        id="admin-sidebar"
+        ref={sidebarRef}
+        role={sidebarOpen ? "dialog" : undefined}
+        aria-modal={sidebarOpen || undefined}
+        aria-label={sidebarOpen ? "Admin navigation" : undefined}
+        onKeyDown={onKeyDown}
         className={`fixed left-0 top-0 z-50 w-[240px] max-w-[78vw] h-screen bg-gradient-to-b lg:w-64 from-blue-700 to-blue-900 text-white shadow-2xl flex flex-col print:!hidden transform transition-transform duration-300 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          sidebarOpen ? "translate-x-0" : "invisible -translate-x-full lg:visible lg:translate-x-0"
         }`}
       >
 
@@ -64,7 +66,15 @@ const closeSidebar = () => {
         </div>
       </div>
 
-      <button type="button" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} className="absolute right-2 top-2 rounded-lg p-2 text-white lg:hidden">✕</button>
+      <button
+        ref={closeButtonRef}
+        type="button"
+        aria-label="Close navigation"
+        onClick={closeSidebar}
+        className="grid min-h-11 min-w-11 place-items-center self-end rounded-lg text-white lg:hidden"
+      >
+        <span aria-hidden="true">✕</span>
+      </button>
       {/* Menu */}
       <nav aria-label="Admin navigation" className="flex-1 mt-4 px-3 overflow-y-auto pb-6">
         <section aria-labelledby="admin-nav-0" className="mb-4">

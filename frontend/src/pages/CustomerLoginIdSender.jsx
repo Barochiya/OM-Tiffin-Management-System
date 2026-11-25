@@ -260,7 +260,7 @@ const CustomerLoginIdSender = () => {
       customer?.userId || "OMT-000000"
     );
   return (
-    <div className="min-h-full bg-slate-50 p-4 sm:p-6">
+    <div className="min-h-full min-w-0 bg-slate-50 sm:p-4 lg:p-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Header */}
         <div className="rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 p-5 text-white shadow-lg sm:p-6">
@@ -320,7 +320,7 @@ const CustomerLoginIdSender = () => {
           </div>
         )}
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 xl:grid-cols-5">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center gap-3">
               <Users className="h-5 w-5 text-blue-600" />
@@ -439,10 +439,10 @@ const CustomerLoginIdSender = () => {
           </div>
         </div>
         {/* Main content */}
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
           {/* Customer table */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4 sm:px-5">
+          <div className="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-4 sm:px-5">
               <div>
                 <h2 className="font-bold text-slate-900">
                   Customer Recipients
@@ -631,7 +631,7 @@ const CustomerLoginIdSender = () => {
                 <p className="text-xs font-semibold uppercase tracking-wide text-green-700">
                   Message
                 </p>
-                <p className="mt-3 text-sm leading-6 text-slate-700">
+                <p className="mt-3 text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]">
                   {getPreviewMessage(
                     selectedCustomers[0] ||
                       customers.find((customer) => customer.ready)
@@ -699,7 +699,7 @@ const CustomerLoginIdSender = () => {
                 <h2 className="font-bold text-slate-900">
                   Last Send Result
                 </h2>
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                <div className="mt-4 grid grid-cols-1 gap-2 text-center min-[420px]:grid-cols-3">
                   <div className="rounded-xl bg-slate-50 p-3">
                     <p className="text-xs text-slate-500">
                       Total

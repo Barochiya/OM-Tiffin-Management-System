@@ -75,7 +75,7 @@ export default function WhatsAppPaymentApproval() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 lg:p-8">
+    <div className="min-w-0 bg-slate-100 sm:p-4 lg:p-8">
       <div className="mx-auto max-w-7xl">
 
         {/* Header */}
@@ -91,8 +91,8 @@ export default function WhatsAppPaymentApproval() {
         </div>
 
         {/* Count */}
-        <div className="mb-6 rounded-2xl bg-white p-6 shadow-lg">
-          <div className="flex items-center justify-between">
+        <div className="mb-6 rounded-2xl bg-white p-4 shadow-lg sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-slate-500">
                 Pending Reviews
@@ -357,13 +357,13 @@ navigate(
     review.customer?.phone || "-";
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white shadow-lg">
+    <div className="min-w-0 rounded-2xl bg-white shadow-lg">
 
       {/* Card Header */}
-      <div className="flex flex-col gap-4 border-b border-slate-200 p-6 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col gap-4 border-b border-slate-200 p-4 sm:p-6 md:flex-row md:items-center md:justify-between">
 
         <div>
-          <h2 className="text-xl font-bold text-slate-800">
+          <h2 className="text-xl font-bold [overflow-wrap:anywhere] text-slate-800">
             {customerName}
           </h2>
 
@@ -378,7 +378,7 @@ navigate(
       </div>
 
       {/* Content */}
-      <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-6 p-4 sm:p-6 lg:grid-cols-2 [&>*]:min-w-0">
 
         {/* Screenshot */}
         <div>
@@ -422,7 +422,7 @@ navigate(
           </div>
 
           {review.mediaCaption && (
-            <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+            <div className="mt-3 rounded-lg bg-slate-50 p-3 text-sm [overflow-wrap:anywhere] text-slate-600">
               <strong>Caption:</strong>{" "}
               {review.mediaCaption}
             </div>
@@ -442,7 +442,7 @@ navigate(
                 Customer
               </p>
 
-              <p className="mt-1 font-semibold text-slate-800">
+              <p className="mt-1 font-semibold [overflow-wrap:anywhere] text-slate-800">
                 {customerName}
               </p>
             </div>
@@ -452,7 +452,7 @@ navigate(
                 WhatsApp Number
               </p>
 
-              <p className="mt-1 font-semibold text-slate-800">
+              <p className="mt-1 font-semibold [overflow-wrap:anywhere] text-slate-800">
                 {phone}
               </p>
             </div>
@@ -462,7 +462,7 @@ navigate(
                 Payment Message
               </p>
 
-              <p className="mt-1 whitespace-pre-wrap text-slate-700">
+              <p className="mt-1 whitespace-pre-wrap [overflow-wrap:anywhere] text-slate-700">
                 {review.message || "No message"}
               </p>
             </div>
@@ -484,7 +484,7 @@ navigate(
       onChange={(event) =>
         handleBillChange(event.target.value)
       }
-      className="w-full rounded-lg border border-blue-300 bg-white px-3 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+      className="w-full min-w-0 max-w-full rounded-lg border border-blue-300 bg-white px-3 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
     >
       <option value="">
         Select pending bill
@@ -520,7 +520,7 @@ navigate(
         setAmount(event.target.value)
       }
       placeholder="Enter payment amount"
-      className="w-full rounded-lg border border-blue-300 bg-white py-3 pl-8 pr-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+      className="w-full min-w-0 max-w-full rounded-lg border border-blue-300 bg-white py-3 pl-8 pr-3 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
     />
   </div>
 
@@ -544,7 +544,7 @@ navigate(
                         key={bill._id}
                         className="rounded-lg bg-white p-3"
                       >
-                        <div className="flex justify-between gap-3">
+                        <div className="flex min-w-0 flex-wrap justify-between gap-3 [overflow-wrap:anywhere]">
                           <div>
                             <p className="font-semibold text-slate-800">
                               {bill.invoiceNo ||
@@ -558,7 +558,7 @@ navigate(
                             </p>
                           </div>
 
-                          <div className="text-right">
+                          <div className="shrink-0 text-right">
                             <p className="font-bold text-red-600">
                               ₹
                               {
@@ -583,7 +583,7 @@ navigate(
       </div>
 
       {/* Action Area */}
-      <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-6 sm:flex-row sm:justify-end">
+      <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 p-4 sm:flex-row sm:p-6 sm:justify-end">
 
         <button
   type="button"

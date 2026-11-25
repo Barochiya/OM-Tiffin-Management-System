@@ -8,7 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-const Navbar = ({ setSidebarOpen }) => {
+const Navbar = ({ sidebarOpen, menuButtonRef, openSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,6 +24,7 @@ const Navbar = ({ setSidebarOpen }) => {
     if(path === "/employees" || (path === "/customers" && new URLSearchParams(location.search).get("view") === "employees")) return {title:'Employee Management',subtitle:'Attendance, salaries and payment slips'};
     if(path === "/document-design") return {title:"Document Design",subtitle:"Shared bill and receipt appearance"};
     if(path === "/website-orders") return {title:"Website Orders",subtitle:"Online order approvals and fulfillment"};
+    if (path === "/whatsapp-payment-approval") return { title: "Payment Approval", subtitle: "Review WhatsApp payment screenshots" };
     if (path === "/whatsapp-inbox") return { title: "WhatsApp Inbox", subtitle: "Customer conversations and replies" };
 
     if (path === "/dashboard") {
@@ -184,38 +185,37 @@ const Navbar = ({ setSidebarOpen }) => {
     <header className="flex items-center justify-between gap-3 bg-white px-3 py-3 shadow-md sm:px-6 sm:py-4 lg:px-8">
 
       {/* LEFT */}
-      <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+      <div className="flex flex-1 min-w-0 items-center gap-2 sm:gap-4">
 
-        {location.pathname.startsWith("/view-bills/") ? (
-  <button
-    type="button"
-    onClick={() => navigate(-1)}
-    className="flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:px-4"
-    aria-label="Go back"
-    title="Go Back"
-  >
-    <span className="text-lg leading-none">←</span>
-    <span>Back</span>
-  </button>
-) : (
-  <button
-    type="button"
-    onClick={() =>
-      setSidebarOpen(true)
-    }
-    className="text-2xl text-slate-700 lg:hidden"
-    aria-label="Open sidebar"
-  >
-    <FaBars />
-  </button>
-)}
+        <button
+          ref={menuButtonRef}
+          type="button"
+          onClick={openSidebar}
+          className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-lg text-xl text-slate-700 lg:hidden"
+          aria-label="Open sidebar"
+          aria-controls="admin-sidebar"
+          aria-expanded={sidebarOpen}
+        >
+          <FaBars aria-hidden="true" />
+        </button>
+        {location.pathname.startsWith("/view-bills/") && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"
+            aria-label="Go back"
+            title="Go Back"
+          >
+            <span aria-hidden="true" className="text-xl">←</span>
+          </button>
+        )}
 
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-bold text-slate-800 sm:text-2xl">
+          <h1 className="line-clamp-2 font-bold break-words text-slate-800 max-sm:!text-base sm:text-2xl">
             {pageInfo.title}
           </h1>
 
-          <p className="truncate text-xs text-gray-500 sm:text-sm">
+          <p className="hidden truncate text-xs text-gray-500 sm:block sm:text-sm">
             {pageInfo.subtitle}
           </p>
         </div>
@@ -223,7 +223,7 @@ const Navbar = ({ setSidebarOpen }) => {
       </div>
 
       {/* RIGHT */}
-      <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
 
         {/* NOTIFICATIONS */}
 
@@ -254,7 +254,7 @@ const Navbar = ({ setSidebarOpen }) => {
         <button
           type="button"
           onClick={handleLogout}
-          aria-label="Sign out" title="Sign out" className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          aria-label="Sign out" title="Sign out" className="flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 text-sm md:px-4 font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
         >
           <FaSignOutAlt />
 

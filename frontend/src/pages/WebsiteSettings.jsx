@@ -109,8 +109,8 @@ const WebsiteSettings = () => {
     description,
     field,
   }) => (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex min-w-0 flex-[1_1_12rem] items-center gap-3">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
           <Icon />
         </div>
@@ -123,7 +123,7 @@ const WebsiteSettings = () => {
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2">
         <button
           type="button"
           onClick={() => handleToggle(field)}
@@ -207,7 +207,7 @@ const WebsiteSettings = () => {
             Control the main customer-facing website features.
           </p>
         </div>
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           <ToggleRow
             icon={FaGlobe}
             title="Website Enabled"
@@ -250,7 +250,7 @@ const WebsiteSettings = () => {
             Control optional website content sections.
           </p>
         </div>
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           <ToggleRow
             icon={FaComments}
             title="Inquiries"
@@ -293,7 +293,7 @@ const WebsiteSettings = () => {
             Control website availability for regular meal services.
           </p>
         </div>
-        <div className="grid gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
           <ToggleRow
             icon={FaUtensils}
             title="Lunch"

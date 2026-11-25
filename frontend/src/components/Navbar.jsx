@@ -8,7 +8,7 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-const Navbar = ({ setSidebarOpen }) => {
+const Navbar = ({ sidebarOpen, menuButtonRef, openSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -186,36 +186,35 @@ const Navbar = ({ setSidebarOpen }) => {
       {/* LEFT */}
       <div className="flex min-w-0 items-center gap-2 sm:gap-4">
 
-        {location.pathname.startsWith("/view-bills/") ? (
-  <button
-    type="button"
-    onClick={() => navigate(-1)}
-    className="flex items-center gap-2 rounded-xl bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 sm:px-4"
-    aria-label="Go back"
-    title="Go Back"
-  >
-    <span className="text-lg leading-none">←</span>
-    <span>Back</span>
-  </button>
-) : (
-  <button
-    type="button"
-    onClick={() =>
-      setSidebarOpen(true)
-    }
-    className="text-2xl text-slate-700 lg:hidden"
-    aria-label="Open sidebar"
-  >
-    <FaBars />
-  </button>
-)}
+        <button
+          ref={menuButtonRef}
+          type="button"
+          onClick={openSidebar}
+          className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-lg text-xl text-slate-700 lg:hidden"
+          aria-label="Open sidebar"
+          aria-controls="admin-sidebar"
+          aria-expanded={sidebarOpen}
+        >
+          <FaBars aria-hidden="true" />
+        </button>
+        {location.pathname.startsWith("/view-bills/") && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200"
+            aria-label="Go back"
+            title="Go Back"
+          >
+            <span aria-hidden="true" className="text-xl">←</span>
+          </button>
+        )}
 
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-bold text-slate-800 sm:text-2xl">
+          <h1 className="line-clamp-2 text-base font-bold break-words text-slate-800 sm:text-2xl">
             {pageInfo.title}
           </h1>
 
-          <p className="truncate text-xs text-gray-500 sm:text-sm">
+          <p className="hidden truncate text-xs text-gray-500 sm:block sm:text-sm">
             {pageInfo.subtitle}
           </p>
         </div>
@@ -254,7 +253,7 @@ const Navbar = ({ setSidebarOpen }) => {
         <button
           type="button"
           onClick={handleLogout}
-          aria-label="Sign out" title="Sign out" className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+          aria-label="Sign out" title="Sign out" className="flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 text-sm md:px-4 font-semibold text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
         >
           <FaSignOutAlt />
 

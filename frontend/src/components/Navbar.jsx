@@ -24,6 +24,7 @@ const Navbar = ({ sidebarOpen, menuButtonRef, openSidebar }) => {
     if(path === "/employees" || (path === "/customers" && new URLSearchParams(location.search).get("view") === "employees")) return {title:'Employee Management',subtitle:'Attendance, salaries and payment slips'};
     if(path === "/document-design") return {title:"Document Design",subtitle:"Shared bill and receipt appearance"};
     if(path === "/website-orders") return {title:"Website Orders",subtitle:"Online order approvals and fulfillment"};
+    if (path === "/whatsapp-payment-approval") return { title: "Payment Approval", subtitle: "Review WhatsApp payment screenshots" };
     if (path === "/whatsapp-inbox") return { title: "WhatsApp Inbox", subtitle: "Customer conversations and replies" };
 
     if (path === "/dashboard") {
@@ -184,7 +185,7 @@ const Navbar = ({ sidebarOpen, menuButtonRef, openSidebar }) => {
     <header className="flex items-center justify-between gap-3 bg-white px-3 py-3 shadow-md sm:px-6 sm:py-4 lg:px-8">
 
       {/* LEFT */}
-      <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+      <div className="flex flex-1 min-w-0 items-center gap-2 sm:gap-4">
 
         <button
           ref={menuButtonRef}
@@ -210,7 +211,7 @@ const Navbar = ({ sidebarOpen, menuButtonRef, openSidebar }) => {
         )}
 
         <div className="min-w-0">
-          <h1 className="line-clamp-2 text-base font-bold break-words text-slate-800 sm:text-2xl">
+          <h1 className="line-clamp-2 font-bold break-words text-slate-800 max-sm:!text-base sm:text-2xl">
             {pageInfo.title}
           </h1>
 
@@ -222,7 +223,7 @@ const Navbar = ({ sidebarOpen, menuButtonRef, openSidebar }) => {
       </div>
 
       {/* RIGHT */}
-      <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-4">
 
         {/* NOTIFICATIONS */}
 

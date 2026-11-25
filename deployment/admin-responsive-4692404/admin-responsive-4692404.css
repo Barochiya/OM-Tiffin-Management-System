@@ -1,0 +1,105 @@
+/* OM Tiffin Admin responsive hotfix for BigRock release 4692404. */
+@media (max-width: 1023px) {
+  .om-admin-shell > div.flex-1 > div > header > div:first-child {
+    flex: 1 1 0%;
+    min-inline-size: 0;
+  }
+
+  .om-admin-shell > div.flex-1 > div > header > div:last-child {
+    flex-shrink: 0;
+  }
+
+  .om-admin-shell > div.flex-1 > div > header button:is([aria-label="Sign out"], [aria-label="Open sidebar"]) {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 44px;
+    min-block-size: 44px;
+    padding-inline: 0;
+  }
+
+  @media (max-width: 639px) {
+    .om-admin-shell > div.flex-1 > div > header h1 {
+      font-size: 1rem;
+    }
+  }
+
+  /* Walk-in Customers. The filter label and select previously measured as one row. */
+  .om-admin-shell main :has(> label > select[aria-label="Filter payment status"]) > label {
+    display: grid;
+    gap: .375rem;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  .om-admin-shell main select[aria-label="Filter payment status"] {
+    margin-inline-start: 0;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    min-block-size: 44px;
+  }
+
+  .om-admin-shell main > div:has(select[aria-label="Filter payment status"]) {
+    padding-inline: clamp(0px, calc((100vw - 320px) / 5), 16px);
+    overflow-wrap: anywhere;
+  }
+
+  .om-admin-shell main > div:has(select[aria-label="Filter payment status"]) :is(input, select) {
+    min-inline-size: 0;
+    max-inline-size: 100%;
+  }
+
+  /* Keep the wallet summary in flow. The live theme makes all header elements sticky. */
+  .om-admin-shell main > main > section > header:has(dl) {
+    position: static !important;
+    z-index: auto !important;
+  }
+
+  /* Wallet approvals. Long identity fields and form controls set the card's min-content width. */
+  .om-admin-shell main > main:has(input[aria-label="Reference (optional) or reason for rejection"]) {
+    min-inline-size: 0;
+    padding-inline: clamp(0px, calc((100vw - 320px) / 5), 24px);
+  }
+
+  .om-admin-shell main > main:has(input[aria-label="Reference (optional) or reason for rejection"]) > section article {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .om-admin-shell main input[aria-label="Reference (optional) or reason for rejection"] {
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    min-block-size: 44px;
+  }
+
+  .om-admin-shell main article:has(input[aria-label="Reference (optional) or reason for rejection"]) button {
+    min-block-size: 44px;
+    max-inline-size: 100%;
+  }
+
+  /* WhatsApp invoice approvals. Keep message, invoice and select within the card. */
+  .om-admin-shell main > div:has(img[alt="Payment screenshot"], .whitespace-pre-wrap) {
+    padding-inline: clamp(0px, calc((100vw - 320px) / 5), 16px);
+  }
+
+}
+
+.om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1023px) {
+  .om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) > div {
+    padding-inline: clamp(12px, 4vw, 24px);
+  }
+}
+
+.om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) .grid > *,
+.om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) :is(select, input, button) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+
+.om-admin-shell main .overflow-hidden.rounded-2xl:has(.whitespace-pre-wrap) .flex.justify-between {
+  flex-wrap: wrap;
+}

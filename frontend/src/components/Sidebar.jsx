@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import {
   FaWallet,
   FaUsers,
+  FaWalking,
+  FaMapMarkerAlt,
   FaUserPlus,
   FaCalendarAlt,
   FaBarcode,
@@ -20,6 +22,7 @@ import {
 
 const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
   const location = useLocation();
+  const walkInsActive = location.pathname === "/customers" && new URLSearchParams(location.search).get("view") === "walk-ins";
   const walletsActive = location.pathname === "/wallets" || (location.pathname === "/customers" && new URLSearchParams(location.search).get("view") === "wallets");
 
 const closeSidebar = () => {
@@ -92,7 +95,7 @@ const closeSidebar = () => {
           to="/customers"
           onClick={closeSidebar}
           className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
-            location.pathname === "/customers" && !walletsActive && new URLSearchParams(location.search).get("view") !== "pg" && new URLSearchParams(location.search).get("view") !== "employees" && new URLSearchParams(location.search).get("view") !== "review-invitations"
+            location.pathname === "/customers" && !walletsActive && !walkInsActive && new URLSearchParams(location.search).get("view") !== "delivery-locations" && new URLSearchParams(location.search).get("view") !== "expenses" && new URLSearchParams(location.search).get("view") !== "pg" && new URLSearchParams(location.search).get("view") !== "employees" && new URLSearchParams(location.search).get("view") !== "review-invitations"
               ? "bg-white text-blue-700 font-semibold shadow"
               : "hover:bg-blue-600"
           }`}
@@ -112,10 +115,13 @@ const closeSidebar = () => {
           <FaUserPlus className="text-green-300" />
           Add Customer
         </Link>
+        <Link to="/customers?view=walk-ins" onClick={closeSidebar} aria-current={walkInsActive ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-4 py-3 ${walkInsActive ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaWalking aria-hidden="true" />Walk-in Customers</Link>
           </div>
         </section>
         <section aria-labelledby="admin-nav-2" className="mb-4">
           <h2 id="admin-nav-2" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Daily work</h2>
+          <Link to="/customers?view=delivery-locations" onClick={closeSidebar} aria-current={new URLSearchParams(location.search).get("view") === "delivery-locations" ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-4 py-3 ${new URLSearchParams(location.search).get("view") === "delivery-locations" ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaMapMarkerAlt />Delivery Locations</Link>
+          <Link to="/customers?view=expenses" onClick={closeSidebar} aria-current={location.search === "?view=expenses" ? "page" : undefined} className={`flex items-center gap-3 rounded-lg px-4 py-3 ${location.search === "?view=expenses" ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaMoneyBillWave />Daily Expenses</Link>
           <div className="space-y-1">
             <Link
           to="/daily-entry"
@@ -166,6 +172,7 @@ const closeSidebar = () => {
           <h2 id="admin-nav-4" className="px-4 pt-4 pb-2 text-xs font-semibold uppercase tracking-wide text-blue-200">Wallets &amp; balances</h2>
           <div className="space-y-1">
             <Link to="/customers?view=wallets" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${walletsActive ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaWallet />Customer Wallets</Link>
+            <Link to="/customers?view=wallet-payment-approvals" onClick={closeSidebar} className="flex items-center gap-3 rounded-lg px-4 py-3 hover:bg-blue-600"><FaWallet />Wallet Payment Approvals</Link>
           </div>
         </section>
         <section aria-labelledby="admin-nav-5" className="mb-4">

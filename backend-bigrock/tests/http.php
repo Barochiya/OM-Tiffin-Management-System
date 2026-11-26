@@ -19,3 +19,14 @@ check($app->handle('GET','/api/payments',[],'')[0]===401);
 check($app->handle('GET','/api/missing',[],'')[0]===404);
 check(!str_contains($app->handle('GET','/api/payments',[],'')[2],'password'));
 echo "PASS HTTP boundary: strict OM origins, preflight, JSON object/size/type limits, authorization, missing routes, no secret disclosure.\n";
+
+foreach(['/api/payments/123/reverse','/api/bills/123/cancel','/api/wallets/123/adjustments','/api/payments/approve-whatsapp-payment']as $path)check($app->handle('POST',$path,['Content-Type'=>'application/json'],'{}')[0]===401);
+check($app->handle('GET','/api/dashboard/financial-report',[],'')[0]===401);
+echo "PASS financial write and reconciliation routes reject unauthenticated callers before side effects.\n";
+
+check($app->handle("GET","/api/dashboard/financial-report/pdf",[],"")[0]===401);
+
+check($app->handle('GET','/api/expenses',[],'')[0]===401);
+check($app->handle('POST','/api/expenses',['Content-Type'=>'application/json'],'{}')[0]===401);
+check($app->handle('PUT','/api/expenses/123',['Content-Type'=>'application/json'],'{}')[0]===401);
+check($app->handle('POST','/api/expenses/123/cancel',['Content-Type'=>'application/json'],'{}')[0]===401);

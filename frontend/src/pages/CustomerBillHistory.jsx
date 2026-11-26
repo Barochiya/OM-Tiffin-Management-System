@@ -52,6 +52,18 @@ const CustomerBillHistory = () => {
   useEffect(() => {
     loadBills({ showLoader: true });
   }, [loadBills]);
+  useEffect(() => {
+    let running = false;
+    const refresh = async () => {
+      if (document.hidden || running) return;
+      running = true;
+      try { await loadBills(); } finally { running = false; }
+    };
+    const timer = setInterval(refresh, 15000);
+    window.addEventListener('focus', refresh);
+    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); };
+  }, [loadBills]);
+
 
   const handleLogout = () => {
     logoutCustomer();

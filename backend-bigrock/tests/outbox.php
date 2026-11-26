@@ -3,6 +3,7 @@ declare(strict_types=1);
 require dirname(__DIR__).'/outbox.php';
 final class OutboxTestStore extends OMT\Store {
     public array $events=[],$records=[];public bool $failCompletion=false;public function __construct(){}
+    public function all(string $collection):array{return array_values($this->records[$collection]??[]);}
     public function get(string $collection,string $id):?array{return $this->records[$collection][$id]??null;}
     public function transaction(callable $f):mixed{return $f($this);}
     public function claimOutbox(string $key):?array{if(($this->events[$key]['status']??null)!=='pending')return null;$this->events[$key]['status']='processing';return ['id'=>$key,'event_key'=>$key,'payload'=>$this->events[$key]['payload']];}
@@ -36,3 +37,10 @@ check($worker->runApproved(['login-good'])['login-good']==='accepted');check($ca
 unset($s->records['tiffins']['demo']);$s->events['login-deleted']=['status'=>'pending','payload'=>$login];
 check($worker->runApproved(['login-deleted'])['login-deleted']==='failed');check($calls===$before+1);
 echo "PASS customer Login ID recipient/account validation and deleted demo never sends.\n";
+
+$s->records['tiffins']['demo']=['_id'=>'demo','phone'=>'9999999999'];$s->records['customeraccounts']['account']['lastLoginAt']=gmdate('c');
+$s->events['bulk-logged-before-send']=['status'=>'pending','payload'=>[...$login,'pendingLoginOnly'=>true]];$before=$calls;
+check($worker->runApproved(['bulk-logged-before-send'])['bulk-logged-before-send']==='failed');check($calls===$before);
+$s->events['manual-lost-id']=['status'=>'pending','payload'=>[...$login,'pendingLoginOnly'=>false]];
+check($worker->runApproved(['manual-lost-id'])['manual-lost-id']==='accepted');check($calls===$before+1);
+echo "PASS login-ID bulk delivery rechecks login history at dispatch; explicit manual recovery remains allowed. Mock sender only.\n";

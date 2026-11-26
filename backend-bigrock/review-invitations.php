@@ -21,7 +21,7 @@ final class ReviewInvitations {
     private function resolve(string $token):array {
         if(!preg_match('/^([a-f0-9]{24})\.[a-f0-9]{64}$/D',$token,$m))throw new HttpError(404,'This review link is unavailable.');
         $i=$this->store->get('reviewinvitations',$m[1]);if(!$i||!hash_equals($this->token($i),$token))throw new HttpError(404,'This review link is unavailable.');
-        $c=$this->store->get('tiffins',$i['customer']);if(!$c)throw new HttpError(404,'This review link is unavailable.');return [$i,$c];
+        $c=$this->store->get(($i['walkIn']??false)?'walkincustomers':'tiffins',$i['customer']);if(!$c)throw new HttpError(404,'This review link is unavailable.');return [$i,$c];
     }
     public function listing():array {
         $rows=[];foreach(sorted($this->store->all('tiffins'),['customerName'=>1])as $c){$i=$this->invitation($c['_id']);$history=$this->store->find('reviewinvitationdeliveries',fn($d)=>$d['customer']===$c['_id']);$latest=sorted($history,['createdAt'=>-1])[0]??null;
@@ -43,11 +43,11 @@ final class ReviewInvitations {
         if($templateId===''||!function_exists('curl_init'))return 'NOT_CONFIGURED';$token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';$v=$this->settings['WHATSAPP_API_VERSION']??'v26.0';if(!$token||!preg_match('/^v\d+\.\d+$/D',$v))return 'UNKNOWN';
         $h=curl_init('https://graph.facebook.com/'.$v.'/'.$templateId.'?fields=name,language,status,category');curl_setopt_array($h,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token]]);$raw=curl_exec($h);$http=(int)curl_getinfo($h,CURLINFO_RESPONSE_CODE);curl_close($h);$d=is_string($raw)?json_decode($raw,true):null;return $http===200&&($d['name']??'')===$templateName&&($d['language']??'')==='en_GB'?(($d['category']??'')==='UTILITY'?($d['status']??'UNKNOWN'):'CATEGORY_CHANGED'):'UNKNOWN';
     }
-    public function send(array $b,?string $verifiedStatus=null):array {
+    public function send(array $b,?string $verifiedStatus=null,bool $walkIn=false):array {
         if(($verifiedStatus??$this->status())!=='APPROVED')throw new HttpError(409,'The dedicated WhatsApp review template is not approved yet. You can copy personal links meanwhile.');
         $ids=$b['customerIds']??[];$request=$b['requestId']??'';if(!is_array($ids)||!$ids||count($ids)>50||!preg_match('/^[a-f0-9-]{36}$/Di',(string)$request))throw new HttpError(400,'Select 1 to 50 customers and provide a request ID.');
-        return $this->store->transaction(function()use($ids,$request){$results=[];$this->store->prepareReviewCollections();foreach(array_unique($ids)as $id){$c=$this->store->get('tiffins',(string)$id);if(!$c)throw new HttpError(404,'Customer not found');$i=$this->invitation($c['_id']);if($this->received($c,$i)){$results[]=['customerId'=>$id,'status'=>'review_received'];continue;}
-            $i=$this->ensure($c);$deliveryId=substr(hash('sha256','review:'.$i['_id'].':'.$request),0,24);$old=$this->store->get('reviewinvitationdeliveries',$deliveryId);if($old){$results[]=['customerId'=>$id,'status'=>'already_queued'];continue;}
+        return $this->store->transaction(function()use($ids,$request,$walkIn){$results=[];$this->store->prepareReviewCollections();foreach(array_unique($ids)as $id){$c=$this->store->get($walkIn?'walkincustomers':'tiffins',(string)$id);if(!$c)throw new HttpError(404,'Customer not found');$i=$this->invitation($c['_id']);if($this->received($c,$i)){$results[]=['customerId'=>$id,'status'=>'review_received'];continue;}
+            $i=$this->ensure($c);if($walkIn)$i['walkIn']=true;$deliveryId=substr(hash('sha256','review:'.$i['_id'].':'.$request),0,24);$old=$this->store->get('reviewinvitationdeliveries',$deliveryId);if($old){$results[]=['customerId'=>$id,'status'=>'already_queued'];continue;}
             if(!empty($i['lastQueuedAt'])&&strtotime($i['lastQueuedAt'])>time()-86400){$results[]=['customerId'=>$id,'status'=>'cooldown'];continue;}
             $phone=preg_replace('/\D/','',$c['phone']??'');if(!preg_match('/^[6-9]\d{9}$/D',$phone)){$results[]=['customerId'=>$id,'status'=>'invalid_phone'];continue;}
             $d=$this->store->put('reviewinvitationdeliveries',['_id'=>$deliveryId,'customer'=>$id,'invitation'=>$i['_id'],'whatsappStatus'=>'pending','whatsappMessageId'=>null,'failureReason'=>'Queued'],true);
@@ -55,14 +55,14 @@ final class ReviewInvitations {
         }return success(['results'=>$results]);});
     }
     public function thankYou(array $review):void {
-        $id=$review['customer']??'';$c=$this->store->get('tiffins',$id);$i=$this->store->get('reviewinvitations',$review['invitation']??'');
+        $id=$review['customer']??'';$i=$this->store->get('reviewinvitations',$review['invitation']??'');$c=$this->store->get(($i['walkIn']??false)?'walkincustomers':'tiffins',$id);
         if(!$c||!$i||$i['customer']!==$id||($i['reviewId']??'')!==$review['_id']||empty($i['submittedAt']))return;
         $key=substr(hash('sha256','review-thanks:'.$review['_id']),0,24);if($this->store->get('reviewthankyoudeliveries',$key))return;
         $phone=preg_replace('/\D/','',$c['phone']??'');if(!preg_match('/^[6-9]\d{9}$/D',$phone))return;
         $this->store->prepareReviewCollections();$this->store->put('reviewthankyoudeliveries',['_id'=>$key,'customer'=>$id,'review'=>$review['_id'],'invitation'=>$i['_id'],'whatsappStatus'=>'pending','whatsappMessageId'=>null,'failureReason'=>'Waiting for approved thank-you template'],true);
         $this->store->queue('review-thanks:'.$key,['kind'=>'review-thank-you','customerId'=>$id,'invitationId'=>$i['_id'],'reviewId'=>$review['_id'],'documentId'=>$key,'to'=>$phone,'templateName'=>self::THANK_YOU_TEMPLATE,'languageCode'=>'en_GB','components'=>[['type'=>'header','parameters'=>[['type'=>'image','image'=>['link'=>'https://www.omtiffinservices.com/review-thank-you.png']]]],['type'=>'body','parameters'=>[['type'=>'text','text'=>preg_replace('/\s+/u',' ',trim($review['customerName']))]]]]]);
     }
-    public function eligibleThanks(array $p):bool {$c=$this->store->get('tiffins',$p['customerId']??'');$r=$this->store->get('websitereviews',$p['reviewId']??'');return ($p['templateName']??'')===self::THANK_YOU_TEMPLATE&&$c&&$r&&($r['customer']??'')===$c['_id']&&($r['status']??'')==='Approved'&&preg_replace('/\D/','',$c['phone']??'')===($p['to']??'');}
+    public function eligibleThanks(array $p):bool {$i=$this->store->get('reviewinvitations',$p['invitationId']??'');$c=$this->store->get(($i['walkIn']??false)?'walkincustomers':'tiffins',$p['customerId']??'');$r=$this->store->get('websitereviews',$p['reviewId']??'');return ($p['templateName']??'')===self::THANK_YOU_TEMPLATE&&$c&&$r&&($r['customer']??'')===$c['_id']&&($r['status']??'')==='Approved'&&preg_replace('/\D/','',$c['phone']??'')===($p['to']??'');}
 
-    public function eligible(array $p):bool {$i=$this->store->get('reviewinvitations',$p['invitationId']??'');$c=$this->store->get('tiffins',$p['customerId']??'');return ($p['templateName']??'')===self::TEMPLATE&&$c&&$i&&$i['customer']===$c['_id']&&!$this->received($c,$i)&&preg_replace('/\D/','',$c['phone']??'')===($p['to']??'');}
+    public function eligible(array $p):bool {$i=$this->store->get('reviewinvitations',$p['invitationId']??'');$c=$this->store->get(($i['walkIn']??false)?'walkincustomers':'tiffins',$p['customerId']??'');return ($p['templateName']??'')===self::TEMPLATE&&$c&&$i&&$i['customer']===$c['_id']&&!$this->received($c,$i)&&preg_replace('/\D/','',$c['phone']??'')===($p['to']??'');}
 }

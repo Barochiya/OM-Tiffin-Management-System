@@ -22,3 +22,17 @@ check($a->recipients()[1]['data'][0]['loginEnabled']===false);check($a->recipien
 echo "PASS account provisioning, safe fields, strict enable flags, deduplicated selected recipients, password reset preserves identity/login flag, no credentials in notifications, honest queued state. Synthetic records only.\n";
 
 foreach($s->events as $event){check($event['templateName']==='om_tiffin_service_update');check(str_contains($event['components'][0]['parameters'][1]['text'],'https://www.omtiffinservices.com/customer-login'));check(str_contains($event['components'][0]['parameters'][1]['text'],$account['userId']));}
+
+$pending=$s->put('tiffins',['customerName'=>'Synthetic pending','phone'=>'0000000000','barcode'=>'OMT-PENDING','status'=>'Active'],true);
+$logged=$s->put('tiffins',['customerName'=>'Synthetic logged','phone'=>'0000000000','barcode'=>'OMT-LOGGED','status'=>'Active'],true);
+$pendingAccount=$s->put('customeraccounts',['customer'=>$pending['_id'],'userId'=>'OMT-PENDING','loginEnabled'=>true,'isFirstLogin'=>true],true);
+$loggedAccount=$s->put('customeraccounts',['customer'=>$logged['_id'],'userId'=>'OMT-LOGGED','loginEnabled'=>true,'isFirstLogin'=>true],true);
+$s->put('customerfirstloginlogs',['customerAccount'=>$loggedAccount['_id'],'customer'=>$logged['_id'],'firstLoginAt'=>'2026-11-01T10:00:00Z'],true);
+$before=$s->data;$recipients=$a->recipients()[1]['data'];check($s->data===$before);
+$loggedRow=array_values(array_filter($recipients,fn($row)=>$row['customerId']===$logged['_id']))[0];check($loggedRow['hasLoggedIn']===true);
+$count=count($s->events);$bulk=$a->sendLoginIds(['customerIds'=>[$id,$pending['_id'],$logged['_id']],'selectionMode'=>'pending-login'])[1];
+check($bulk['summary']['queued']===1&&$bulk['summary']['skipped']===2&&count($s->events)===$count+1);
+check($s->data===$before);
+$count=count($s->events);$manual=$a->sendLoginIds(['customerIds'=>[$logged['_id']],'selectionMode'=>'manual'])[1];check($manual['summary']['queued']===1&&count($s->events)===$count+1);
+check($s->data===$before);
+echo "PASS logged-in mark uses actual login history even after password reset; bulk mode rechecks login-enabled/never-logged status, skips stale selections, and explicit manual resend remains available. Mock queue only; no production access or sends.\n";

@@ -845,11 +845,11 @@ const generateBillPdf = async (bill, customer, designOverride = null) => {
       // PAYMENT SUMMARY
       // =========================================================
       const drawPaymentSummary = () => {
-        pageBreak(130);
+        pageBreak(165);
         const y = doc.y;
         const gap = 18;
         const boxWidth = (CONTENT_WIDTH - gap) / 2;
-        const boxHeight = 120;
+        const boxHeight = 155;
         drawRoundedBox(
           LEFT,
           y,
@@ -909,6 +909,10 @@ const generateBillPdf = async (bill, customer, designOverride = null) => {
             formatMoney(pendingAmount),
           ],
         ];
+        paymentRows.splice(3, 0,
+          ["Wallet adjusted", formatMoney(Number(bill.walletAppliedPaise || 0) / 100)],
+          ["Direct payments applied", formatMoney(bill.directPaymentsAppliedPaise == null ? Math.max(0, paidAmount - Number(bill.walletAppliedPaise || 0) / 100) : Number(bill.directPaymentsAppliedPaise) / 100)]
+        );
         let paymentY = y + 40;
         paymentRows.forEach(
           ([label, value], index) => {
@@ -920,9 +924,9 @@ const generateBillPdf = async (bill, customer, designOverride = null) => {
               )
               .fontSize(index === 2 ? 8.5 : 8)
               .fillColor(
-                index === 4
+                label === "Pending"
                   ? colors.red
-                  : index === 3
+                  : label === "Paid"
                     ? "#16a34a"
                     : colors.text
               )
@@ -939,9 +943,9 @@ const generateBillPdf = async (bill, customer, designOverride = null) => {
               )
               .fontSize(index === 2 ? 8.5 : 8)
               .fillColor(
-                index === 4
+                label === "Pending"
                   ? colors.red
-                  : index === 3
+                  : label === "Paid"
                     ? "#16a34a"
                     : colors.text
               )

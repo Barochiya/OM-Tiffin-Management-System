@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getCustomerPayments,
+  downloadCustomerReceiptPdf,
   logoutCustomer,
 } from "../services/customerAuthService";
 const CustomerPaymentHistory = () => {
@@ -11,6 +12,29 @@ const CustomerPaymentHistory = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  const [receiptBusy, setReceiptBusy] = useState(null);
+  const [receiptError, setReceiptError] = useState("");
+  const downloadReceipt = async (payment) => {
+    if (receiptBusy) return;
+    setReceiptBusy(payment._id);
+    setReceiptError("");
+    try {
+      const response = await downloadCustomerReceiptPdf(payment._id);
+      const url = window.URL.createObjectURL(new Blob([response.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `OM-Tiffin-Receipt-${payment._id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      if ([401, 403].includes(err?.response?.status)) {
+        logoutCustomer();
+        navigate("/customer-login", { replace: true });
+      } else setReceiptError("Receipt could not be downloaded. Please retry or contact OM Tiffin Service.");
+    } finally { setReceiptBusy(null); }
+  };
   const loadPayments = useCallback(
     async ({ showLoader = false } = {}) => {
       try {
@@ -42,6 +66,18 @@ const CustomerPaymentHistory = () => {
   useEffect(() => {
     loadPayments({ showLoader: true });
   }, [loadPayments]);
+  useEffect(() => {
+    let running = false;
+    const refresh = async () => {
+      if (document.hidden || running) return;
+      running = true;
+      try { await loadPayments(); } finally { running = false; }
+    };
+    const timer = setInterval(refresh, 15000);
+    window.addEventListener('focus', refresh);
+    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); };
+  }, [loadPayments]);
+
   const formatMoney = (value) => {
     return `₹${Number(value || 0).toFixed(2)}`;
   };
@@ -127,6 +163,7 @@ const CustomerPaymentHistory = () => {
             </div>
           </div>
           <div className="p-5 sm:p-8">
+            {receiptError && <p role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{receiptError}</p>}
             {error && (
               <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm font-medium text-red-700">
                 {error}
@@ -205,6 +242,12 @@ const CustomerPaymentHistory = () => {
                         </p>
                       </div>
                     </div>
+                    {payment.amountAppliedPaise != null && <dl className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm"><div><dt className="text-slate-500">Applied to bill</dt><dd className="font-bold">{formatMoney(Number(payment.amountAppliedPaise) / 100)}</dd></div><div><dt className="text-slate-500">Excess wallet credit</dt><dd className="font-bold">{formatMoney(Number(payment.excessWalletCreditPaise || 0) / 100)}</dd></div></dl>}
+                    {payment.status === "Success" && /^[a-f0-9]{24}$/i.test(payment._id) && (
+                      <button type="button" disabled={Boolean(receiptBusy)} onClick={() => downloadReceipt(payment)} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-50">
+                        <Download size={16} />{receiptBusy === payment._id ? "Downloading receipt…" : "Download receipt PDF"}
+                      </button>
+                    )}
                     {payment.note && (
                       <div className="mt-3 rounded-xl bg-blue-50 border border-blue-100 p-3">
                         <p className="text-xs font-medium text-blue-500">

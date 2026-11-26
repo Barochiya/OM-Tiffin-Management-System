@@ -79,9 +79,13 @@ final class Wallet {
         $id=$this->identity($customer.':'.$event);$existing=$this->store->get('wallettransactions',$id);
         if($existing){if($existing['amountPaise']!==$delta||$existing['reason']!==$reason)throw new HttpError(409,'Wallet event already recorded with different data');return;}
         $account=$this->account($customer);if(!$account)throw new HttpError(409,'Wallet is not active');
-        $account['balancePaise']+=$delta;$account['sequence']++;
-        $this->store->put('wallettransactions',['_id'=>$id,'customer'=>$customer,'event'=>$event,'type'=>$type,'amountPaise'=>$delta,'balancePaise'=>$account['balancePaise'],'sequence'=>$account['sequence'],'reason'=>$reason,'actor'=>$actor,'source'=>$source],true);
+        $previous=$account['balancePaise'];$account['balancePaise']+=$delta;$account['sequence']++;
+        $this->store->put('wallettransactions',['_id'=>$id,'customer'=>$customer,'event'=>$event,'type'=>$type,'amountPaise'=>$delta,'previousBalancePaise'=>$previous,'balancePaise'=>$account['balancePaise'],'sequence'=>$account['sequence'],'reason'=>$reason,'actor'=>$actor,'approvalStatus'=>'approved','approvedAt'=>gmdate(DATE_ATOM),'source'=>$source],true);
         $this->store->put('walletaccounts',$account);
+    }
+    public function creditTopUp(array $request,string $actor):void {
+        $this->post($request['customer'],'topup:'.$request['_id'],'topup',$request['amountPaise'],
+            'Verified UPI top-up',$actor,['requestId'=>$request['_id'],'reference'=>$request['reference']??null]);
     }
     private function entryState(array $entry):string {
         return json_encode([numeric($entry['breakfastQty']??0),numeric($entry['lunchQty']??0),numeric($entry['dinnerQty']??0),array_map(fn($i)=>[(string)($i['description']??''),self::paise($i['amount']??0)],$entry['extraItems']??[]),(string)($entry['remark']??'')],JSON_THROW_ON_ERROR);
@@ -94,12 +98,55 @@ final class Wallet {
         $entry['walletBasis']=['rates'=>$rates,'chargePaise'=>$amount,'version'=>$version,'modified'=>($old['modified']??false)||($changed&&$previous!==null),'date'=>substr($entry['date'],0,10)];return $entry;
     }
     public function payment(array $payment):void {
-        if($this->account($payment['customer'])&&($payment['status']??'')==='Success')$this->post($payment['customer'],'payment:'.$payment['_id'],'payment',self::paise($payment['amount']),'Payment received','',['payment'=>$payment['_id']]);
+        if(!$this->account($payment['customer'])||($payment['status']??'')!=='Success')return;
+        $excess=(int)($payment['excessWalletCreditPaise']??0);
+        $source=['payment'=>$payment['_id'],'bill'=>$payment['bill']??null,'reference'=>$payment['transactionId']??''];
+        $this->post($payment['customer'],'payment:'.$payment['_id'],'payment',self::paise($payment['amount'])-$excess,'Payment received',$payment['approvedBy']??'',$source);
+        if($excess>0)$this->post($payment['customer'],'payment-excess:'.$payment['_id'],'excess_credit',$excess,'Excess approved payment credited to wallet',$payment['approvedBy']??'',$source);
+    }
+    public function settleBills(string $customer,string $actor=''):void {
+        $account=$this->account($customer);if(!$account)return;
+        $bills=sorted($this->store->find('bills',fn($b)=>$b['customer']===$customer&&($b['carriedForward']??false)!==true&&($b['status']??'')!=='Cancelled'),['createdAt'=>1]);
+        $pending=array_sum(array_map(fn($b)=>self::paise($b['pendingAmount']??0),$bills));
+        // Meal charges already debit this ledger. Recover the funding available for
+        // allocation without charging those same meals a second time at invoicing.
+        $unbilled=0;$query=['mode'=>'unbilled'];
+        do{
+            $statement=$this->statement($customer,$query)[1]['data'];
+            foreach($statement['history'] as $row)if($row['type']==='meal')$unbilled+=max(0,-$row['amountPaise']);
+            $query['before']=$statement['nextBefore'];
+        }while($query['before']!==null);
+        $available=max(0,$account['balancePaise']+$pending+$unbilled);
+        foreach($bills as $bill){
+            $amount=min($available,self::paise($bill['pendingAmount']??0));if($amount<=0)continue;
+            $version=(int)($bill['allocationVersion']??0)+1;
+            $this->post($customer,'invoice-allocation:'.$bill['_id'].':'.$version,'invoice_allocation',0,'Wallet funding applied to invoice',$actor,['bill'=>$bill['_id'],'appliedPaise'=>$amount]);
+            $bill['walletAppliedPaise']=(int)($bill['walletAppliedPaise']??0)+$amount;
+            $bill['allocationVersion']=$version;
+            $bill['paidAmount']=(self::paise($bill['paidAmount']??0)+$amount)/100;
+            $bill['pendingAmount']=max(0,self::paise($bill['totalAmount'])-self::paise($bill['paidAmount']))/100;
+            $bill['status']=$bill['pendingAmount']<=0?'Paid':'Partial';
+            $this->store->put('bills',$bill);$available-=$amount;
+        }
+    }
+    public function reversePayment(array $payment,string $reason,string $actor):void {
+        $account=$this->account($payment['customer']);if(!$account)return;
+        $events=$this->store->find('wallettransactions',fn($t)=>$t['customer']===$payment['customer']);
+        $last=0;foreach($events as $event)if(($event['source']['payment']??null)===$payment['_id'])$last=max($last,(int)$event['sequence']);
+        if(!$last)throw new HttpError(409,'Legacy payment requires wallet reconciliation before reversal');
+        foreach($events as $event)if($event['sequence']>$last&&($event['type']??'')!=='invoice_allocation')throw new HttpError(409,'Later wallet activity exists. Reconcile it before reversing this payment');
+        foreach($events as $event)if($event['sequence']>$last&&($event['source']['bill']??null)!==$payment['bill'])throw new HttpError(409,'This payment has funded another invoice. Reconcile its allocation before reversal');
+        $this->post($payment['customer'],'payment-reversal:'.$payment['_id'],'payment_reversal',-self::paise($payment['amount']),$reason,$actor,['payment'=>$payment['_id'],'bill'=>$payment['bill']]);
+    }
+    public function reverseInvoice(array $bill,string $reason,string $actor):void {
+        if(!$this->account($bill['customer']))throw new HttpError(409,'Activate and reconcile this customer wallet before cancelling an invoice');
+        $gross=self::paise($bill['totalAmount'])-self::paise($bill['previousPendingAmount']??0);
+        $this->post($bill['customer'],'invoice-cancel:'.$bill['_id'],'invoice_reversal',$gross,$reason,$actor,['bill'=>$bill['_id'],'walletAppliedPaise'=>$bill['walletAppliedPaise']??0,'directAppliedPaise'=>$bill['directPaymentsAppliedPaise']??0]);
     }
     public function adjust(string $customer,array $body,string $actor):array {
         $reason=trim((string)($body['reason']??''));$key=(string)($body['requestId']??'');$amount=self::paise($body['amount']??null);
         if(strlen($reason)<5||strlen($reason)>500||!preg_match('/^[A-Za-z0-9-]{16,80}$/D',$key)||$amount===0)throw new HttpError(400,'Provide a nonzero amount, reason (5–500 characters), and unique request ID');
-        return $this->store->transaction(function()use($customer,$key,$amount,$reason,$actor){$this->post($customer,'adjust:'.$key,'adjustment',$amount,$reason,$actor);return $this->view($customer);});
+        return $this->store->transaction(function()use($customer,$key,$amount,$reason,$actor){$this->post($customer,'adjust:'.$key,'adjustment',$amount,$reason,$actor);if($amount>0)$this->settleBills($customer,$actor);return $this->view($customer);});
     }
     public function view(string $customer,int $before=PHP_INT_MAX):array {
         if(!$this->store->get('tiffins',$customer))throw new HttpError(404,'Customer not found');

@@ -45,10 +45,15 @@ function hasRoute(stack, method, url) {
   }
   return false;
 }
-const phpRouter = fs.readFileSync(path.join(root, 'backend-bigrock/router.php'), 'utf8');
+const phpInventoryRun = require('node:child_process').spawnSync(process.env.OMTIFFIN_PHP || 'php', [path.join(root,'scripts/php-route-inventory.php')], {encoding:'utf8'});
+assert.equal(phpInventoryRun.status,0,'PHP production route inventory unavailable: '+(phpInventoryRun.stderr || phpInventoryRun.error));
+const phpRoutes = JSON.parse(phpInventoryRun.stdout);
 function hasPhpRoute(method, url) {
-  const route = url.replace(/^\/api(?=\/|$)/, '') || '/';
-  return phpRouter.includes(`$this->route('${method.toUpperCase()}','${route}'`);
+  const parts = url.replace(/^\/api(?=\/|$)/, '').split('/').filter(Boolean);
+  return phpRoutes.some(route => {
+    const pattern = route.path.split('/').filter(Boolean);
+    return route.method.toLowerCase() === method.toLowerCase() && pattern.length === parts.length && pattern.every((segment,index) => segment.startsWith(':') || segment === parts[index]);
+  });
 }
 async function services(apiUrl) {
   const requests = [];
@@ -83,6 +88,7 @@ async function services(apiUrl) {
       generateBill:[{}], generateBillAndSendWhatsApp:[{}], sendBillWhatsApp:[{}], sendAllBillsWhatsApp:[{}], retryBill:[ids], getBillById:[ids], downloadBillPdf:[ids],
       addPayment:[{}], getBillsByCustomer:[ids], getPendingBills:[ids], getPaymentById:[ids], downloadPaymentReceiptPdf:[ids], sendPaymentReceiptWhatsApp:[ids,Buffer.from('dummy')], approveWhatsAppPayment:[{}],
       getCustomerBillById:[ids], downloadCustomerBillPdf:[ids], getCustomerMealHistory:[10,2026,'1'], updateCustomerProfile:[{}],
+      downloadCustomerReceiptPdf:[ids], getDeliveryLocation:[ids], saveDeliveryLocation:[ids,{}], saveExpense:[{},ids], cancelExpense:[ids,{}],
       changeCustomerPassword:['dummy','dummy','dummy'], sendCustomerPasswordResetOtp:['AUDIT'], verifyCustomerPasswordResetOtp:['AUDIT','dummy'], resetCustomerPassword:['AUDIT','dummy','dummy','dummy'], sendCustomerUserIdRecoveryOtp:['0000000000'], verifyCustomerUserIdRecoveryOtp:['0000000000','dummy'], sendCustomerAccountSetupOtp:['AUDIT'], verifyCustomerAccountSetupOtp:['AUDIT','dummy'], setCustomerAccountSetupPassword:['AUDIT','dummy','dummy','dummy'],
       createModificationRequest:[{}], getModificationRequestById:[ids], updateModificationRequestStatus:[ids,'PENDING'], updateModificationSettings:[{}],
       sendLoginIdsWhatsApp:[[ids]], createWebsiteOrder:[{}], getPublicOrderStatus:['0000000000'], createMenuItem:[{}], updateMenuItem:[ids,{}], deleteMenuItem:[ids], createPublicReview:[{}], updateReview:[ids,{}], deleteReview:[ids], updateWebsiteSettings:[{}],

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import api from '../services/api';
 import customerApi from '../services/customerAuthService';
 import { currentBillingPeriod } from '../services/billingCycle';
@@ -11,7 +11,15 @@ export default function WalletPanel({ customerId, refreshKey }) {
   const [error, setError] = useState(''), [busy, setBusy] = useState(false), [older, setOlder] = useState([]);
   const [mode, setMode] = useState('unbilled'), [period, setPeriod] = useState(currentBillingPeriod);
   const [amount, setAmount] = useState(''), [reason, setReason] = useState(''), [adjustOpen, setAdjustOpen] = useState(false);
+  const [direction, setDirection] = useState('credit');
   const [refreshing, setRefreshing] = useState(false), [refreshedAt, setRefreshedAt] = useState(null);
+  const adjustmentDialog = useRef(null), adjustmentTitle = useId();
+  useEffect(() => {
+    if (!adjustOpen) return;
+    const dialog = adjustmentDialog.current;
+    dialog.showModal();
+    return () => dialog.close();
+  }, [adjustOpen]);
   const request = useRef(null), activeLoad = useRef(null), selection = useRef('');
   const filterKey = JSON.stringify([path, mode, period]); selection.current = filterKey;
   const wallet = loadedWallet?._selection === filterKey ? loadedWallet : null;
@@ -28,7 +36,8 @@ export default function WalletPanel({ customerId, refreshKey }) {
   const activate = async () => { setBusy(true); try { await api.post(`${path}/activate`, { fingerprint: proposal.fingerprint }); setProposal(null); await load(); } catch(e) { setError(e.response?.data?.message || 'Activation failed'); } finally { setBusy(false); } };
   const adjust = async event => {
     event.preventDefault(); if (busy) return;
-    const payload = { amount, reason: reason.trim() }, signature = JSON.stringify(payload);
+    if (!(Number(amount) > 0) || reason.trim().length < 5) return;
+    const payload = { amount: direction === 'debit' ? '-' + amount : amount, reason: reason.trim() }, signature = JSON.stringify(payload);
     if (request.current?.signature !== signature) request.current = { signature, id: crypto.randomUUID() };
     setBusy(true);
     try { await api.post(`${path}/adjustments`, { ...payload, requestId: request.current.id }); request.current = null; setAmount(''); setReason(''); setOlder([]); setAdjustOpen(false); await load(); }
@@ -64,7 +73,31 @@ export default function WalletPanel({ customerId, refreshKey }) {
         {wallet.history.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-slate-500">No entries in this view. Use Billing cycle or All history to view previous entries.</td></tr>}
       </tbody></table></div>
       {wallet.nextBefore && <button disabled={busy} onClick={more} className="mt-3 rounded-lg border px-3 py-2">Older entries</button>}
-      {admin && <div className="mt-5 border-t pt-4"><button type="button" onClick={() => setAdjustOpen(open => !open)} aria-expanded={adjustOpen} className="rounded-lg border px-3 py-2 font-semibold text-blue-700">{adjustOpen ? 'Close adjustment' : 'Add adjustment'}</button>{adjustOpen && <form onSubmit={adjust} className="mt-4 grid gap-3 sm:grid-cols-2"><label>Amount (₹; negative to debit)<input required type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 w-full rounded-lg border p-2" /></label><label>Reason<input required minLength={5} maxLength={500} value={reason} onChange={e => setReason(e.target.value)} className="mt-1 w-full rounded-lg border p-2" /></label><button disabled={busy} className="rounded-lg bg-blue-700 px-4 py-2 text-white sm:col-span-2">{busy ? 'Saving…' : 'Record adjustment'}</button></form>}</div>}
+      {admin && <div className="mt-5 flex justify-end">
+        <button type="button" onClick={() => { setDirection('credit'); setAdjustOpen(true); }} aria-haspopup="dialog" className="rounded-xl bg-blue-700 px-4 py-2.5 font-semibold text-white">Add adjustment</button>
+        {adjustOpen && <dialog ref={adjustmentDialog} aria-labelledby={adjustmentTitle} onCancel={event => { event.preventDefault(); if (!busy) setAdjustOpen(false); }} className="fixed inset-0 m-auto max-h-[90dvh] w-[min(540px,94vw)] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/60">
+          <header className="border-b border-blue-100 bg-blue-50 px-5 py-4">
+            <h3 id={adjustmentTitle} className="text-xl font-bold">Adjust wallet balance</h3>
+            <p className="mt-1 text-sm text-slate-600">Current balance <strong>{walletMoney(wallet.balancePaise)}</strong></p>
+          </header>
+          <form onSubmit={adjust} className="grid gap-4 p-5">
+            {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p>}
+            <fieldset disabled={busy} className="grid gap-2 sm:grid-cols-2">
+              <legend className="mb-2 text-sm font-semibold">Adjustment type</legend>
+              {[['credit', 'Add credit'], ['debit', 'Deduct amount']].map(([value, label]) => <label key={value} className={direction === value ? 'flex cursor-pointer gap-2 rounded-xl border border-blue-600 bg-blue-50 p-3 font-semibold' : 'flex cursor-pointer gap-2 rounded-xl border border-slate-200 p-3 font-semibold'}>
+                <input type="radio" name="adjustment-type" checked={direction === value} onChange={() => setDirection(value)} />{label}
+              </label>)}
+            </fieldset>
+            <label className="text-sm font-semibold">Amount (₹)<input required disabled={busy} type="number" min="0.01" step="0.01" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1 block w-full rounded-xl border border-slate-300 bg-white p-3 text-base" /></label>
+            <label className="text-sm font-semibold">Reason<textarea required disabled={busy} minLength={5} maxLength={500} rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder="Why is the balance changing?" className="mt-1 block w-full rounded-xl border border-slate-300 bg-white p-3 text-base" /></label>
+            {Number(amount) > 0 && Number.isFinite(Number(amount)) && <p className="flex flex-wrap justify-between gap-2 rounded-xl bg-slate-100 p-3 text-sm">Estimated balance after adjustment <strong>{walletMoney(wallet.balancePaise + Math.round(Number(amount) * 100) * (direction === 'debit' ? -1 : 1))}</strong></p>}
+            <footer className="flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-4">
+              <button type="button" disabled={busy} onClick={() => setAdjustOpen(false)} className="rounded-xl border border-slate-300 px-4 py-2 font-semibold">Cancel</button>
+              <button disabled={busy || !(Number(amount) > 0) || reason.trim().length < 5} className="rounded-xl bg-blue-700 px-4 py-2 font-semibold text-white disabled:opacity-50">{busy ? 'Saving…' : direction === 'credit' ? 'Add credit to wallet' : 'Deduct from wallet'}</button>
+            </footer>
+          </form>
+        </dialog>}
+      </div>}
     </>}
   </section>;
 }

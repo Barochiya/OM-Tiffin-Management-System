@@ -4,9 +4,12 @@ namespace OMT;
 require_once __DIR__.'/customers.php';
 final class Accounts {
     public function __construct(private readonly Store $store){}
+    private function hasLoggedIn(array $account,string $customer):bool {
+        return !empty($account['lastLoginAt'])||!empty($account['firstLoginAt'])||$this->store->first('customerfirstloginlogs',fn($log)=>($log['customerAccount']??null)===($account['_id']??'')||($log['customer']??null)===$customer)!==null;
+    }
     public function recipients():array {
         $customers=sorted($this->store->find('tiffins',fn($d)=>array_key_exists('barcode',$d)&&$d['barcode']!==''),['barcode'=>1]);$data=[];
-        foreach($customers as $customer){$account=$this->store->first('customeraccounts',fn($a)=>($a['customer']??null)===$customer['_id']);$data[]=['customerId'=>$customer['_id'],'customerName'=>$customer['customerName']??'','phone'=>$customer['phone']??'','barcode'=>$customer['barcode']??'','userId'=>$account['userId']??$customer['barcode']??'','status'=>$customer['status']??'Active','accountExists'=>$account!==null,'loginEnabled'=>($account['loginEnabled']??false)===true,'isFirstLogin'=>($account['isFirstLogin']??false)===true,'ready'=>$account!==null&&!empty($account['userId'])&&!empty($customer['phone'])];}
+        foreach($customers as $customer){$account=$this->store->first('customeraccounts',fn($a)=>($a['customer']??null)===$customer['_id']);$data[]=['customerId'=>$customer['_id'],'customerName'=>$customer['customerName']??'','phone'=>$customer['phone']??'','barcode'=>$customer['barcode']??'','userId'=>$account['userId']??$customer['barcode']??'','status'=>$customer['status']??'Active','accountExists'=>$account!==null,'loginEnabled'=>($account['loginEnabled']??false)===true,'isFirstLogin'=>($account['isFirstLogin']??false)===true,'hasLoggedIn'=>$account!==null&&$this->hasLoggedIn($account,$customer['_id']),'lastLoginAt'=>$account['lastLoginAt']??null,'ready'=>$account!==null&&!empty($account['userId'])&&!empty($customer['phone'])];}
         return [200,['success'=>true,'count'=>count($data),'readyCount'=>count(array_filter($data,fn($d)=>$d['ready'])),'data'=>$data]];
     }
     public function deliveryStatus():array {
@@ -21,8 +24,8 @@ final class Accounts {
         if(!is_bool($body['enabled']??null))throw new HttpError(400,'enabled must be true or false');
         return $this->store->transaction(function()use($customer,$body){$account=$this->store->first('customeraccounts',fn($a)=>($a['customer']??null)===$customer);if(!$account)throw new HttpError(404,'Customer account not found');$account['loginEnabled']=$body['enabled'];$account=$this->store->put('customeraccounts',$account);return [200,['success'=>true,'message'=>$body['enabled']?'Customer login enabled':'Customer login disabled','account'=>['id'=>$account['_id'],'customer'=>$account['customer'],'userId'=>$account['userId'],'loginEnabled'=>$account['loginEnabled'],'isFirstLogin'=>$account['isFirstLogin']]]];});
     }
-    private function queueLogin(array $customer,array $account,string $key):void {
-        $this->store->queue($key,CustomerLoginMessage::payload($customer,$account));
+    private function queueLogin(array $customer,array $account,string $key,bool $pendingOnly=false):void {
+        $this->store->queue($key,array_replace(CustomerLoginMessage::payload($customer,$account),['pendingLoginOnly'=>$pendingOnly]));
     }
     public function regenerate(string $customerId):array {
         return $this->store->transaction(function()use($customerId){
@@ -36,16 +39,18 @@ final class Accounts {
     }
     public function sendLoginIds(array $body):array {
         $ids=$body['customerIds']??[];$users=$body['userIds']??[];
+        $mode=$body['selectionMode']??'manual';if(!in_array($mode,['manual','pending-login'],true))throw new HttpError(400,'Invalid login ID selection mode');
         if((!is_array($ids)||!$ids)&&(!is_array($users)||!$users))throw new HttpError(400,'customerIds or userIds must contain at least one customer');
         if(!is_array($ids)||!is_array($users)||count($ids)+count($users)>1000)throw new HttpError(400,'Invalid customer selection');
         if(!$ids){$users=array_map(fn($v)=>strtoupper(trim((string)$v)),$users);$ids=array_column($this->store->find('customeraccounts',fn($a)=>in_array($a['userId']??null,$users,true)),'customer');}
-        return $this->store->transaction(function()use($ids){$results=[];$batch=bin2hex(random_bytes(12));
+        return $this->store->transaction(function()use($ids,$mode){$results=[];$batch=bin2hex(random_bytes(12));
             foreach($this->store->find('tiffins',fn($c)=>in_array($c['_id'],$ids,true))as $customer){
                 $account=$this->store->first('customeraccounts',fn($a)=>($a['customer']??null)===$customer['_id']);$error=!$account?'Customer account not found':(empty($customer['phone'])?'Customer phone number is not available':null);
                 $item=['customerId'=>$customer['_id'],'customerName'=>$customer['customerName'],'userId'=>$account['userId']??$customer['barcode']??'','success'=>$error===null,'status'=>$error?'failed':'queued'];
-                if($error)$item['error']=$error;else{$item['eventKey']='login-id:'.$account['_id'].':'.$batch;$this->queueLogin($customer,$account,$item['eventKey']);}$results[]=$item;
+                if($mode==='pending-login'&&$account&&(($account['loginEnabled']??false)!==true||$this->hasLoggedIn($account,$customer['_id']))){$item['status']='skipped';$item['success']=false;$item['reason']='Already logged in or login disabled';$results[]=$item;continue;}
+                if($error)$item['error']=$error;else{$item['eventKey']='login-id:'.$account['_id'].':'.$batch;$this->queueLogin($customer,$account,$item['eventKey'],$mode==='pending-login');}$results[]=$item;
             }
-            $failed=count(array_filter($results,fn($r)=>$r['status']==='failed'));return [200,['success'=>true,'message'=>'Customer login ID notifications queued.','summary'=>['total'=>count($results),'sent'=>0,'queued'=>count($results)-$failed,'failed'=>$failed],'data'=>$results]];
+            $failed=count(array_filter($results,fn($r)=>$r['status']==='failed'));$skipped=count(array_filter($results,fn($r)=>$r['status']==='skipped'));return [200,['success'=>true,'message'=>'Customer login ID notifications queued.','summary'=>['total'=>count($results),'sent'=>0,'queued'=>count($results)-$failed-$skipped,'failed'=>$failed,'skipped'=>$skipped],'data'=>$results]];
         });
     }
 }

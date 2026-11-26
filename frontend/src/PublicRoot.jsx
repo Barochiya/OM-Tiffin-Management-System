@@ -6,10 +6,12 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./PublicApp";
 import SearchMetadata from "./components/SearchMetadata";
 import NotificationCenter from "./components/NotificationCenter";
+import VisitorTracker from "./components/VisitorTracker";
 
 const application = (
   <BrowserRouter>
     <SearchMetadata />
+    <VisitorTracker />
     <App />
     <NotificationCenter />
   </BrowserRouter>

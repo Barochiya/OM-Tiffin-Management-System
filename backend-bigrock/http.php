@@ -4,7 +4,7 @@ namespace OMT;
 require_once __DIR__.'/router.php';
 final class HttpApplication {
     public function __construct(private readonly Router $router,private readonly ?Webhook $webhook=null,private readonly ?WhatsApp $whatsapp=null,private readonly bool $stagingOrigin=false){}
-    public function handle(string $method,string $uri,array $headers,string $raw,array $query=[],array $form=[],array $files=[]):array {
+    public function handle(string $method,string $uri,array $headers,string $raw,array $query=[],array $form=[],array $files=[],array $context=[]):array {
         $headers=array_change_key_case($headers,CASE_LOWER);$method=strtoupper($method);
         $response=['Cache-Control'=>'no-store','X-Content-Type-Options'=>'nosniff','Referrer-Policy'=>'same-origin'];
         try {
@@ -40,7 +40,9 @@ final class HttpApplication {
             }
             $token=null;$authorization=$headers['authorization']??'';
             if($authorization!==''){if(!preg_match('/^Bearer ([A-Za-z0-9._-]+)$/D',$authorization,$match))throw new HttpError(401,'Token Failed');$token=$match[1];}
-            [$status,$data]=$this->router->dispatch($method,$path,$query,$body,$token,$headers['idempotency-key']??null);
+            $data=$this->router->dispatch($method,$path,$query,$body,$token,$headers['idempotency-key']??null,[...$context,'headers'=>$headers]);
+            if($data instanceof CsvResponse)return [200,[...$response,'Content-Type'=>'text/csv; charset=utf-8','Content-Disposition'=>'attachment; filename="'.$data->filename.'"'],$data->text];
+            [$status,$data]=$data;
             if($data instanceof TextResponse)return [$status,[...$response,'Content-Type'=>'text/plain; charset=utf-8'],$data->text];
             if($data instanceof BinaryResponse)return [$status,[...$response,'Content-Type'=>$data->mime,'Content-Disposition'=>'attachment','Content-Length'=>(string)strlen($data->bytes)],$data->bytes];
             if($data instanceof PdfResponse)return [$status,[...$response,'Content-Type'=>'application/pdf','Content-Disposition'=>'inline; filename="'.$data->filename.'"','Content-Length'=>(string)strlen($data->bytes)],$data->bytes];

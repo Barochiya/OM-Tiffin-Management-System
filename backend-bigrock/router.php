@@ -21,10 +21,17 @@ require_once __DIR__.'/document-notifications.php';
 require_once __DIR__.'/employees.php';
 require_once __DIR__.'/pg.php';
 require_once __DIR__.'/review-invitations.php';
+require_once __DIR__.'/analytics.php';
+require_once __DIR__.'/ranking.php';
 final class Router {
     private array $routes=[];
     public function __construct(private readonly Store $store,private readonly array $settings){
         $c=new Catalog($store);$r=new ReadModels($store);$a=new Auth($store,$settings['JWT_SECRET']??'',$settings['CUSTOMER_JWT_SECRET']??'');$billing=new Billing($store);
+        $analytics=new VisitorAnalytics($settings,$store);$ranking=new CustomerRanking($store);
+        $this->route('POST','/visitor-analytics/track','visitor',fn($p,$q,$b,$user,$context)=>$analytics->track($b,$context,$user));
+        $this->route('GET','/visitor-analytics/dashboard','admin',fn($p,$q,$b,$user)=>$analytics->dashboard($q,$user));
+        $this->route('GET','/visitor-analytics/logs','admin',fn($p,$q,$b,$user)=>$analytics->logs($q,$user));
+        $this->route('GET','/visitor-analytics/export','admin',fn($p,$q,$b,$user)=>$analytics->logs($q,$user,true));
         $pg=new Pg($store,$settings);
         $this->route('GET','/pg/templates','admin',fn()=>$pg->statuses());
         $this->route('GET','/pg','admin',fn($p,$q)=>$pg->listing($q));
@@ -192,6 +199,7 @@ final class Router {
         $this->route('GET','/customer-accounts/status','admin',fn()=>$r->accountStatuses());
         $this->route('GET','/customer-accounts/users','admin',fn()=>$r->customerUsers());
         $this->route('GET','/customer-portal/profile','customer',fn($p,$q,$b,$user)=>$r->profile($user['customer']));
+        $this->route('GET','/customer-portal/ranking','customer',fn($p,$q,$b,$user)=>$ranking->forCustomer($user['customer'],$q));
         $this->route('GET','/customer-portal/bills','customer',fn($p,$q,$b,$user)=>$r->bills($user['customer']));
         $this->route('GET','/customer-portal/bills/:billId','customer',fn($p,$q,$b,$user)=>$r->bill($p['billId'],$user['customer']));
         $this->route('GET','/customer-portal/payments','customer',fn($p,$q,$b,$user)=>$r->payments($user['customer']));
@@ -205,7 +213,7 @@ final class Router {
         $this->routes[]=['method'=>$method,'path'=>$path,'regex'=>'~^'.$pattern.'/?$~D','names'=>$names,'access'=>$access,'handler'=>$handler];
     }
     public function inventory():array{return array_map(fn($r)=>['method'=>$r['method'],'path'=>$r['path'],'access'=>$r['access']],$this->routes);}
-    public function dispatch(string $method,string $path,array $query=[],array $body=[],?string $token=null,?string $idempotency=null):array {
+    public function dispatch(string $method,string $path,array $query=[],array $body=[],?string $token=null,?string $idempotency=null,array $context=[]):array|CsvResponse {
         $method=strtoupper($method);$path=preg_replace('~^/api(?=/|$)~','',$path)?:'/';
         foreach($this->routes as $route){
             if($route['method']!==$method||!preg_match($route['regex'],$path,$matches))continue;
@@ -214,13 +222,14 @@ final class Router {
             if($route['access']==='employee')$user=requireEmployee($this->store,$this->settings,$token??'');
             if($route['access']==='customer')$user=requireCustomer($this->store,true,$this->settings,$token??'');
             if($route['access']==='customer-first-login')$user=requireCustomer($this->store,false,$this->settings,$token??'');
-            if(!in_array($method,['GET','HEAD','OPTIONS'],true)&&!in_array($path,['/admin/login','/document-design/preview'],true)&&empty($this->settings['migration']['writesEnabled']))throw new HttpError(503,'Migration staging is read-only. Please use the current service.');
-            $call=fn()=>($route['handler'])($params,$query,$body,$user);
+            if($route['access']==='visitor'&&$token){try{$user=requireCustomer($this->store,true,$this->settings,$token);}catch(HttpError){$user=null;}}
+            if(!in_array($method,['GET','HEAD','OPTIONS'],true)&&!in_array($path,['/admin/login','/document-design/preview','/visitor-analytics/track'],true)&&empty($this->settings['migration']['writesEnabled']))throw new HttpError(503,'Migration staging is read-only. Please use the current service.');
+            $call=fn()=>($route['handler'])($params,$query,$body,$user,$context);
             if($idempotency!==null&&!in_array($method,['GET','HEAD','OPTIONS'],true)){
                 if(!preg_match('/^[A-Za-z0-9._:-]{16,100}$/D',$idempotency))throw new HttpError(400,'Invalid idempotency key.');
                 $scope=$user['_id']??$route['access'];$key=hash('sha256',$scope.'|'.$method.'|'.$path.'|'.$idempotency);
                 // Password/session responses must never be cached in operations.
-                if(str_starts_with($path,'/employee-auth/')||str_starts_with($path,'/customer-auth/')||str_starts_with($path,'/admin/')||str_contains($path,'regenerate-password')||str_ends_with($path,'/provision')||$path==='/document-design/preview')return $call();
+                if(str_starts_with($path,'/employee-auth/')||str_starts_with($path,'/customer-auth/')||str_starts_with($path,'/admin/')||str_contains($path,'regenerate-password')||str_ends_with($path,'/provision')||in_array($path,['/document-design/preview','/visitor-analytics/track'],true))return $call();
                 return $this->store->operation($key,hash('sha256',serialize([$query,$body])),$call);
             }
             return $call();

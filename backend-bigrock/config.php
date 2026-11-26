@@ -25,3 +25,22 @@ function db(): \PDO {
     if ($pdo->query('SELECT DATABASE()')->fetchColumn() !== 'maapn1f6_omtiffin') throw new \RuntimeException('Database identity mismatch');
     return $pdo;
 }
+
+/**
+ * Visitor analytics is deliberately isolated from the business database.
+ * A separate database name and least-privilege user are mandatory. Failure to
+ * connect is handled by the analytics module and must never interrupt orders,
+ * billing, wallets, authentication, or customer portal requests.
+ */
+function analyticsDb(array $settings): ?\PDO {
+    if (empty($settings['analytics']['enabled'])) return null;
+    $business=$settings['database']??[];$c=$settings['analytics']['database']??[];
+    foreach(['host','name','user','password'] as $key)if(empty($c[$key]))throw new \RuntimeException('Analytics database is not configured');
+    if(($c['name']??'')===($business['name']??'')||($c['user']??'')===($business['user']??''))throw new \RuntimeException('Analytics storage must use an isolated database and user');
+    $pdo=new \PDO('mysql:host='.$c['host'].';dbname='.$c['name'].';charset=utf8mb4',$c['user'],$c['password'],[
+        \PDO::ATTR_ERRMODE=>\PDO::ERRMODE_EXCEPTION,\PDO::ATTR_EMULATE_PREPARES=>false,\PDO::ATTR_STRINGIFY_FETCHES=>false
+    ]);
+    $pdo->exec("SET time_zone = '+00:00'");
+    if($pdo->query('SELECT DATABASE()')->fetchColumn()!==$c['name'])throw new \RuntimeException('Analytics database identity mismatch');
+    return $pdo;
+}

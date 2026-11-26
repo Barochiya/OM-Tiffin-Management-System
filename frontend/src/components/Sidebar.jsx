@@ -15,6 +15,7 @@ import {
   FaMoneyCheckAlt,
   FaUtensils,
   FaStar,
+  FaChartLine,
 } from "react-icons/fa";
 
 const Sidebar = ({ sidebarOpen = false, setSidebarOpen = () => {} }) => {
@@ -81,6 +82,7 @@ const closeSidebar = () => {
         >
           Dashboard
         </Link>
+            <Link to="/visitor-analytics" onClick={closeSidebar} className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all ${location.pathname === "/visitor-analytics" ? "bg-white text-blue-700 font-semibold shadow" : "hover:bg-blue-600"}`}><FaChartLine className="text-cyan-300" />Visitor Analytics</Link>
           </div>
         </section>
         <section aria-labelledby="admin-nav-1" className="mb-4">

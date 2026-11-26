@@ -15,6 +15,7 @@ downloadCustomerBillPdf,
   getCustomerModificationRequests,
 getCustomerPayments,
 getCustomerAnnouncements,
+getCustomerRanking,
 } = require("../controllers/customerPortalController");
 // Customer updates their own profile
 router.put(
@@ -28,6 +29,11 @@ router.get(
   protectCustomer,
   requirePasswordChanged,
   getCustomerAnnouncements
+);router.get(
+  "/ranking",
+  protectCustomer,
+  requirePasswordChanged,
+  getCustomerRanking
 );router.get(
   "/payments",
   protectCustomer,

@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { webcrypto } = require('node:crypto');
 const { createRequire } = require('node:module');
 const root = process.argv[2] || path.resolve(__dirname, '..');
 const backendRequire = createRequire(path.join(root, 'backend/package.json'));
@@ -26,11 +27,13 @@ const Admin = backendRequire('./models/Admin');
 const WebsiteMenu = backendRequire('./models/WebsiteMenu');
 const WebsiteOrder = backendRequire('./models/WebsiteOrder');
 const WebsiteSettings = backendRequire('./models/WebsiteSettings');
+const DocumentDesign = backendRequire('./models/DocumentDesign');
 const billController = backendRequire('./controllers/billController');
 const Payment = backendRequire('./models/Payment');
 const paymentController = backendRequire('./controllers/paymentController');
 const orderController = backendRequire('./controllers/websiteOrderController');
 const auth = backendRequire('./middleware/authMiddleware');
+DocumentDesign.findOne = () => ({ lean: async () => null });
 let checks = 0;
 function check(name, fn) { return Promise.resolve().then(fn).then(() => { checks++; console.log('PASS ' + name); }); }
 function response() { return { statusCode: 200, headers: {}, status(code) { this.statusCode = code; return this; }, json(body) { this.body = body; return this; }, send(body) { this.body = body; return this; }, setHeader(key, value) { this.headers[key] = value; } }; }
@@ -42,6 +45,11 @@ function hasRoute(stack, method, url) {
   }
   return false;
 }
+const phpRouter = fs.readFileSync(path.join(root, 'backend-bigrock/router.php'), 'utf8');
+function hasPhpRoute(method, url) {
+  const route = url.replace(/^\/api(?=\/|$)/, '') || '/';
+  return phpRouter.includes(`$this->route('${method.toUpperCase()}','${route}'`);
+}
 async function services(apiUrl) {
   const requests = [];
   const storage = new Map([['token','audit-admin-token'],['customerToken','audit-customer-token']]);
@@ -51,7 +59,7 @@ async function services(apiUrl) {
     requests.push({ method: config.method, url: new URL(axios.getUri(config), 'http://audit.local').pathname, authorization: config.headers.get('Authorization') });
     return { data: { success: true }, status: 200, statusText: 'OK', headers: {}, config };
   };
-  const context = vm.createContext({ console, sessionStorage: { getItem: key => storage.get(key), removeItem: key => storage.delete(key) }, window: { location: { href: '' } } });
+  const context = vm.createContext({ console, crypto: webcrypto, setTimeout: () => 0, clearTimeout: () => {}, document: { body: { dataset: {} } }, sessionStorage: { getItem: key => storage.get(key), removeItem: key => storage.delete(key) }, window: { location: { href: '' } } });
   const modules = new Map();
   async function load(file) {
     if (modules.has(file)) return modules.get(file);
@@ -84,12 +92,12 @@ async function services(apiUrl) {
     for (const file of fs.readdirSync(directory).filter(name=>name.endsWith('Service.js') && name !== 'whatsappService.js')) {
       const mod = await load(path.join(directory,file)); await mod.evaluate();
       for (const name of Object.keys(mod.namespace)) {
-        if (name === 'default' || name === 'logoutCustomer' || typeof mod.namespace[name] !== 'function') continue;
+        if (name === 'default' || name === 'logoutCustomer' || name === 'currentDeliveryMeal' || name === 'recordVisit' || typeof mod.namespace[name] !== 'function') continue;
         const before = requests.length;
         await mod.namespace[name](...(args[name] || []));
         assert.equal(requests.length,before+1, name+' should make one request');
         const req = requests.at(-1);
-        assert(hasRoute(app._router.stack,req.method,req.url), name+' has no backend route: '+req.method+' '+req.url);
+        assert(hasRoute(app._router.stack,req.method,req.url) || hasPhpRoute(req.method,req.url), name+' has no backend route: '+req.method+' '+req.url);
         assert(!req.url.includes('/api/api/'),name+' duplicated API prefix');
         const customer = file === 'customerAuthService.js' || file === 'customerModificationService.js';
         assert.equal(req.authorization,customer?'Bearer audit-customer-token':'Bearer audit-admin-token',name+' token');

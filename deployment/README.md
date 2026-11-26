@@ -13,3 +13,5 @@ Before first activation, finish HTTP/browser/mobile verification, configure HTTP
 The public document root will point to `/home1/maapn1f6/omtiffinservices.com/current`; release frontend files are separate from the private PHP/PDF release code. `apiEnabled`, `writesEnabled`, `workersEnabled` and `externalMessagesEnabled` in private migration configuration independently guard activation. Existing data/config are never replaced by a Git push.
 
 `deploy.py` and the workflow are prepared code. Their presence does not confirm that a production deployment, cron, DNS change, backup schedule or end-to-end verification has been completed.
+
+Visitor analytics has an additional independent activation gate and isolated database requirements documented in `visitor-analytics.md`. Never point it at the OM Tiffin business database.

@@ -12,6 +12,7 @@ import {
   FaSignOutAlt,
   FaBars,
   FaTimes,
+  FaWallet,
 } from "react-icons/fa";
 import { logoutCustomer } from "../../services/customerAuthService";
 const menuItems = [
@@ -179,6 +180,13 @@ const CustomerSidebar = () => {
           </button>
         </div>
       </aside>
+      <nav className="customer-bottom-nav" aria-label="Customer quick navigation">
+        <NavLink to="/customer/dashboard"><FaHome /><span>Home</span></NavLink>
+        <NavLink to="/customer/tiffin-plan"><FaChartPie /><span>Tiffin</span></NavLink>
+        <NavLink to="/customer/bills"><FaFileInvoiceDollar /><span>Bills</span></NavLink>
+        <button type="button" onClick={() => navigate("/customer/dashboard?wallet=open")}><FaWallet /><span>Wallet</span></button>
+        <NavLink to="/customer/profile"><FaUserCircle /><span>Profile</span></NavLink>
+      </nav>
     </>
   );
 };

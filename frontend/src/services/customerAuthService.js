@@ -214,3 +214,7 @@ export const getCustomerAnnouncements = async () => {
   );
   return response.data;
 };
+export const getCustomerRanking = async (params = {}) => {
+  const response = await customerApi.get("/customer-portal/ranking", { params });
+  return response.data;
+};

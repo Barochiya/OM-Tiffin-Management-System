@@ -5,6 +5,10 @@ const { createRequire } = require('node:module');
 const { pathToFileURL } = require('node:url');
 const root = process.argv[2] || path.resolve(__dirname,'..');
 const frontendRequire = createRequire(path.join(root,'frontend/package.json'));
+const backendRequire = createRequire(path.join(root,'backend/package.json'));
+backendRequire('./models/DocumentDesign').findOne=()=>({lean:async()=>null});
+const documentDefaults=backendRequire('./utils/documentDesign').defaults;
+const documentDesign={revision:0,bill:documentDefaults('bill'),receipt:documentDefaults('receipt'),salary:documentDefaults('salary'),pg:documentDefaults('pg')};
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const id='507f1f77bcf86cd799439011';
 const customer={_id:id,customerName:'Audit Customer',phone:'0000000000',address:'Audit Address, Gandhinagar',status:'Active',mealType:'Both',barcode:'OMT-000001',pricing:{pricingType:'default',breakfastPrice:0,lunchPrice:117,dinnerPrice:132},advanceBalance:0};
@@ -40,10 +44,15 @@ function fixture(url,method){
   if(p.startsWith('/customer-portal/bills/'))return {success:true,data:bill};
   if(p==='/customer-portal/bills')return {success:true,data:[bill]};
   if(p==='/customer-portal/payments')return {success:true,data:[payment]};
+  if(p==='/customer-portal/ranking')return {success:true,data:{rank:1,totalEligible:1,period:'Oct 2026 · Cycle 1',score:125,scoreLabel:'Total successful payments linked to valid bills',topFive:true,reward:{supported:false,eligible:false},progress:{targetRank:5,thresholdScore:null,amountToTopFive:0}}};
   if(p.startsWith('/customer-portal/'))return {success:true,data:[]};
   if(p==='/customer-modification-admin/settings')return {success:true,data:{lunchCutoffTime:'10:30',dinnerCutoffTime:'17:00',skipTiffinEnabled:true,extraTiffinEnabled:true,mealModificationEnabled:true,otherRequestEnabled:true}};
   if(p.startsWith('/customer-modification-admin/'))return {success:true,data:[]};
   if(p.startsWith('/daily-entry'))return {success:true,data:[]};
+  if(p==='/meal-deliveries')return {success:true,data:[],whatsappConfigured:false};
+  if(p==='/document-design')return {success:true,data:documentDesign};
+  if(p==='/employees')return {success:true,data:{employees:[]}};
+  if(p==='/wallets')return {success:true,data:[],summary:{active:0,needsActivation:0,totalBalance:0}};
   if(p==='/announcement-status')return {success:true,data:[{_id:'real-announcement',customerName:'Demo Customer',title:'Real announcement fixture',status:'delivered',createdAt:'2026-10-08T10:00:00Z'},{_id:'test-announcement',customerName:'Demo Customer',title:'System Review Test',status:'failed',notificationArchived:true,createdAt:'2026-09-25T10:00:00Z'}]};
   if(p==='/bills/delivery-status'||p==='/announcement-status'||p.startsWith('/whatsapp-inbox'))return {success:true,data:[]};
   if(p==='/bills')return {success:true,data:[bill]};
@@ -53,6 +62,8 @@ function fixture(url,method){
   if(p.startsWith('/payments/'))return payment;
   if(p==='/dashboard/notifications')return {total:3,categories:[{id:'orders',title:'Website orders awaiting confirmation',count:2,path:'/website-orders'},{id:'reviews',title:'Reviews awaiting approval',count:1,path:'/website-reviews'}],unavailable:[],updatedAt:new Date().toISOString()};
   if(p==='/dashboard')return {period:{label:url.searchParams.get('month')==='10'?'Oct 2026':url.searchParams.get('year')==='2026'?'2026':'All time',chartYear:2026},availableYears:[2026,2025],growth:{revenue:url.searchParams.get('year')==='all' || !url.searchParams.get('year') ? {percent:null,label:'All-time successful collections'} : {percent:-25,label:'vs previous month'},active:{percent:100,share:true,label:'of registered customers'}},stats:{totalCustomers:1,activeCustomers:1,totalRevenue:125,totalPending:124},todayCollection:125,todayMeals:2,revenueChart:[],recentPayments:[],pendingBills:[],topCustomers:[]};
+  if(p==='/visitor-analytics/dashboard')return {success:true,enabled:true,fullIpAuthorized:false,metrics:{todayVisits:1,todayUnique:1,active:1,yesterday:0,week:1,month:1,new:1,returning:0,guest:1,customers:0,mobile:0,tablet:0,desktop:1,averageDurationSeconds:30},devices:[{label:'Desktop',value:1}],browsers:[{label:'Chrome',value:1}],operatingSystems:[{label:'Windows',value:1}],daily:[{day:'2026-11-26',value:1}],hourly:[],monthly:[],pages:[{label:'/',value:1}]};
+  if(p==='/visitor-analytics/logs')return {success:true,page:1,total:1,totalPages:1,data:[{visitId:'audit-visitor-session',firstVisit:'2026-11-26T08:00:00Z',lastActivity:'2026-11-26T08:00:30Z',durationSeconds:30,entryPage:'/',lastPage:'/menu',ip:'192.0.***.***',customerId:null,customerName:null,kind:'guest',device:'Desktop',os:'Windows',browser:'Chrome 130',screen:'1440x900',viewport:'1440x800',orientation:'landscape',country:'Unknown',state:'Unknown',city:'Unknown',returning:false,active:true}]};
   if(p.startsWith('/barcodes'))return {success:true,barcode:customer.barcode,customer,items:[{customer,barcode:customer.barcode}]};
   if(p.startsWith('/website-orders'))return {success:true,data:[]};
   throw Error('Missing API fixture: '+method+' '+p);
@@ -89,7 +100,11 @@ async function context(viewport,authenticated=true){
   await check('admin sidebar and header stay visible while a page module is delayed',async()=>{
     const ctx=await context({width:1440,height:1000}),p=await ctx.newPage();let release;const wait=new Promise(resolve=>{release=resolve});
     await p.route('**/src/pages/PriceSettings.jsx',async route=>{await wait;await route.continue()});
-    try{await p.goto(base+'/price-settings');await p.getByRole('status',{name:'Loading page'}).waitFor();assert(await p.locator('.om-admin-shell').isVisible());assert(await p.locator('aside').isVisible());assert(await p.locator('header').isVisible());release();await p.getByRole('button',{name:/Save/}).first().waitFor();}finally{release();await ctx.close()}
+    try{await p.goto(base+'/price-settings');await p.getByRole('status',{name:'Loading page'}).waitFor();await p.locator('.om-admin-shell').waitFor();assert(await p.locator('aside').isVisible());assert(await p.locator('header').isVisible());release();await p.getByRole('button',{name:/Save/}).first().waitFor();}finally{release();await ctx.close()}
+  });
+  await check('consented public visits use the isolated analytics endpoint once',async()=>{
+    const ctx=await context({width:1280,height:800});await ctx.addInitScript(()=>{if(window.location.origin!=='null')localStorage.setItem('omAnalyticsConsent','accepted');});const p=await ctx.newPage();const before=writes.length;
+    try{await p.goto(base+'/');await p.waitForLoadState('networkidle');const tracks=writes.slice(before).filter(request=>request.path==='/api/visitor-analytics/track');assert.equal(tracks.length,1);const payload=JSON.parse(tracks[0].body.toString());assert.equal(payload.page,'/');assert.equal(payload.entryPage,'/');}finally{await ctx.close()}
   });
   const desktop=await context({width:1440,height:1000});const page=await desktop.newPage();
   const source=fs.readFileSync(path.join(root,'frontend/src/App.jsx'),'utf8');
@@ -179,7 +194,7 @@ async function context(viewport,authenticated=true){
       await p.goto(base+'/payment-receipt/'+id);await p.getByRole('button',{name:'Send Receipt PDF',exact:true}).waitFor();
       const downloadPromise=p.waitForEvent('download');await p.getByRole('button',{name:'Save as PDF',exact:true}).click();const download=await downloadPromise;assert(download.suggestedFilename().endsWith('.pdf'));
       const before=writes.length;await p.getByRole('button',{name:'Send Receipt PDF',exact:true}).click();await p.getByRole('status').filter({hasText:'Fixture action completed.'}).waitFor();
-      const sent=writes.slice(before).find(request=>request.path==='/api/payments/send-whatsapp');assert(sent);assert.equal(sent.headers['x-payment-id'],id);assert.equal(sent.body.subarray(0,5).toString(),'%PDF-');
+      const sent=writes.slice(before).find(request=>request.path==='/api/payments/send-whatsapp');assert(sent);const payload=JSON.parse(sent.body.toString());assert.equal(payload.paymentId,id);assert.equal(payload.renderPdf,true);
       if(process.env.AUDIT_ARTIFACT_DIR)await p.screenshot({path:path.join(process.env.AUDIT_ARTIFACT_DIR,'receipt-'+name+'-ui.png'),fullPage:true});
       assert((await p.evaluate(()=>document.documentElement.scrollWidth))<=viewport.width,'Horizontal overflow in '+name+' receipt');
     });

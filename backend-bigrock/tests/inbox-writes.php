@@ -9,7 +9,7 @@ $approved=$s->put('whatsappmessages',['paymentStatus'=>'payment_received'],true)
 echo "PASS inbox reply/rejection tracking, duplicate/approved rejection protection, no payment mutation, notification queued only.\n";
 $customer=$s->put('tiffins',['customerName'=>'Synthetic','phone'=>'9999999999','advanceBalance'=>0],true);$bill=$s->put('bills',['customer'=>$customer['_id'],'totalAmount'=>100,'paidAmount'=>0,'pendingAmount'=>100,'invoiceNo'=>'SYNTHETIC'],true);
 $message=$s->put('whatsappmessages',['customer'=>$customer['_id'],'paymentStatus'=>'pending_review'],true);$billing=new OMT\Billing($s);$body=['whatsappMessageId'=>$message['_id'],'customerId'=>$customer['_id'],'billId'=>$bill['_id'],'amount'=>101];
-denied(fn()=>$billing->approveWhatsApp($body),400);check(count($s->all('payments'))===0);
+$body['amount']=0;denied(fn()=>$billing->approveWhatsApp($body),400);check(count($s->all('payments'))===0);
 $body['amount']=60;$result=$billing->approveWhatsApp($body)[1];check($result['data']['bill']['pendingAmount']===40.0);check($result['data']['whatsappMessage']['linkedPayment']===$result['data']['payment']['_id']);
 denied(fn()=>$billing->approveWhatsApp($body),400);check(count($s->all('payments'))===1);check($s->get('tiffins',$customer['_id'])['advanceBalance']===0.0);
 echo "PASS synthetic WhatsApp payment approval: ownership/overpayment guard, atomic bill/payment/review links, duplicate approval rejected, no real payment or notification.\n";

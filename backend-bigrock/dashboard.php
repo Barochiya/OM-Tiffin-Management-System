@@ -33,7 +33,27 @@ final class Dashboard {
         $p=self::periods($query,$now);$r=new ReadModels($this->store);
         $customers=$this->store->all('tiffins');$payments=$this->store->all('payments');$entries=$this->store->all('dailyentries');
         $successful=array_values(array_filter($payments,fn($d)=>($d['status']??null)==='Success'));
-        $sum=function($start,$end)use($successful){$total=0.0;foreach($successful as $d)if(self::inPeriod($d['paymentDate']??$d['createdAt']??null,$start,$end))$total+=(float)($d['amount']??0);return $total;};
+        $walkInPayments=[];
+        foreach($this->store->all('walkincustomers') as $customer){
+            foreach(WalkIns::payments($customer) as $payment){
+                if(empty($payment['approvedBy'])||empty($payment['paymentDate']))continue;
+                $date=(new \DateTimeImmutable($payment['paymentDate']))->setTimezone(new \DateTimeZone('Asia/Kolkata'));
+                $walkInPayments[]=['payment'=>$payment,'year'=>(int)$date->format('Y'),'month'=>(int)$date->format('n'),'cycle'=>(int)$date->format('j')<=15?1:2];
+            }
+        }
+        $topUps=[];
+        foreach($this->store->all('wallettopups') as $row){
+            if(($row['status']??null)!=='approved'||empty($row['reviewedAt']))continue;
+            $date=(new \DateTimeImmutable($row['reviewedAt']))->setTimezone(new \DateTimeZone('Asia/Kolkata'));
+            $topUps[]=[
+                'payment'=>['amount'=>$row['amountPaise']/100,'paymentDate'=>$row['reviewedAt']],
+                'year'=>(int)$date->format('Y'),'month'=>(int)$date->format('n'),
+                'cycle'=>(int)$date->format('j')<=15?1:2,
+            ];
+        }
+        $collections=array_merge($successful,array_column($walkInPayments,'payment'),array_column($topUps,'payment'));
+
+        $sum=function($start,$end)use($collections){$total=0.0;foreach($collections as $d)if(self::inPeriod($d['paymentDate']??$d['createdAt']??null,$start,$end))$total+=(float)($d['amount']??0);return $total;};
         $mealSum=function($start,$end)use($entries){$total=0.0;foreach($entries as $d)if(self::inPeriod($d['date']??null,$start,$end))$total+=(float)($d['breakfastQty']??0)+(float)($d['lunchQty']??0)+(float)($d['dinnerQty']??0);return $total;};
         $bills=[];foreach($this->store->all('bills') as $bill)$bills[$bill['_id']]=$bill;
         $linked=[];$unassigned=0.0;$unassignedCount=0;
@@ -41,9 +61,40 @@ final class Dashboard {
             if(!$bill||!is_numeric($bill['year']??null)||!in_array((int)($bill['month']??0),range(1,12),true)||!in_array((string)($bill['cycle']??''),['1','2'],true)){$unassigned+=(float)($payment['amount']??0);$unassignedCount++;continue;}
             $linked[]=['payment'=>$payment,'year'=>(int)$bill['year'],'month'=>(int)$bill['month'],'cycle'=>(int)$bill['cycle']];
         }
+        // Revenue is earned once per invoice/order. Collections and wallet funding are separate.
+        $linked=[];$undatedInvoices=0;
+        foreach($bills as $bill){
+            if(($bill['status']??'')==='Cancelled')continue;
+            $generated=$bill['generatedAt']??$bill['createdAt']??null;
+            if(!$generated){$undatedInvoices++;continue;}
+            try{$date=(new \DateTimeImmutable($generated))->setTimezone(new \DateTimeZone('Asia/Kolkata'));}
+            catch(\Throwable){$undatedInvoices++;continue;}
+            $gross=max(0,Wallet::paise($bill['totalAmount']??0)-Wallet::paise($bill['previousPendingAmount']??0));
+            $linked[]=['payment'=>['amount'=>$gross/100,'customer'=>$bill['customer']??null], 'year'=>(int)$date->format('Y'),'month'=>(int)$date->format('n'),'cycle'=>(int)$date->format('j')<=15?1:2];
+        }
+        foreach($this->store->all('walkincustomers')as $customer)foreach(WalkIns::orders($customer)as $order){
+            $date=(new \DateTimeImmutable($order['generatedAt']))->setTimezone(new \DateTimeZone('Asia/Kolkata'));
+            $linked[]=['payment'=>['amount'=>$order['totalPaise']/100,'customer'=>$customer['_id']],'year'=>(int)$date->format('Y'),'month'=>(int)$date->format('n'),'cycle'=>(int)$date->format('j')<=15?1:2];
+        }
         $billSum=function(?int $year,?int $month,?int $cycle)use($linked){$total=0.0;foreach($linked as $item)if(($year===null||$item['year']===$year)&&($month===null||$item['month']===$month)&&($cycle===null||$item['cycle']===$cycle))$total+=(float)($item['payment']['amount']??0);return $total;};
         $revenue=$billSum($p['year'],$p['month'],$p['cycle']);
         $previous=$p['previousStart']?$billSum((int)$p['previousStart']->format('Y'),$p['month']!==null?(int)$p['previousStart']->format('n'):null,$p['cycle']):0.0;
+        $inReport=function(?string $date)use($p):bool {
+            if(!$date)return false;
+            try{$day=(new \DateTimeImmutable($date))->setTimezone(new \DateTimeZone('Asia/Kolkata'));}
+            catch(\Throwable){return false;}
+            return self::inPeriod($date,$p['start'],$p['end'])&&($p['cycle']===null||((int)$day->format('j')<=15?1:2)===$p['cycle']);
+        };
+        $collectionTotal=0;$fundingTotal=0;$excessTotal=0;$walletApplied=0;
+        foreach($successful as $payment)if($inReport($payment['paymentDate']??$payment['createdAt']??null)){
+            $collectionTotal+=Wallet::paise($payment['amount']??0);
+            $excessTotal+=(int)($payment['excessWalletCreditPaise']??0);
+        }
+        foreach($walkInPayments as $item)if($inReport($item['payment']['paymentDate']??null))$collectionTotal+=Wallet::paise($item['payment']['amount']);
+        foreach($this->store->all('wallettopups') as $row)if(($row['status']??'')==='approved'&&$inReport($row['reviewedAt']??$row['updatedAt']??null))$fundingTotal+=(int)$row['amountPaise'];
+        foreach($bills as $bill)if($inReport($bill['generatedAt']??$bill['createdAt']??null))$walletApplied+=(int)($bill['walletAppliedPaise']??0);
+        $walletNet=array_sum(array_column($this->store->all('walletaccounts'),'balancePaise'));
+        $financialSummary=['grossInvoiceRevenue'=>$revenue,'directCollections'=>$collectionTotal/100,'approvedWalletFunding'=>$fundingTotal/100,'walletApplied'=>$walletApplied/100,'excessWalletCredits'=>$excessTotal/100,'currentWalletNet'=>$walletNet/100];
         $today=$sum($p['todayStart'],$p['tomorrow']);$yesterday=$sum($p['yesterday'],$p['todayStart']);$meals=$mealSum($p['todayStart'],$p['tomorrow']);$previousMeals=$mealSum($p['yesterday'],$p['todayStart']);
         $wallet=new Wallet($this->store);$people=[];foreach($customers as $person)$people[$person['_id']]=$person;$rates=[];$todayMealPaise=0;
         foreach($entries as $entry){
@@ -71,7 +122,56 @@ final class Dashboard {
         }
         arsort($top,SORT_NUMERIC);$topCustomers=[];foreach(array_slice($top,0,5,true)as $id=>$total){$item=['_id'=>$id?:null,'totalPaid'=>$total];$customer=$id?$this->store->get('tiffins',$id):null;if($customer)$item['customer']=$customer;$topCustomers[]=$item;}
         $years=array_values(array_unique($years));rsort($years,SORT_NUMERIC);
-        $revenueGrowth=$p['start']&&$p['start']>$p['todayStart']?['percent'=>null,'label'=>'Future period']:($p['start']?self::change($revenue,$previous,($p['end']>$p['tomorrow']?'bill period so far ':'bill period ').$p['comparisonLabel'].($p['cycle']!==null?' · same cycle':' · both cycles')):['percent'=>null,'label'=>'All-time payments linked to bills']);
-        return [200,['success'=>true,'stats'=>['totalCustomers'=>$count,'activeCustomers'=>$active,'totalRevenue'=>$revenue,'totalPending'=>array_sum(array_column($pending,'pendingAmount'))],'period'=>array_intersect_key($p,array_flip(['year','month','cycle','label','chartYear'])),'availableYears'=>$years,'reportingBasis'=>'bill_period','unassignedPayments'=>['count'=>$unassignedCount,'amount'=>$unassigned],'growth'=>['revenue'=>$revenueGrowth,'active'=>['percent'=>$count?floor($active/$count*1000+0.5)/10:0,'label'=>'of registered customers','share'=>true],'pending'=>['percent'=>null,'label'=>'Current balance; historical balances unavailable'],'customers'=>['percent'=>null,'label'=>'Registered customers (current total)'],'collection'=>self::change($today,$yesterday,'today so far vs yesterday'),'meals'=>self::change($meals,$previousMeals,'today so far vs yesterday')],'todayCollection'=>$today,'todayMeals'=>$meals,'todayMealAmount'=>$todayMealAmount,'revenueChart'=>$chart,'recentPayments'=>$recent,'pendingBills'=>$pending,'topCustomers'=>$topCustomers]];
+        $revenueGrowth=$p['start']&&$p['start']>$p['todayStart']?['percent'=>null,'label'=>'Future period']:($p['start']?self::change($revenue,$previous,($p['end']>$p['tomorrow']?'invoice period so far ':'invoice period ').$p['comparisonLabel'].($p['cycle']!==null?' · same cycle':' · both cycles')):['percent'=>null,'label'=>'All-time gross invoices and walk-in orders']);
+        return [200,['success'=>true,'stats'=>['totalCustomers'=>$count,'activeCustomers'=>$active,'totalRevenue'=>$revenue,'totalPending'=>array_sum(array_column($pending,'pendingAmount'))],'period'=>array_intersect_key($p,array_flip(['year','month','cycle','label','chartYear'])),'availableYears'=>$years,'financialSummary'=>$financialSummary,'reportingBasis'=>'invoice_generated_at','undatedInvoices'=>$undatedInvoices,'unassignedPayments'=>['count'=>$unassignedCount,'amount'=>$unassigned],'growth'=>['revenue'=>$revenueGrowth,'active'=>['percent'=>$count?floor($active/$count*1000+0.5)/10:0,'label'=>'of registered customers','share'=>true],'pending'=>['percent'=>null,'label'=>'Current balance; historical balances unavailable'],'customers'=>['percent'=>null,'label'=>'Registered customers (current total)'],'collection'=>self::change($today,$yesterday,'today so far vs yesterday'),'meals'=>self::change($meals,$previousMeals,'today so far vs yesterday')],'todayCollection'=>$today,'todayMeals'=>$meals,'todayMealAmount'=>$todayMealAmount,'revenueChart'=>$chart,'recentPayments'=>$recent,'pendingBills'=>$pending,'topCustomers'=>$topCustomers]];
     }
+    public function financialReport(array $query):array {
+        $period=self::periods($query);
+        if($period['cycle']!==null&&$period['month']===null)throw new HttpError(400,'Select a year and month for a half-month reconciliation report');
+        $start=$period['start'];$end=$period['end'];
+        if($period['cycle']===1)$end=$start->modify('+15 days');
+        if($period['cycle']===2)$start=$start->modify('+15 days');
+        $included=fn($date)=>self::inPeriod($date,$start,$end);
+        $revenue=[];$collections=[];$outstanding=[];$wallets=[];
+        foreach($this->store->all('bills')as $bill){
+            $date=$bill['generatedAt']??$bill['createdAt']??null;
+            if($date&&$included($date)&&($bill['status']??'')!=='Cancelled')$revenue[]=['invoice'=>$bill['invoiceNo']??$bill['_id'],'customer'=>$bill['customer'],'generatedAt'=>$date,'grossAmount'=>max(0,Wallet::paise($bill['totalAmount'])-Wallet::paise($bill['previousPendingAmount']??0))/100];
+            if(($bill['carriedForward']??false)!==true&&($bill['status']??'')!=='Cancelled'&&($bill['pendingAmount']??0)>0)$outstanding[]=['invoice'=>$bill['invoiceNo']??$bill['_id'],'customer'=>$bill['customer'],'outstanding'=>$bill['pendingAmount']];
+        }
+        foreach($this->store->all('payments')as $payment)if(($payment['status']??'')==='Success'&&$included($payment['paymentDate']??$payment['createdAt']??null))$collections[]=['id'=>$payment['_id'],'customer'=>$payment['customer'],'receivedAt'=>$payment['paymentDate']??$payment['createdAt'],'amount'=>$payment['amount'],'kind'=>'invoice-payment','reference'=>$payment['transactionId']??''];
+        foreach($this->store->all('wallettopups')as $payment)if(($payment['status']??'')==='approved'&&$included($payment['reviewedAt']??null))$collections[]=['id'=>$payment['_id'],'customer'=>$payment['customer'],'receivedAt'=>$payment['reviewedAt'],'amount'=>$payment['amountPaise']/100,'kind'=>'wallet-funding','reference'=>$payment['reference']??''];
+        foreach($this->store->all('walkincustomers')as $customer)foreach(WalkIns::payments($customer)as $index=>$payment){
+            if(empty($payment['approvedBy'])||empty($payment['paymentDate']))continue;
+            if($included($payment['paymentDate']))$collections[]=['id'=>$payment['receiptNo']??'','customer'=>$customer['_id'],'receivedAt'=>$payment['paymentDate'],'amount'=>$payment['amount'],'kind'=>'walk-in-payment','reference'=>$payment['reference']??''];
+        }
+        foreach($this->store->all('walkincustomers')as $customer){
+            foreach(WalkIns::orders($customer)as $order)if($included($order['generatedAt']))$revenue[]=['invoice'=>$order['id'],'customer'=>$customer['_id'],'generatedAt'=>$order['generatedAt'],'grossAmount'=>$order['totalPaise']/100];
+            $paid=array_sum(array_map(fn($item)=>Wallet::paise($item['amount']),array_slice(WalkIns::payments($customer),(int)($customer['orderPaymentStart']??0))));
+            $due=($customer['totalPaise']??$paid)-$paid;
+            if($due>0)$outstanding[]=['invoice'=>'Walk-in order','customer'=>$customer['_id'],'outstanding'=>$due/100];
+        }
+        $events=$this->store->all('wallettransactions');
+        foreach($this->store->all('walletaccounts')as $account){
+            $rows=sorted(array_values(array_filter($events,fn($e)=>$e['customer']===$account['customer'])),['sequence'=>1]);
+            $opening=0;$credits=0;$debits=0;$closing=0;$history=[];
+            foreach($rows as $event){
+                $date=$event['createdAt']??null;if(!$date)continue;
+                $instant=new \DateTimeImmutable($date);
+                if($start&&$instant<$start){$opening=(int)$event['balancePaise'];$closing=$opening;continue;}
+                if($end&&$instant>=$end)continue;
+                $amount=(int)$event['amountPaise'];$credits+=max(0,$amount);$debits+=max(0,-$amount);$closing=(int)$event['balancePaise'];
+                $history[]=['id'=>$event['_id'],'date'=>$date,'type'=>$event['type'],'amountPaise'=>$amount,'balancePaise'=>$closing,'reason'=>$event['reason']??'','actor'=>$event['actor']??'','source'=>$event['source']??[]];
+            }
+            $wallets[]=['customer'=>$account['customer'],'openingPaise'=>$opening,'creditsPaise'=>$credits,'debitsPaise'=>$debits,'closingPaise'=>$closing,'transactions'=>$history,'reconciled'=>$closing===$opening+$credits-$debits];
+        }
+        $people=[];foreach($this->store->all('tiffins')as $person)$people[$person['_id']]=['name'=>$person['customerName']??'Customer','code'=>$person['barcode']??''];
+        foreach($this->store->all('walkincustomers')as $person)$people[$person['_id']]=['name'=>$person['customerName']??'Walk-in customer','code'=>'Walk-in'];
+        $expenses=$this->store->find('businessexpenses',fn($row)=>($row['status']??'active')==='active'&&!empty($row['date'])&&$included($row['date'].'T00:00:00+05:30'));
+        $incomePaise=array_sum(array_map(fn($row)=>Wallet::paise($row['grossAmount']),$revenue));
+        $collectionPaise=array_sum(array_map(fn($row)=>Wallet::paise($row['amount']),$collections));
+        $expensePaise=array_sum(array_column($expenses,'amountPaise'));
+        $expenseSummary=['incomePaise'=>$incomePaise,'collectionPaise'=>$collectionPaise,'expensePaise'=>$expensePaise,'netEarningsPaise'=>$incomePaise-$expensePaise,'cashAfterExpensesPaise'=>$collectionPaise-$expensePaise];
+        return success(['expenses'=>$expenses,'expenseSummary'=>$expenseSummary,'generatedAt'=>gmdate(DATE_ATOM),'customers'=>$people,'period'=>$period['label'],'revenue'=>$revenue,'collections'=>$collections,'wallets'=>$wallets,'outstanding'=>$outstanding,'outstandingBasis'=>'Current unpaid balances; other reports use the selected receipt or generation period']);
+    }
+
 }

@@ -60,6 +60,7 @@ const WebsiteSettings = lazy(() => import("./pages/WebsiteSettings"));
 const WebsiteReviews = lazy(() => import("./pages/WebsiteReviews"));
 const WebsiteOrders = lazy(() => import("./pages/WebsiteOrders"));
 const WebsiteMenu = lazy(() => import("./pages/WebsiteMenu"));
+const VisitorAnalytics = lazy(() => import("./pages/VisitorAnalytics"));
 import ProtectedRoute from "./components/ProtectedRoute";
 import CustomerProtectedRoute from "./components/CustomerProtectedRoute";
 function LoginEntry(){const location=useLocation();return new URLSearchParams(location.search).get('portal')==='employee'?<EmployeePortal/>:<Login/>;}
@@ -157,6 +158,7 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/visitor-analytics" element={<ProtectedRoute><VisitorAnalytics /></ProtectedRoute>} />
 
         <Route
           path="/customers"

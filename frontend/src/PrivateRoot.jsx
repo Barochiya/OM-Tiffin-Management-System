@@ -7,10 +7,13 @@ import App from "./FullApp";
 import { CartProvider } from "./context/CartContext";
 import SearchMetadata from "./components/SearchMetadata";
 import NotificationCenter from "./components/NotificationCenter";
+import VisitorTracker from "./components/VisitorTracker";
+import "./styles/admin-responsive.css";
 
 const application = (
   <BrowserRouter>
     <SearchMetadata />
+    <VisitorTracker />
     <CartProvider><App /></CartProvider>
     <NotificationCenter />
   </BrowserRouter>

@@ -76,6 +76,18 @@ class Store {
         $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
         foreach(['employees','employeeattendance','employeepayroll','salarypayments','employeeaudit','employeecash','employeesettings','employeenotifications','employeeaccounts','employeeotps','employeefirstloginlogs']as $name)$q->execute([$name]);
     }
+    public function prepareDeliveryLocationCollection():void {
+        if(!$this->pdo->inTransaction())throw new \LogicException('Transaction required');
+        $this->pdo->exec("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES('deliverylocationevents','{}',0,UTC_TIMESTAMP(3))");
+    }
+    public function prepareExpenseCollection():void {
+        if(!$this->pdo->inTransaction())throw new \LogicException('Transaction required');
+        $this->pdo->exec("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES('businessexpenses','{}',0,UTC_TIMESTAMP(3))");
+    }
+    public function prepareWalkInCollection():void {
+        if(!$this->pdo->inTransaction())throw new \LogicException('Transaction required');
+        $this->pdo->exec("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES('walkincustomers','{}',0,UTC_TIMESTAMP(3))");
+    }
     public function prepareReviewCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Review setup requires a transaction');
         $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
@@ -88,7 +100,7 @@ class Store {
     public function prepareWalletCollections():void {
         if(!$this->pdo->inTransaction())throw new \LogicException('Wallet setup requires a business transaction');
         $q=$this->pdo->prepare("INSERT IGNORE INTO omt_collections(name,source_metadata,source_count,imported_at) VALUES(?,'{}',0,UTC_TIMESTAMP(3))");
-        foreach(['walletaccounts','wallettransactions']as $name)$q->execute([$name]);
+        foreach(['walletaccounts','wallettransactions','wallettopups']as $name)$q->execute([$name]);
     }
     public function operation(string $key,string $hash,callable $callback):array {
         return $this->transaction(function()use($key,$hash,$callback){
@@ -103,7 +115,7 @@ class Store {
         $q=$this->pdo->prepare('SELECT payload FROM omt_outbox WHERE event_key=?');$q->execute([$eventKey]);$existing=$q->fetchColumn();
         if($existing!==false){if(OutboxCrypto::decode($eventKey,$existing,$this->outboxKey())!=$payload)throw new HttpError(409,'Notification event already exists with different data');return;}
         $q=$this->pdo->prepare('INSERT INTO omt_outbox(event_key,payload,available_at) VALUES(?,?,UTC_TIMESTAMP(3))');$q->execute([$eventKey,OutboxCrypto::encode($eventKey,$payload,$this->outboxKey())]);
-        if(in_array($payload['kind']??null,['pg-notification','document-template','receipt-auto','employee-notification','employee-otp','customer-otp','login-id','review-invitation','review-thank-you'],true))$this->instantDocumentEvents[]=$eventKey;
+        if(in_array($payload['kind']??null,['walk-in-receipt','wallet-qr','wallet-credit','pg-notification','document-template','receipt-auto','employee-notification','employee-otp','customer-otp','login-id','review-invitation','review-thank-you'],true))$this->instantDocumentEvents[]=$eventKey;
     }
     public function claimOutbox(string $eventKey):?array {
         if(!$this->pdo->inTransaction())throw new \LogicException('Outbox claim requires a business transaction');
@@ -169,6 +181,24 @@ class Store {
             $providerId=$notification['messageId']??null;if(!is_string($providerId)||$providerId==='')throw new \LogicException('Missing provider acknowledgement');
             $existing=$this->first('customerloginiddeliveries',fn($d)=>($d['whatsappMessageId']??null)===$providerId);
             if(!$existing)$this->put('customerloginiddeliveries',['customer'=>$p['customerId'],'customerAccount'=>$p['accountId'],'customerName'=>$p['customerName'],'userId'=>$p['userId'],'phone'=>$p['to'],'templateName'=>$p['templateName'],'whatsappMessageId'=>$providerId,'whatsappStatus'=>'accepted','sentAt'=>null,'deliveredAt'=>null,'readAt'=>null,'failedAt'=>null,'failureReason'=>''],true);
+        }
+        if(($p['kind']??null)==='walk-in-receipt'){
+            $row=$this->get('walkincustomers',$p['customerId']);
+            if($row){
+                $row['whatsappStatus']=$status;
+                $row['whatsappMessageId']=$notification['messageId']??null;
+                $row['failureReason']=$notification['error']??'';
+                $this->put('walkincustomers',$row);
+            }
+        }
+        if(($p['kind']??null)==='wallet-qr'){
+            $row=$this->get('wallettopups',$p['requestId']);
+            if($row){
+                $row['whatsappStatus']=$status;
+                $row['whatsappMessageId']=$notification['messageId']??null;
+                $row['failureReason']=$notification['error']??'';
+                $this->put('wallettopups',$row);
+            }
         }
         if(in_array($p['kind']??null,['customer-otp','employee-otp'],true)){$otpCollection=$p['kind']==='employee-otp'?'employeeotps':'customerotps';
             $otp=$this->get($otpCollection,$p['otpId']);if(!$otp)throw new \RuntimeException('OTP record missing');$otp['whatsappStatus']=$status;

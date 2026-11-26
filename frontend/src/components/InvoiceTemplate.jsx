@@ -244,14 +244,18 @@ export default function InvoiceTemplate({ bill }) {
           </h2>
 
           <div className="space-y-3">
+            <p><strong>Gross tiffin bill:</strong> Rs.{Number(bill.totalAmount || 0) - Number(bill.previousPendingAmount || 0)}</p>
+            <p><strong>Wallet adjusted:</strong> Rs.{Number(bill.walletAppliedPaise || 0) / 100}</p>
+            <p><strong>Direct payments applied:</strong> Rs.{bill.directPaymentsAppliedPaise == null ? Math.max(0, Number(bill.paidAmount || 0) - Number(bill.walletAppliedPaise || 0) / 100) : Number(bill.directPaymentsAppliedPaise) / 100}</p>
+
 
             <p>
-              <strong>Total Amount:</strong> Rs.
+              <strong>Total bill:</strong> Rs.
               {bill.totalAmount}
             </p>
 
             <p>
-              <strong>Paid Amount:</strong> Rs.
+              <strong>Total settled:</strong> Rs.
               {bill.paidAmount}
             </p>
 

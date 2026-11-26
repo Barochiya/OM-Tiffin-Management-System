@@ -1,5 +1,5 @@
 import { notify } from "../services/notifications";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -22,6 +22,7 @@ import {
 } from "../services/paymentService";
 
 export default function Payments() {
+const paymentRequest = useRef(null);
    const navigate = useNavigate();
 
   // ===========================
@@ -39,6 +40,7 @@ export default function Payments() {
   const [bill, setBill] = useState("");
 
   const [amount, setAmount] = useState("");
+  const [reference, setReference] = useState("");
 
   const [paymentMethod, setPaymentMethod] =
     useState("Cash");
@@ -144,6 +146,7 @@ export default function Payments() {
         bill,
 
         amount: Number(amount),
+        reference,
 
         paymentMethod,
 
@@ -153,13 +156,17 @@ export default function Payments() {
 
      
 
-const savedPayment = await addPayment(paymentData);
+const signature = JSON.stringify(paymentData);
+if (paymentRequest.current?.signature !== signature) paymentRequest.current = { signature, id: crypto.randomUUID() };
+const savedPayment = await addPayment({ ...paymentData, requestId: paymentRequest.current.id });
+paymentRequest.current = null;
 
 await loadPayments();
 
 setBill("");
 setAmount("");
 setRemark("");
+setReference("");
 setPaymentMethod("Cash");
 
 if (savedPayment?._id) {
@@ -507,6 +514,9 @@ if (savedPayment?._id) {
     />
 
   </div>
+
+  <div><label className="mb-2 block font-semibold">UTR / payment reference (optional)</label><input value={reference} onChange={event => setReference(event.target.value)} maxLength={160} className="w-full rounded-xl border p-3" /></div>
+  {bill && (() => { const pending = Number(bills.find(row => row._id === bill)?.pendingAmount || 0); const received = Math.max(0, Number(amount) || 0); const applied = Math.min(pending, received); return <dl className="rounded-xl border border-blue-100 bg-blue-50 p-4 text-sm"><dt>Applied to invoice</dt><dd className="mb-2 font-bold">₹{applied.toFixed(2)}</dd><dt>Excess wallet credit</dt><dd className="mb-2 font-bold">₹{Math.max(0, received - applied).toFixed(2)}</dd><dt>Outstanding after payment</dt><dd className="font-bold">₹{Math.max(0, pending - applied).toFixed(2)}</dd></dl>; })()}
 
   {/* Payment Mode */}
 

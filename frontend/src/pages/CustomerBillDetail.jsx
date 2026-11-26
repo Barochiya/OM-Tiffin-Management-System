@@ -301,6 +301,11 @@ const CustomerBillDetail = () => {
                 </div>
               </div>
             </section>
+            <dl className="mt-4 grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-3">
+              <div><dt className="text-xs font-semibold text-slate-500">Gross tiffin bill</dt><dd className="mt-1 font-bold text-slate-900">{formatMoney(Math.max(0, Number(bill.totalAmount || 0) - Number(bill.previousPendingAmount || 0)))}</dd></div>
+              <div><dt className="text-xs font-semibold text-slate-500">Wallet adjusted</dt><dd className="mt-1 font-bold text-emerald-700">{formatMoney(Number(bill.walletAppliedPaise || 0) / 100)}</dd></div>
+              <div><dt className="text-xs font-semibold text-slate-500">Direct payments applied</dt><dd className="mt-1 font-bold text-blue-700">{formatMoney(bill.directPaymentsAppliedPaise == null ? Math.max(0, Number(bill.paidAmount || 0) - Number(bill.walletAppliedPaise || 0) / 100) : Number(bill.directPaymentsAppliedPaise) / 100)}</dd></div>
+            </dl>
             <section className="mt-7">
               <h3 className="text-lg font-bold text-slate-900 mb-4">
                 Meal Summary

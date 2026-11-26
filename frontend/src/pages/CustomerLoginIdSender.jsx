@@ -26,6 +26,7 @@ const MESSAGE_PREVIEW =
 const CustomerLoginIdSender = () => {
   const [customers, setCustomers] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [selectionMode, setSelectionMode] = useState("manual");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
@@ -124,11 +125,8 @@ const CustomerLoginIdSender = () => {
   const inactiveCount = customers.filter(
     (customer) => customer.status === "Inactive"
   ).length;
-  const allFilteredSelected =
-    filteredCustomers.length > 0 &&
-    filteredCustomers.every((customer) =>
-      selectedIds.includes(String(customer.customerId))
-    );
+  const bulkCandidates = filteredCustomers.filter(customer => customer.ready && customer.loginEnabled && !customer.hasLoggedIn);
+  const allFilteredSelected = bulkCandidates.length > 0 && bulkCandidates.every(customer => selectedIds.includes(String(customer.customerId)));
   const getDeliveryStatusMeta = (status) => {
     switch (String(status || "").toLowerCase()) {
       case "read":
@@ -164,6 +162,7 @@ const CustomerLoginIdSender = () => {
     }
   };  const toggleCustomer = (customerId) => {
     const id = String(customerId);
+    setSelectionMode("manual");
     setSelectedIds((current) =>
       current.includes(id)
         ? current.filter((item) => item !== id)
@@ -173,28 +172,8 @@ const CustomerLoginIdSender = () => {
     setSuccessMessage("");
   };
   const toggleSelectAll = () => {
-    const filteredIds = filteredCustomers
-      .filter((customer) => customer.ready)
-      .map((customer) => String(customer.customerId));
-    if (filteredIds.length === 0) {
-      return;
-    }
-    setSelectedIds((current) => {
-      const currentSet = new Set(current);
-      if (
-        filteredIds.every((id) => currentSet.has(id))
-      ) {
-        return current.filter(
-          (id) => !filteredIds.includes(id)
-        );
-      }
-      return [
-        ...current,
-        ...filteredIds.filter(
-          (id) => !currentSet.has(id)
-        ),
-      ];
-    });
+    setSelectionMode("pending-login");
+    setSelectedIds(allFilteredSelected ? [] : bulkCandidates.map(customer => String(customer.customerId)));
     setSendResults(null);
     setSuccessMessage("");
   };
@@ -230,7 +209,7 @@ const CustomerLoginIdSender = () => {
       const response = await sendLoginIdsWhatsApp(
         selectedReadyCustomers.map((customer) =>
           String(customer.customerId)
-        )
+        ), selectionMode
       );
       if (!response?.success) {
         throw new Error(
@@ -239,9 +218,7 @@ const CustomerLoginIdSender = () => {
       }
       setSendResults(response.summary || null);
       setSuccessMessage(
-        `WhatsApp sending completed. Sent: ${
-          response.summary?.sent || 0
-        }, Failed: ${response.summary?.failed || 0}.`
+        `Login ID requests queued: ${response.summary?.queued || 0}. Skipped: ${response.summary?.skipped || 0}. Failed: ${response.summary?.failed || 0}.`
       );
     } catch (sendError) {
       console.error("CustomerLoginIdSender send:", sendError);
@@ -389,7 +366,7 @@ const CustomerLoginIdSender = () => {
         </div>
         {/* Controls */}
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4">
             <div className="flex flex-1 flex-col gap-3 sm:flex-row">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -415,17 +392,18 @@ const CustomerLoginIdSender = () => {
                 <option value="Inactive">Inactive</option>
               </select>
             </div>
+            <p className="text-xs text-slate-500">Bulk selection includes enabled accounts awaiting their first login. Select an individual row to resend a lost Login ID.</p>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={toggleSelectAll}
-                disabled={loading || filteredCustomers.length === 0}
+                disabled={loading || sending || bulkCandidates.length === 0}
                 className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CheckSquare className="h-4 w-4" />
                 {allFilteredSelected
-                  ? "Unselect All"
-                  : "Select All"}
+                  ? "Clear pending selection"
+                  : "Select enabled customers awaiting login"}
               </button>
               <button
                 type="button"
@@ -484,7 +462,8 @@ const CustomerLoginIdSender = () => {
                           checked={allFilteredSelected}
                           onChange={toggleSelectAll}
                           className="h-4 w-4 rounded border-slate-300 text-blue-600"
-                          aria-label="Select all visible customers"
+                          aria-label="Select enabled customers who have never logged in"
+                          disabled={sending || bulkCandidates.length === 0}
                         />
                       </th>
                       <th className="px-4 py-3">
@@ -538,6 +517,7 @@ const CustomerLoginIdSender = () => {
                           <td className="px-4 py-3">
                             <div className="font-semibold text-slate-900">
                               {customer.customerName || "Customer"}
+                              {customer.hasLoggedIn && <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-800"><CheckCircle2 size={12} />Logged in</span>}
                             </div>
                             <div className="text-xs text-slate-500">
                               {customer.barcode || customerId}

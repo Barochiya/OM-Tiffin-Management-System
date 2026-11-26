@@ -50,10 +50,77 @@ final class OutboxWorker {
             // Claim commits BEFORE HTTP. A crash or ambiguous provider response must never auto-resend.
             try{
                 $eligible=true;
+                if(($payload['documentType']??null)==='receipt'){
+                    $receiptPayment=$this->store->get('payments',(string)($payload['documentId']??''));
+                    if($receiptPayment&&($receiptPayment['status']??'Success')!=='Success')throw new \RuntimeException('Payment is no longer approved');
+                }
+                if(($payload['kind']??null)==='walk-in-receipt'){
+                    require_once __DIR__.'/document-notifications.php';
+                    $walkIn=$this->store->get('walkincustomers',$payload['customerId']);
+                    $payment=$walkIn['payment']??null;
+                    if(isset($payload['paymentKey'])){
+                        $payment=null;
+                        foreach($walkIn['payments']??[] as $item)if($item['requestId']===$payload['paymentKey']){$payment=$item;break;}
+                    }
+                    if(isset($payload['receiptNo'])){
+                        require_once __DIR__.'/walk-ins.php';
+                        $payment=null;
+                        foreach(WalkIns::payments($walkIn??[]) as $item){
+                            if(($item['receiptNo']??null)===$payload['receiptNo']){$payment=$item;break;}
+                        }
+                    }
+                    $eligible=$payment&&$walkIn['phone']===$payload['to'];
+                    if($eligible&&!empty($payload['textOnly'])){
+                        $values=[$walkIn['customerName'],number_format($payment['amount'],2,'.',''),$payment['paymentMethod']];
+                        $payload=array_replace($payload,['kind'=>'template','templateName'=>'om_tiffin_walk_in_payment_confirmation','languageCode'=>'en_GB',
+                            'components'=>[['type'=>'body','parameters'=>array_map(fn($v)=>['type'=>'text','text'=>$v],$values)]]]);
+                    }elseif($eligible){
+                        $documents=new Documents($this->store);
+                        $design=$documents->settings()[1]['data']['walk-in'];
+                        $design['showQr']=false;
+                        $pdf=(new PdfRenderer())->run(['type'=>'walk-in','data'=>$payment,'customer'=>$walkIn,'design'=>$design]);
+                        $date=(new \DateTimeImmutable($payment['paymentDate']))->setTimezone(new \DateTimeZone('Asia/Kolkata'))->format('d/m/Y');
+                        $values=[$walkIn['customerName'],$payment['receiptNo'],number_format($payment['amount'],2,'.',''),$payment['paymentMethod'],$date];
+                        $payload=array_replace($payload,['kind'=>'document-template','templateName'=>'om_tiffin_walk_in_payment_receipt','languageCode'=>'en',
+                            'attachment'=>(new DocumentNotifications($this->store,$documents))->storePdf($pdf),'filename'=>'Walk-in-Payment-Receipt.pdf',
+                            'components'=>[['type'=>'body','parameters'=>array_map(fn($v)=>['type'=>'text','text'=>$v],$values)]]]);
+                    }
+                }
+                if(($payload['kind']??null)==='wallet-credit'){
+                    require_once __DIR__.'/wallet-topups.php';
+                    $row=$this->store->get('wallettopups',$payload['requestId']);
+                    $phone=$row?WalletTopUps::phone($this->store->get('tiffins',$row['customer'])['phone']??''):'';
+                    $eligible=$row&&$row['status']==='approved'&&$phone===$payload['to'];
+                }
+                if(($payload['kind']??null)==='wallet-qr'){
+                    require_once __DIR__.'/wallet-topups.php';
+                    require_once __DIR__.'/document-notifications.php';
+                    require_once __DIR__.'/documents.php';
+                    $row=$this->store->get('wallettopups',$payload['requestId']);
+                    $phone=$row?WalletTopUps::phone($this->store->get('tiffins',$row['customer'])['phone']??''):'';
+                    $eligible=$row&&$row['status']==='pending'&&$phone===$payload['to']
+                        &&($this->settings['WALLET_QR_TEMPLATE']??null)===$payload['templateName'];
+                    if($eligible){
+                        if(!(new WhatsAppTransport($this->settings))->walletTemplateApproved($payload['templateName'])){
+                            $result=['status'=>'failed','error'=>'Wallet QR Utility template is not approved or available.'];
+                            $this->store->transaction(fn()=>$this->store->finishOutbox($event,$result));
+                            $outcomes[$key]='failed';
+                            continue;
+                        }
+                        $payload['imageBytes']=(new PdfRenderer())->run(['type'=>'wallet-qr','uri'=>$row['upiUri']],false);
+                        $payload['components']=[['type'=>'body','parameters'=>[
+                            ['type'=>'text','text'=>$row['name']?:'Customer'],
+                            ['type'=>'text','text'=>$row['userId']?:'Customer account'],
+                            ['type'=>'text','text'=>number_format($row['amountPaise']/100,2,'.','')],
+                            ['type'=>'text','text'=>$row['_id']],
+                        ]]];
+                    }
+                }
                 if(in_array($payload['kind']??null,['customer-otp','employee-otp'],true)){$otp=$this->store->get($payload['kind']==='employee-otp'?'employeeotps':'customerotps',$payload['otpId']);$eligible=$otp&&empty($otp['usedAt'])&&!empty($otp['expiresAt'])&&(float)(new \DateTimeImmutable($otp['expiresAt']))->format('U.u')>microtime(true);}
                 if(($payload['kind']??null)==='login-id'){
                     $customer=$this->store->get('tiffins',$payload['customerId']);$account=$this->store->get('customeraccounts',$payload['accountId']);
                     $eligible=$customer&&$account&&!empty($account['loginEnabled'])&&($account['customer']??null)===$customer['_id']&&($account['userId']??null)===$payload['userId']&&preg_replace('/\D/','',$customer['phone']??'')===preg_replace('/\D/','',$payload['to']??'');
+                    if($eligible&&!empty($payload['pendingLoginOnly']))$eligible=empty($account['lastLoginAt'])&&empty($account['firstLoginAt'])&&$this->store->first('customerfirstloginlogs',fn($log)=>($log['customerAccount']??null)===$payload['accountId']||($log['customer']??null)===$payload['customerId'])===null;
                 }
                 $notification=$eligible?($this->send)($payload):['status'=>'failed','error'=>'Notification target expired, was removed, or changed before delivery.'];
             }
@@ -74,6 +141,20 @@ final class WhatsAppTransport {
         $h=curl_init('https://graph.facebook.com/'.$version.'/'.$expected['id'].'?fields=name,language,status');curl_setopt_array($h,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_FOLLOWLOCATION=>false,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>4,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token]]);$raw=curl_exec($h);$status=(int)curl_getinfo($h,CURLINFO_RESPONSE_CODE);curl_close($h);$data=is_string($raw)?json_decode($raw,true):null;
         if($status!==200||($data['name']??'')!==$expected['name']||($data['language']??'')!=='en_GB')return 'UNKNOWN';return in_array($data['status']??'',['APPROVED','PENDING','REJECTED','PAUSED','DISABLED'],true)?$data['status']:'UNKNOWN';
     }
+    public function walletTemplateApproved(string $name):bool {
+        $id=$this->settings['WALLET_QR_TEMPLATE_ID']??'';
+        $token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';
+        $version=$this->settings['WHATSAPP_API_VERSION']??'v26.0';
+        if(!$token||!ctype_digit((string)$id)||!preg_match('/^v\d+\.\d+$/D',$version)||!function_exists('curl_init'))return false;
+        $handle=curl_init('https://graph.facebook.com/'.$version.'/'.$id.'?fields=name,language,status,category');
+        curl_setopt_array($handle,[CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>2,CURLOPT_TIMEOUT=>5,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token]]);
+        $raw=curl_exec($handle);
+        $http=curl_getinfo($handle,CURLINFO_RESPONSE_CODE);
+        curl_close($handle);
+        $data=is_string($raw)?json_decode($raw,true):null;
+        return $http===200&&($data['name']??null)===$name&&($data['language']??null)==='en_GB'
+            &&($data['category']??null)==='UTILITY'&&($data['status']??null)==='APPROVED';
+    }
     public function template(array $payload):array {
         $token=$this->settings['WHATSAPP_ACCESS_TOKEN']??'';$phoneId=$this->settings['WHATSAPP_PHONE_NUMBER_ID']??'';$version=$this->settings['WHATSAPP_API_VERSION']??'v26.0';
         if(!$token||!preg_match('/^\d+$/D',$phoneId)||!preg_match('/^v\d+\.\d+$/D',$version))throw new \RuntimeException('WhatsApp configuration unavailable');
@@ -88,6 +169,23 @@ final class WhatsAppTransport {
             if($failed)return ['status'=>'unknown','error'=>'PDF upload acknowledgement uncertain; check provider logs before resending.'];
             if($http<200||$http>=300||empty($uploaded['id']))return ['status'=>'failed','error'=>'WhatsApp PDF upload failed.'];
             array_unshift($payload['components'],['type'=>'header','parameters'=>[['type'=>'document','document'=>['id'=>$uploaded['id'],'filename'=>$payload['filename']]]]]);
+        }
+        if(($payload['kind']??null)==='wallet-qr'){
+            $bytes=$payload['imageBytes']??'';
+            if(!str_starts_with($bytes,"\x89PNG\r\n\x1a\n")||strlen($bytes)>5*1024*1024)throw new \RuntimeException('Invalid QR image');
+            $image=tmpfile();
+            if(!$image)throw new \RuntimeException('QR image temporary storage unavailable');
+            try {
+                if(fwrite($image,$bytes)!==strlen($bytes))throw new \RuntimeException('Could not store QR image');
+                $upload=curl_init('https://graph.facebook.com/'.$version.'/'.$phoneId.'/media');
+                curl_setopt_array($upload,[CURLOPT_POST=>true,CURLOPT_RETURNTRANSFER=>true,CURLOPT_CONNECTTIMEOUT=>10,CURLOPT_TIMEOUT=>30,CURLOPT_HTTPHEADER=>['Authorization: Bearer '.$token],CURLOPT_POSTFIELDS=>['messaging_product'=>'whatsapp','type'=>'image/png','file'=>new \CURLFile(stream_get_meta_data($image)['uri'],'image/png','Wallet-top-up-QR.png')]]);
+                $raw=curl_exec($upload);
+                $http=curl_getinfo($upload,CURLINFO_RESPONSE_CODE);
+                curl_close($upload);
+                $media=is_string($raw)?json_decode($raw,true):null;
+                if($http<200||$http>=300||empty($media['id']))return ['status'=>'failed','error'=>'Wallet QR image upload failed.'];
+                array_unshift($payload['components'],['type'=>'header','parameters'=>[['type'=>'image','image'=>['id'=>$media['id']]]]]);
+            } finally {fclose($image);}
         }
         $body=in_array($payload['kind']??null,['text','inbox-reply'],true)
             ?['messaging_product'=>'whatsapp','to'=>$phone,'type'=>'text','text'=>['preview_url'=>false,'body'=>$payload['message']]]

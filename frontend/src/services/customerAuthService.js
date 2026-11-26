@@ -208,9 +208,15 @@ export const getCustomerPayments = async () => {
   );
   return response.data;
 };
+export const downloadCustomerReceiptPdf = async (paymentId) =>
+  customerApi.get(`/customer-portal/payments/${encodeURIComponent(paymentId)}/pdf`, { responseType: "blob" });
 export const getCustomerAnnouncements = async () => {
   const response = await customerApi.get(
     "/customer-portal/announcements"
   );
+  return response.data;
+};
+export const getCustomerRanking = async (params = {}) => {
+  const response = await customerApi.get("/customer-portal/ranking", { params });
   return response.data;
 };

@@ -3,6 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { Link } from "react-router-dom";
 import {
   FaMoneyBillWave,
+  FaWallet,
   FaUsers,
   FaClock,
   FaUtensils,
@@ -20,6 +21,7 @@ import TopCustomers from "../components/TopCustomers";
 
 import {
   getDashboardAnalytics,
+  downloadFinancialReportPdf,
 } from "../services/dashboardService";
 
 export default function Dashboard() {
@@ -27,10 +29,12 @@ export default function Dashboard() {
   // STATES
   // ======================================
 
+  const [exporting, setExporting] = useState(false);
   const [year, setYear] = useState('all');
   const [month, setMonth] = useState('all');
   const [cycle, setCycle] = useState('all');
   const requestVersion = useRef(0);
+  const foregroundLoading = useRef(false);
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -39,10 +43,12 @@ export default function Dashboard() {
   // LOAD DASHBOARD
   // ======================================
 
-  const loadDashboard = useCallback(async () => {
+  const loadDashboard = useCallback(async (options = {}) => {
+    const quiet = options?.quiet === true;
+    if (quiet && foregroundLoading.current) return;
     const version = ++requestVersion.current;
     try {
-      setLoading(true);
+      if (!quiet) { foregroundLoading.current = true; setLoading(true); }
 
       const response =
         await getDashboardAnalytics({ year, month, cycle });
@@ -50,7 +56,7 @@ export default function Dashboard() {
 
       setDashboard(response);
 
-      setError("");
+      if (!quiet) setError("");
     } catch (err) {
       if(version !== requestVersion.current) return;
       console.error(
@@ -58,17 +64,41 @@ export default function Dashboard() {
         err
       );
 
-      setError(
+      if (!quiet) setError(
         err.code === "ECONNABORTED" ? "Unable to load dashboard. The server is taking longer than usual. Your tools are still available; tap Retry." : "Unable to load dashboard."
       );
     } finally {
-      if(version === requestVersion.current) setLoading(false);
+      if(version === requestVersion.current && !quiet) { foregroundLoading.current = false; setLoading(false); }
     }
   }, [year, month, cycle]);
 
+  const exportFinancialReport = async () => {
+    setExporting(true);
+    try {
+      const response = await downloadFinancialReportPdf({ year, month, cycle });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a"); link.href = url;
+      link.download = "om-tiffin-financial-report-" + year + "-" + month + "-" + cycle + ".pdf";
+      document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(url);
+    } catch (err) { setError(err.response?.data?.message || "Unable to download financial report"); }
+    finally { setExporting(false); }
+  };
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+  useEffect(() => {
+    let running = false;
+    const refresh = async () => {
+      if (document.hidden || running) return;
+      running = true;
+      try { await loadDashboard({ quiet: true }); } finally { running = false; }
+    };
+    const timer = setInterval(refresh, 15000);
+    window.addEventListener('focus', refresh);
+    return () => { clearInterval(timer); window.removeEventListener('focus', refresh); };
+  }, [loadDashboard]);
+
   useEffect(() => { const version = requestVersion; return () => { version.current++; }; }, []);
     // ======================================
   // LOADING
@@ -220,6 +250,21 @@ const todayMeals =
 },
 ];
 
+const formatAmount = amount => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(amount || 0);
+const finance = dashboard?.financialSummary;
+const financialCards = finance ? [
+  {title:'Collection / Received payments', key:'directCollections', color:'text-blue-600', bg:'bg-blue-100', icon:<FaMoneyBillWave />, note:"Today's total collection (all receipts): " + formatAmount(todayCollection)},
+  {title:'Approved wallet funding', key:'approvedWalletFunding', color:'text-emerald-600', bg:'bg-emerald-100', icon:<FaWallet />, note:'Wallet advances; excluded from revenue'},
+  {title:'Wallet applied to invoices', key:'walletApplied', color:'text-indigo-600', bg:'bg-indigo-100', icon:<FaFileInvoice />, note:'Wallet funding allocated to invoices'},
+  {title:'Excess credited to wallets', key:'excessWalletCredits', color:'text-purple-600', bg:'bg-purple-100', icon:<FaPlus />, note:'Excess receipts; excluded from revenue'},
+  {title:'Current net wallet balance', key:'currentWalletNet', color:Number(finance.currentWalletNet || 0)<0?'text-red-600':'text-teal-600', bg:Number(finance.currentWalletNet || 0)<0?'bg-red-100':'bg-teal-100', icon:<FaWallet />, note:'Current credit less outstanding across wallets'},
+].map(({key,note,...card}) => ({...card,value:formatAmount(finance[key]),subtitle:key==='currentWalletNet'?'Current balance · All customers':(key==='directCollections'?'Direct payments · ':'')+(dashboard?.period?.label || 'Selected period'),growth:{percent:null,label:note}})) : [];
+const displayedCards = finance ? [
+  cards[0], financialCards[0], cards[2],
+  {...cards[1],title:'Total Customers / Active',value:String(stats.totalCustomers || 0)+' / '+String(stats.activeCustomers || 0),subtitle:'Registered customers / Currently active'},
+  ...financialCards.slice(1), cards[5],
+] : cards;
+
   return (
     <div className="dashboard-page min-h-screen bg-slate-100">
 
@@ -274,20 +319,23 @@ const todayMeals =
 
 {/* Reporting controls */}
 <section aria-label="Revenue filters" className="mb-6 flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-white p-5">
-  <div className="mr-auto"><h2 className="font-bold text-slate-900">Revenue reporting</h2><p className="mt-1 text-sm text-slate-500">Successful payments by bill month/year and cycle · Today’s collection stays by payment date</p></div>
+  <div className="mr-auto"><h2 className="font-bold text-slate-900">Revenue reporting</h2><p className="mt-1 text-sm text-slate-500">Gross invoices by generation date and cycle · Collections by payment date</p></div>
   <label className="text-sm font-semibold text-slate-600">Year<select aria-label="Revenue year" className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-2.5" value={year} onChange={event=>{setYear(event.target.value);setMonth('all');}}><option value="all">All time</option>{(dashboard?.availableYears || [new Date().getFullYear()]).map(value=><option key={value} value={value}>{value}</option>)}</select></label>
   <label className="text-sm font-semibold text-slate-600">Month<select aria-label="Revenue month" disabled={year==='all'} className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-2.5 disabled:opacity-50" value={month} onChange={event=>setMonth(event.target.value)}><option value="all">Whole year</option>{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((name,index)=><option key={name} value={index+1}>{name}</option>)}</select></label>
   <label className="text-sm font-semibold text-slate-600">Cycle<select aria-label="Revenue cycle" className="mt-2 block rounded-xl border border-slate-200 bg-white px-4 py-2.5" value={cycle} onChange={event=>setCycle(event.target.value)}><option value="all">Both cycles</option><option value="1">Cycle 1 (1–15)</option><option value="2">Cycle 2 (16–End)</option></select></label>
   <button type="button" disabled={loading} onClick={loadDashboard} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{loading?'Updating…':'Refresh'}</button>
-  {dashboard?.unassignedPayments?.count > 0 && <p className="w-full text-sm text-amber-700">₹{Number(dashboard.unassignedPayments.amount).toLocaleString("en-IN")} across {dashboard.unassignedPayments.count} payments have no valid bill link and are excluded from bill-period revenue.</p>}
+  <button type="button" disabled={exporting || (cycle !== 'all' && month === 'all')} onClick={exportFinancialReport} className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 disabled:opacity-50">{exporting ? 'Preparing…' : 'Download financial report (PDF)'}</button>
+  {cycle !== 'all' && month === 'all' && <p className="w-full text-xs text-slate-500">Select a month to download a half-month reconciliation report.</p>}
+  {dashboard?.undatedInvoices > 0 && <p className="w-full text-sm text-amber-700">{dashboard.undatedInvoices} historical invoices need a verified generation date before revenue can be assigned to a period.</p>}
+  {dashboard?.unassignedPayments?.count > 0 && <p className="w-full text-sm text-amber-700">₹{Number(dashboard.unassignedPayments.amount).toLocaleString("en-IN")} across {dashboard.unassignedPayments.count} payments have no valid bill link. Review these collections for reconciliation.</p>}
   {error && <p role="alert" className="w-full text-sm text-red-600">{error} Showing the last loaded report.</p>}
   {loading && <p role="status" className="w-full text-sm text-slate-500">Updating report…</p>}
 </section>
 {/* KPI Cards */}
 
-<div className="dashboard-kpis grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+<div aria-label="Dashboard metrics" className="dashboard-kpis grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
 
-  {cards.map((card) => (
+  {displayedCards.map((card) => (
     <DashboardCard
       key={card.title}
       title={card.title}

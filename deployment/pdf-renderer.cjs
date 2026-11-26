@@ -7,12 +7,23 @@ process.stdin.on('data',chunk=>{size+=chunk.length;if(size>5*1024*1024){process.
 process.stdin.on('end',async()=>{
  try{
   const payload=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  if(payload.type==='wallet-qr'){
+   if(typeof payload.uri!=='string'||!payload.uri.startsWith('upi://pay?')||payload.uri.length>512)throw Error('Invalid UPI QR');
+   const QRCode=require('./backend/node_modules/qrcode');
+   process.stdout.write(await QRCode.toBuffer(payload.uri,{width:480,margin:4}));
+   return;
+  }
+  if(payload.type==='financial-report'){
+   if(!payload.data||typeof payload.data!=='object')throw Error('Invalid report data');
+   process.stdout.write(await require('./backend/utils/financialReportPdf')(payload.data,payload.brand || {}));return;
+  }
   const designModule=require('./backend/utils/documentDesign');
   if(payload.operation==='validate-design'){process.stdout.write(JSON.stringify(designModule.validate(payload.design,payload.type)));return;}
-  if(!['bill','receipt','salary','pg'].includes(payload.type)||!payload.data||typeof payload.data!=='object')throw Error('Invalid PDF payload');
+  if(!['bill','receipt','salary','pg','walk-in'].includes(payload.type)||!payload.data||typeof payload.data!=='object')throw Error('Invalid PDF payload');
   const design=designModule.validate(payload.design||designModule.defaults(payload.type),payload.type);designModule.load=async()=>design;
   let bytes;
-  if(payload.type==='pg')bytes=await require('./backend/utils/pgReceiptPdf')(payload.data,design);
+  if(payload.type==='walk-in') bytes=await require('./backend/utils/walkInReceiptPdf')(payload.data,payload.customer,design);
+  else if(payload.type==='pg')bytes=await require('./backend/utils/pgReceiptPdf')(payload.data,design);
   else if(payload.type==='salary')bytes=await require('./backend/utils/salarySlipPdf')(payload.data,design);
   else if(payload.type==='bill')bytes=await require('./backend/utils/billPdfGenerator')(payload.data,payload.customer||payload.data.customer||{});
   else bytes=await require('./backend/utils/receiptPdfGenerator')({...payload.data,customer:payload.customer||payload.data.customer||{}});

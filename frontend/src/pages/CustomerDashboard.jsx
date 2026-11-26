@@ -1,6 +1,6 @@
 import { House, CreditCard, LogOut, Megaphone, Inbox, MessageCircle, FileText, Download, ChartColumn, UtensilsCrossed } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo-screen.webp";
 import {
   getCustomerMealHistory,
@@ -12,8 +12,10 @@ import CustomerModificationRequest from "../customer/components/CustomerModifica
 import CustomerSidebar from "../customer/components/CustomerSidebar";
 import WalletDialog from "../components/WalletDialog";
 import { Wallet } from "lucide-react";
+import CustomerRankingCard from "../components/CustomerRankingCard";
 const CustomerDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const now = new Date();
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -70,6 +72,7 @@ const CustomerDashboard = () => {
   useEffect(() => {
     loadDashboard({ showLoader: true });
   }, [loadDashboard]);
+  useEffect(() => { if (new URLSearchParams(location.search).get("wallet") === "open") setWalletOpen(true); }, [location.search]);
   useCustomerAutoRefresh(() => {
     loadDashboard();
   });
@@ -250,6 +253,7 @@ const CustomerDashboard = () => {
             </div>
           </div>
         </section>
+        <CustomerRankingCard />
         {/* Meal Summary */}
         {walletOpen && <WalletDialog onClose={() => setWalletOpen(false)} />}
         <section>

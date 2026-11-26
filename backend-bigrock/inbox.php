@@ -6,6 +6,13 @@ final class Inbox {
     public function __construct(private readonly Store $store){}
     public function messages(bool $outgoing=false,bool $unread=false,bool $reviews=false):array {
         $r=new ReadModels($this->store);
+        $payableByCustomer=[];
+        if($reviews){
+            foreach($this->store->all('bills') as $bill){
+                if(empty($bill['customer'])||!empty($bill['carriedForward'])||strcasecmp((string)($bill['status']??''),'paid')===0||(float)($bill['pendingAmount']??0)<=0)continue;
+                $payableByCustomer[$bill['customer']][]=$bill;
+            }
+        }
         $messages=sorted($this->store->find('whatsappmessages',fn($d)=>($outgoing||($d['direction']??null)==='incoming')&&(!$unread||($d['inboxStatus']??null)==='unread')&&(!$reviews||($d['paymentStatus']??null)==='pending_review')),['createdAt'=>-1]);
         $data=[];foreach($messages as $message){
             $message=$r->hydrate('whatsappmessages',$message);
@@ -14,7 +21,13 @@ final class Inbox {
                 $message=$r->populate($message,'linkedBill','bills',$reviews?['invoiceNo','month','year','cycle','totalAmount','paidAmount','pendingAmount','status']:['invoiceNo','totalAmount','paidAmount','pendingAmount','status']);
                 if(!$reviews)$message=$r->populate($message,'linkedPayment','payments',['amount','paymentMethod','paymentDate','status']);
             }
-            if($reviews){$customer=$message['customer']['_id']??null;$bills=$customer?$this->store->find('bills',fn($b)=>($b['customer']??null)===$customer&&(float)($b['pendingAmount']??0)>0):[];
+            if($reviews){$customer=$message['customer']['_id']??null;$bills=$payableByCustomer[$customer]??[];
+                if(!$bills)continue;
+                $linked=$message['linkedBill']['_id']??null;
+                if($linked){
+                    $bills=array_values(array_filter($bills,fn($bill)=>$bill['_id']===$linked));
+                    if(!$bills)continue;
+                }
                 $message['pendingBills']=array_map(fn($b)=>only($r->hydrate('bills',$b),['invoiceNo','month','year','cycle','totalAmount','paidAmount','pendingAmount','status']),sorted($bills,['year'=>-1,'month'=>-1,'cycle'=>-1]));
             }
             $data[]=$message;

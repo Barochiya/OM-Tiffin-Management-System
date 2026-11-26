@@ -75,7 +75,7 @@ async function check(name,fn){if(process.env.TEST_FILTER&&!name.includes(process
     h.nodes(node=>node.type==='button')[2].props.onClick();assert(h.calls.some(call=>call[0]==='open'&&call[1]==='/view-bills/audit-bill?print=true'));h.dispose();
   });
   await check('bill auto-print waits for loaded data and runs once',async()=>{
-    const h=await harness('pages/SingleBill.jsx',{'../services/billService':{getBillById:async()=>({data:{_id:'audit-bill',dailyDetails:[]}})},'react-router-dom':{useSearchParams:()=>[new URLSearchParams('print=true')]}});
+    const h=await harness('pages/SingleBill.jsx',{'../services/billService':{getBillById:async()=>({data:{_id:'audit-bill',dailyDetails:[]}})},'../services/documentPrintService':{printWithSavedDesign:async(type,id,legacyPrint)=>legacyPrint()},'react-router-dom':{useSearchParams:()=>[new URLSearchParams('print=true')]}});
     h.render();assert.equal(h.calls.filter(call=>call[0]==='print').length,0);await h.flush();h.render();await h.flush();await h.runTimers();assert.equal(h.calls.filter(call=>call[0]==='print').length,1);
     h.render();await h.flush();await h.runTimers();assert.equal(h.calls.filter(call=>call[0]==='print').length,1);h.dispose();
   });
@@ -101,7 +101,7 @@ async function check(name,fn){if(process.env.TEST_FILTER&&!name.includes(process
   });
   await check('single meal-row save preserves other drafts, in-flight edits and failed-save values without reloading',async()=>{
     let reads=0,resolveSave,rejectSave,sent;
-    const h=await harness('pages/ViewCustomer.jsx',{'../services/customerService':{getCustomerById:async()=>({data:{_id:'audit-bill',customerName:'Fixture',pricing:{breakfastPrice:30,lunchPrice:90,dinnerPrice:90}}})},'../services/dailyEntryService':{getCustomerEntries:async()=>{reads++;return {data:[]}},saveDailyEntry:payload=>{sent=payload;return new Promise((resolve,reject)=>{resolveSave=resolve;rejectSave=reject})}}});
+    const h=await harness('pages/ViewCustomer.jsx',{'../services/billingCycle':{currentBillingPeriod:()=>({month:10,year:2026,cycle:'1'}),defaultCycle:()=> '1',cycleEntries:entries=>entries},'../services/customerService':{getCustomerById:async()=>({data:{_id:'audit-bill',customerName:'Fixture',pricing:{breakfastPrice:30,lunchPrice:90,dinnerPrice:90}}})},'../services/dailyEntryService':{getCustomerEntries:async()=>{reads++;return {data:[]}},saveDailyEntry:payload=>{sent=payload;return new Promise((resolve,reject)=>{resolveSave=resolve;rejectSave=reject})}}});
     h.render();await h.flush();h.render();await h.flush();
     const a={_id:'new-a',customer:'audit-bill',date:'2026-10-01',breakfastQty:1,lunchQty:0,dinnerQty:1,extraItems:[],remark:'First',isNewEntry:true};
     const b={_id:'new-b',customer:'audit-bill',date:'2026-10-02',breakfastQty:0,lunchQty:2,dinnerQty:3,extraItems:[{description:'Roti',amount:20}],remark:'Unsaved note',isNewEntry:true};
@@ -114,17 +114,17 @@ async function check(name,fn){if(process.env.TEST_FILTER&&!name.includes(process
     const previous=h.slots[2];const failed=save();rejectSave(Error('Fixture save failure'));await failed;assert.equal(h.slots[2],previous);assert.equal(reads,beforeReads);h.dispose();
   });
   await check('different rows save concurrently, duplicate clicks are ignored and loading clears independently',async()=>{
-    const pending=[];const h=await harness('pages/ViewCustomer.jsx',{'../services/customerService':{getCustomerById:async()=>({data:{_id:'audit-bill',customerName:'Fixture',pricing:{}}})},'../services/dailyEntryService':{getCustomerEntries:async()=>({data:[]}),saveDailyEntry:payload=>new Promise((resolve,reject)=>pending.push({payload,resolve,reject}))}});
+    const pending=[];const h=await harness('pages/ViewCustomer.jsx',{'../services/billingCycle':{currentBillingPeriod:()=>({month:10,year:2026,cycle:'1'}),defaultCycle:()=> '1',cycleEntries:entries=>entries},'../services/customerService':{getCustomerById:async()=>({data:{_id:'audit-bill',customerName:'Fixture',pricing:{}}})},'../services/dailyEntryService':{getCustomerEntries:async()=>({data:[]}),saveDailyEntry:payload=>new Promise((resolve,reject)=>pending.push({payload,resolve,reject}))}});
     h.render();await h.flush();h.render();await h.flush();
     const a={_id:'a',customer:'audit-bill',date:'2026-10-01',breakfastQty:1,lunchQty:0,dinnerQty:0,extraItems:[],remark:'A'},b={...a,_id:'b',date:'2026-10-02',dinnerQty:2,remark:'B'};
     h.slots[2]=[a,b];h.render();const buttons=h.nodes(node=>node.type==='button'&&JSON.stringify(node.props.children).includes('Sav'));
-    const first=buttons[0].props.onClick();await buttons[0].props.onClick();const second=buttons[1].props.onClick();assert.equal(pending.length,2);h.render();assert.equal(h.slots[7].size,2);
-    pending[1].resolve({data:{...b,_id:'saved-b'}});await second;h.render();assert.equal(h.slots[7].size,1);assert(h.slots[7].has('a'));assert.equal(h.slots[2][1]._id,'saved-b');assert.equal(h.slots[2][1].isDirty,false);assert(h.nodes(node=>node.props?.role==='status').some(node=>node.props.children==='Saved'));assert.equal(h.slots[2][0],a);
-    pending[0].reject(Error('Fixture row A failure'));await first;h.render();assert.equal(h.slots[7].size,0);assert.equal(h.slots[2][0],a);assert.equal(h.slots[2][1].remark,'B');h.dispose();
+    const first=buttons[0].props.onClick();await buttons[0].props.onClick();const second=buttons[1].props.onClick();assert.equal(pending.length,2);h.render();assert.equal(h.slots[5].size,2);
+    pending[1].resolve({data:{...b,_id:'saved-b'}});await second;h.render();assert.equal(h.slots[5].size,1);assert(h.slots[5].has('a'));assert.equal(h.slots[2][1]._id,'saved-b');assert.equal(h.slots[2][1].isDirty,false);assert(h.nodes(node=>node.props?.role==='status').some(node=>node.props.children==='Saved'));assert.equal(h.slots[2][0],a);
+    pending[0].reject(Error('Fixture row A failure'));await first;h.render();assert.equal(h.slots[5].size,0);assert.equal(h.slots[2][0],a);assert.equal(h.slots[2][1].remark,'B');h.dispose();
   });
   await check('every static internal link in active source resolves to a defined frontend route',async()=>{
     const app=fs.readFileSync(path.join(root,'frontend/src/App.jsx'),'utf8');
-    const patterns=[...app.matchAll(/path="([^"]+)"/g)].map(match=>new RegExp('^'+match[1].replace(/:[^/]+/g,'[^/]+').replace(/\*/g,'.*')+'/?$')).filter(re=>!re.source.includes('.*'));
+    const patterns=[...app.matchAll(/path="([^"]+)"/g)].map(match=>match[1]).filter(route=>route!=='*').map(route=>new RegExp('^'+route.replace(/:[^/]+/g,'[^/]+').replace(/\*/g,'.*')+'/?$'));
     let links=0;function walk(dir){for(const entry of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,entry.name);if(entry.isDirectory())walk(file);else if(/\.(jsx|js)$/.test(entry.name)&&!entry.name.includes('git-reference')){const text=fs.readFileSync(file,'utf8');for(const match of text.matchAll(/(?:to=|navigate\(|path:\s*)["'](\/[^"']*)["']/g)){const target=match[1].split(/[?#]/)[0]||'/';assert(patterns.some(re=>re.test(target)),file+' broken link '+target);links++;}}}}walk(path.join(root,'frontend/src'));assert(links>50);console.log('  '+links+' internal links matched');
   });
   console.log('PASS '+checks+' component/flow regression groups (isolated JSX harness; not a live browser test).');

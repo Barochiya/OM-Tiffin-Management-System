@@ -8,6 +8,60 @@ const CustomerModificationRequest = require("../models/CustomerModificationReque
 const WebsiteMenu = require("../models/WebsiteMenu");
 const TiffinModificationSettings = require("../models/TiffinModificationSettings");
 const { sendCustomerModificationApprovalNotification } = require("../utils/customerModificationWhatsApp");
+const rankingInteger = (value, min, max) => {
+  if (value === undefined || value === null || value === "" || value === "all") return null;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < min || number > max) throw new Error("Invalid ranking period.");
+  return number;
+};
+
+const getCustomerRanking = async (req, res) => {
+  let year, month, cycle;
+  try {
+    year = rankingInteger(req.query?.year, 2000, 2200);
+    month = rankingInteger(req.query?.month, 1, 12);
+    cycle = rankingInteger(req.query?.cycle, 1, 2);
+    if (month !== null && year === null) throw new Error("Ranking year is required with month.");
+  } catch (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+  try {
+    const billMatch = {
+      "bill.year": { $gte: 2000, $lte: 2200 },
+      "bill.month": { $gte: 1, $lte: 12 },
+      "bill.cycle": { $in: ["1", "2"] },
+      ...(year === null ? {} : { "bill.year": year }),
+      ...(month === null ? {} : { "bill.month": month }),
+      ...(cycle === null ? {} : { "bill.cycle": String(cycle) }),
+    };
+    const scores = await Payment.aggregate([
+      { $match: { status: "Success" } },
+      { $lookup: { from: "bills", localField: "bill", foreignField: "_id", as: "bill" } },
+      { $unwind: "$bill" },
+      { $match: billMatch },
+      { $group: { _id: "$customer", score: { $sum: "$amount" } } },
+      { $sort: { score: -1, _id: 1 } },
+    ]);
+    const customerId = String(req.customerId);
+    const index = scores.findIndex(row => String(row._id) === customerId);
+    const rank = index < 0 ? null : index + 1;
+    const score = index < 0 ? 0 : Number(scores[index].score || 0);
+    const thresholdScore = scores.length >= 5 ? Number(scores[4].score || 0) : null;
+    const period = year === null
+      ? "All time · Both cycles"
+      : `${month ? new Intl.DateTimeFormat("en", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2000, month - 1, 1))) + " " : ""}${year}${cycle ? ` · Cycle ${cycle}` : " · Both cycles"}`;
+    return res.status(200).json({ success: true, data: {
+      rank, totalEligible: scores.length, period, score,
+      scoreLabel: "Total successful payments linked to valid bills",
+      topFive: rank !== null && rank <= 5,
+      reward: { supported: false, eligible: false }, previousRank: null, movement: null,
+      progress: { targetRank: 5, thresholdScore, amountToTopFive: thresholdScore === null || rank === null || rank <= 5 ? 0 : Math.max(0, thresholdScore - score) },
+    } });
+  } catch (error) {
+    console.error("Get customer ranking error:", error);
+    return res.status(500).json({ success: false, message: "Unable to load customer ranking." });
+  }
+};
 const getCustomerProfile = async (req, res) => {
   try {
     const customer = await Tiffin.findById(req.customerId).select(
@@ -665,6 +719,7 @@ const getCustomerPayments = async (req, res) => {
     });
   }
 };module.exports = {
+  getCustomerRanking,
   getCustomerAnnouncements,
   getCustomerPayments,
 downloadCustomerBillPdf,

@@ -50,7 +50,7 @@ final class ReadModels {
     public function bills(?string $customer=null):array {
         $items=sorted($this->store->find('bills',fn($d)=>$customer===null||$d['customer']===$customer),$customer===null?['createdAt'=>-1]:['year'=>-1,'month'=>-1,'cycle'=>-1,'createdAt'=>-1]);
         if($customer===null)$items=array_map(fn($d)=>$this->populate($this->hydrate('bills',$d),'customer','tiffins',['customerName','phone']),$items);
-        else $items=array_map(fn($d)=>only($d,explode(' ','invoiceNo month year cycle breakfastQty lunchQty dinnerQty breakfastAmount lunchAmount dinnerAmount extraAmount totalAmount paidAmount pendingAmount previousPendingAmount status createdAt updatedAt')),$items);
+        else $items=array_map(fn($d)=>only($d,explode(' ','invoiceNo month year cycle breakfastQty lunchQty dinnerQty breakfastAmount lunchAmount dinnerAmount extraAmount totalAmount paidAmount pendingAmount previousPendingAmount walletAppliedPaise directPaymentsAppliedPaise generatedAt status createdAt updatedAt')),$items);
         return success($items);
     }
     public function bill(string $id,?string $customer=null):array {
@@ -60,9 +60,24 @@ final class ReadModels {
     public function payments(?string $customer=null,?string $bill=null):array {
         $items=sorted($this->store->find('payments',fn($p)=>($customer===null||$p['customer']===$customer)&&($bill===null||$p['bill']===$bill)),$customer!==null?['paymentDate'=>-1,'createdAt'=>-1]:($bill!==null?['paymentDate'=>-1]:['createdAt'=>-1]));
         $items=array_map(function($d)use($customer){
-            if($customer!==null){$d=only($d,explode(' ','bill amount paymentMethod transactionId gateway paymentDate status note createdAt updatedAt'));return $this->populate($d,'bill','bills',['invoiceNo','month','year','cycle','totalAmount']);}
+            if($customer!==null){$d=only($d,explode(' ','bill amount amountAppliedPaise excessWalletCreditPaise paymentMethod transactionId gateway paymentDate status note createdAt updatedAt'));return $this->populate($d,'bill','bills',['invoiceNo','month','year','cycle','totalAmount']);}
             return $this->populate($this->populate($this->hydrate('payments',$d),'customer','tiffins'),'bill','bills');
         },$items);
+        if($customer!==null&&$bill===null){
+            foreach($this->store->find('wallettopups',fn($row)=>($row['customer']??null)===$customer&&($row['status']??null)==='approved') as $row){
+                $items[]=[
+                    '_id'=>'wallet-topup:'.$row['_id'],
+                    'amount'=>$row['amountPaise']/100,
+                    'paymentMethod'=>'UPI',
+                    'transactionId'=>$row['reference']??$row['_id'],
+                    'paymentDate'=>$row['reviewedAt']??$row['updatedAt']??$row['createdAt'],
+                    'createdAt'=>$row['createdAt'],
+                    'status'=>'Success',
+                    'note'=>'Wallet top-up',
+                ];
+            }
+            $items=sorted($items,['paymentDate'=>-1,'createdAt'=>-1]);
+        }
         return $customer!==null||$bill!==null?success($items):[200,$items];
     }
     public function payment(string $id):array {

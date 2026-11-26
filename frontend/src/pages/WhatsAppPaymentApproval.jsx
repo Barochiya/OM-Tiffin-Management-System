@@ -159,6 +159,7 @@ function PaymentReviewCard({
       const [selectedBill, setSelectedBill] =
     useState("");
 
+  const [reference, setReference] = useState('');
   const [amount, setAmount] =
     useState("");
 
@@ -250,16 +251,6 @@ const handleApprove = async () => {
     return;
   }
 
-  if (
-    Number(amount) >
-    Number(selectedBillData.pendingAmount)
-  ) {
-    notify(
-      `Amount cannot be greater than pending amount ₹${selectedBillData.pendingAmount}.`
-    );
-    return;
-  }
-
   try {
     setApproving(true);
 
@@ -274,6 +265,7 @@ const handleApprove = async () => {
           selectedBillData._id,
 
         amount: Number(amount),
+        reference,
 
         paymentMethod: "UPI",
       });
@@ -524,8 +516,20 @@ navigate(
     />
   </div>
 
+  <label className="mt-3 block text-sm font-semibold">UTR / payment reference (optional)<input value={reference} onChange={e => setReference(e.target.value)} maxLength={160} className="mt-1 w-full rounded-lg border border-blue-300 bg-white p-3" /></label>
+  {(() => {
+    const pending = Number(review.pendingBills?.find(bill => bill._id === selectedBill)?.pendingAmount || 0);
+    const received = Math.max(0, Number(amount) || 0);
+    const applied = Math.min(pending, received);
+    return <dl className="mt-3 grid grid-cols-2 gap-2 rounded-xl bg-white p-3 text-sm">
+      <dt>Pending bill</dt><dd>₹{pending.toFixed(2)}</dd>
+      <dt>Applied to bill</dt><dd>₹{applied.toFixed(2)}</dd>
+      <dt>Wallet credit</dt><dd>₹{Math.max(0, received - applied).toFixed(2)}</dd>
+      <dt>Remaining outstanding</dt><dd>₹{Math.max(0, pending - applied).toFixed(2)}</dd>
+    </dl>;
+  })()}
   <p className="mt-1 text-xs text-blue-700">
-    You can adjust the amount before approval.
+    Enter the actual amount verified in your bank or UPI account.
   </p>
 </div>
 

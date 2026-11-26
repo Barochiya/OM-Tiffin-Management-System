@@ -4,7 +4,11 @@ import {getDeliveries,markDelivery,currentDeliveryMeal} from '../services/mealDe
 import {getBusinessDate} from '../utils/businessDate';
 import './meal-deliveries.css';
 import SwipeDelivery from './SwipeDelivery';
+import {Link} from 'react-router-dom';
+import AdminDeliveryLocationEditor from '../components/AdminDeliveryLocationEditor';
+import {getDeliveryLocation} from '../services/deliveryLocationService';
 export default function MealDeliveries(){
+ const [editingLocation,setEditingLocation]=useState(null),[openingLocation,setOpeningLocation]=useState('');
  const [date,setDate]=useState(getBusinessDate);const [meal,setMeal]=useState(currentDeliveryMeal);
  const [customers,setCustomers]=useState([]),[records,setRecords]=useState([]),[search,setSearch]=useState('');
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(''),[error,setError]=useState(''),[ready,setReady]=useState(false);const [filter,setFilter]=useState('All');
@@ -29,6 +33,7 @@ export default function MealDeliveries(){
  <div className="delivery-progress"><span>{completed}% completed</span><span>{counts.Delivered} / {eligible.length} stops</span></div><progress max="100" value={completed} aria-label="Delivery completion"/>
  </section>
  <section className="delivery-body">
+ <Link to="/customers?view=delivery-locations" className="delivery-locations-link">Manage delivery locations</Link>
  <div className="delivery-summary">{['Pending','Out for delivery','Delivered'].map(status=><button type="button" key={status} onClick={()=>setFilter(status)} aria-pressed={filter===status}><strong>{counts[status]}</strong><span>{status==='Out for delivery'?'On the way':status}</span></button>)}</div>
  <div className="delivery-toolbar"><h2>{meal} shift</h2><button type="button" disabled={loading||!!busy} onClick={refresh}>Refresh status</button></div>
  <input className="delivery-search" aria-label="Search delivery customers" placeholder="Search name, barcode or phone" value={search} onChange={e=>setSearch(e.target.value)}/>
@@ -38,11 +43,11 @@ export default function MealDeliveries(){
  {loading?<p role="status" className="delivery-empty">Loading your delivery list...</p>:error?null:<div className="delivery-list">{visible.map((c,index)=>{const r=records.find(r=>r.customer===c._id&&r.meal===meal);const status=r?.status||'Pending';return <article key={c._id} className={'delivery-card '+(status==='Delivered'?'is-delivered':'')}>
  <div className="delivery-card-top"><span className="delivery-stop">{String(index+1).padStart(2,'0')}</span><div><h2>{c.customerName}</h2><span className="delivery-code">{c.barcode||'Customer'} · {meal}</span></div><span className={'delivery-badge status-'+status.split(' ')[0].toLowerCase()}>{status==='Out for delivery'?'On the way':status}</span></div>
  {c.address&&<p className="delivery-address">{c.address}</p>}
- <div className="delivery-contact">{c.phone&&<a href={'tel:'+c.phone}>Call customer</a>}{(c.deliveryLocation||c.address)&&<a href={'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(c.deliveryLocation?c.deliveryLocation.latitude+','+c.deliveryLocation.longitude:c.address)} target="_blank" rel="noreferrer">{c.deliveryLocation?'Open saved pin':'Open address'}</a>}</div>
+ <div className="delivery-contact">{c.phone&&<a href={'tel:'+c.phone}>Call customer</a>}{(c.deliveryLocation||c.address)&&<a href={'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(c.deliveryLocation?c.deliveryLocation.latitude+','+c.deliveryLocation.longitude:c.address)} target="_blank" rel="noreferrer">{c.deliveryLocation?'Open saved pin':'Open address'}</a>}<button type="button" disabled={Boolean(openingLocation)} onClick={async()=>{setOpeningLocation(c._id);try{const result=await getDeliveryLocation(c._id);setEditingLocation(result.data);}catch{setError('Could not load the latest delivery pin. Refresh before retrying.');}finally{setOpeningLocation('');}}}>{openingLocation===c._id?'Opening…':c.deliveryLocation?'Update location':'Add location'}</button></div>
  <div className="delivery-timeline"><span className={status!=='Pending'?'done':''}>Dispatched{r?.dispatchedAt&&<small>{new Date(r.dispatchedAt).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'})}</small>}</span><span className={status==='Delivered'?'done':''}>Delivered{r?.deliveredAt&&<small>{new Date(r.deliveredAt).toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit'})}</small>}</span></div>
  {status!=='Delivered'?<SwipeDelivery key={status} disabled={!!busy||date!==getBusinessDate()} onComplete={()=>mark(c,status==='Pending'?'Out for delivery':'Delivered')} label={busy===c._id?'Saving...':status==='Pending'?'Swipe: Out for delivery':'Swipe: Delivered'}/>:<p className="delivery-success">Handover confirmed</p>}
  {[[r?.dispatchNotification,'Dispatch'],[r?.notification,'Delivered']].map(([notice,label])=>notice?.status&&<p key={label} className="delivery-message">{label} WhatsApp: {notice.status==='not_configured'?'awaiting activation':notice.status==='accepted'?'accepted by WhatsApp':notice.status==='pending'?'sending':notice.status==='unknown'?'unconfirmed - check inbox before retrying':notice.status==='failed'?'failed - check WhatsApp setup':notice.status}</p>)}
  </article>;})}{!visible.length&&<div className="delivery-empty"><strong>{filter==='Delivered'?'No completed deliveries yet':'No stops in this list'}</strong><p>Change the meal, date or status filter.</p></div>}</div>}
  <p className="delivery-footer">{ready?'WhatsApp connection is enabled.':'WhatsApp notices are prepared. Sending will start after approval and activation.'}</p>
- </section></main>;
+ </section>{editingLocation&&<AdminDeliveryLocationEditor customer={editingLocation} onClose={()=>setEditingLocation(null)} onSaved={row=>{setCustomers(previous=>previous.map(c=>c._id===row._id?{...c,...row}:c));setEditingLocation(null);}} onReload={()=>{setEditingLocation(null);setError('Location changed. Open the customer again to load the latest pin.');}}/>}</main>;
 }

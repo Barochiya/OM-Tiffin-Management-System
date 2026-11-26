@@ -4,23 +4,17 @@ import api from "./api";
 // Dashboard Analytics
 // ======================================
 
-export const getDashboardAnalytics =
-  async (filters = {}) => {
+export const getDashboardAnalytics = async (filters = {}) => {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const response = await api.get(
-        "/dashboard", { params: filters, timeout: 20000 }
-      );
-
-      return response.data;
+      return (await api.get('/dashboard', { params: filters, timeout: 20000 })).data;
     } catch (error) {
-      console.error(
-        "Dashboard Analytics Error:",
-        error
-      );
-
+      const transient = ['ERR_NETWORK','ECONNABORTED','ETIMEDOUT'].includes(error.code) || [502,503,504].includes(error.response?.status);
+      if (attempt === 0 && transient) continue;
       throw error;
     }
-  };
+  }
+};
 
 // ======================================
 // Recent Payments
@@ -65,3 +59,6 @@ export const checkDashboardServer =
       throw error;
     }
   };
+export const getFinancialReport = async (filters = {}) => (await api.get("/dashboard/financial-report", { params: filters, timeout: 30000 })).data;
+
+export const downloadFinancialReportPdf = async (filters = {}) => api.get("/dashboard/financial-report/pdf", { params: filters, responseType: "blob", timeout: 60000 });

@@ -5,6 +5,28 @@ require_once __DIR__.'/catalog.php';
 final class Recovery {
     public function __construct(private readonly Store $store){}
     private function account(string $userId):?array{return $this->store->first('customeraccounts',fn($d)=>($d['userId']??null)===$userId&&!empty($d['loginEnabled']));}
+    private function setupAccount(string $userId):?array {
+        $existing=$this->account($userId);
+        if($existing)return $existing;
+        if(!preg_match('/^OMT-\d+$/D',$userId))return null;
+        $customers=$this->store->find('tiffins',fn($row)=>($row['barcode']??null)===$userId);
+        if(count($customers)!==1)return null;
+        $customer=$customers[0];
+        $accounts=$this->store->find('customeraccounts',fn($row)=>($row['userId']??null)===$userId||($row['customer']??null)===$customer['_id']);
+        if($accounts){
+            $account=$accounts[0];
+            return count($accounts)===1&&($account['customer']??null)===$customer['_id']
+                &&($account['userId']??null)===$userId&&!empty($account['loginEnabled'])?$account:null;
+        }
+        $phone=preg_replace('/\D/','',(string)($customer['phone']??''));
+        if(!preg_match('/^(?:91)?[6-9]\d{9}$/D',$phone))return null;
+        return $this->store->put('customeraccounts',[
+            'customer'=>$customer['_id'],'userId'=>$userId,
+            'passwordHash'=>password_hash(bin2hex(random_bytes(32)),PASSWORD_BCRYPT,['cost'=>12]),
+            'loginEnabled'=>true,'isFirstLogin'=>true,'passwordChangedAt'=>null,
+            'failedLoginAttempts'=>0,'lockedUntil'=>null,'lastLoginAt'=>null,
+        ],true);
+    }
     private function latest(string $account,string $purpose,callable $extra):?array {
         return sorted($this->store->find('customerotps',fn($d)=>($d['customerAccount']??null)===$account&&($d['purpose']??'PASSWORD_RESET')===$purpose&&empty($d['usedAt'])&&$extra($d)),['createdAt'=>-1])[0]??null;
     }
@@ -17,10 +39,11 @@ final class Recovery {
         if(!$userRecovery&&$userId==='')throw new HttpError(400,'User ID is required'.($setup?'':'.'));
         return $this->store->transaction(function()use($purpose,$setup,$userRecovery,$userId,$phone){
             if($userRecovery){$matches=$this->store->find('customeraccounts',function($a)use($phone){$c=$this->store->get('tiffins',(string)($a['customer']??''));return !empty($a['loginEnabled'])&&$c&&preg_replace('/\D/','',(string)($c['phone']??''))===$phone;});$account=count($matches)===1?$matches[0]:null;}
-            else $account=$this->account($userId);
+            else $account=$setup?$this->setupAccount($userId):$this->account($userId);
             if($setup&&$account&&($account['isFirstLogin']??true)===false)throw new HttpError(409,'You are already registered. Please log in.',['alreadyRegistered'=>true]);
             $customer=$account?$this->store->get('tiffins',$account['customer']):null;
             $generic=$userRecovery?'If this number is registered, an OTP will be sent to your WhatsApp.':($setup?'If the account is eligible, a verification code will be sent to the registered WhatsApp number.':'If the account is eligible, an OTP has been sent to the registered WhatsApp number.');
+            if($setup&&(!$account||!$customer||!preg_match('/^(?:91)?[6-9]\d{9}$/D',preg_replace('/\D/','',(string)($customer['phone']??'')))))return [400,['success'=>false,'message'=>'Unable to request a verification code. Check your User ID or contact OM Tiffin Service.']];
             if(!$account||!$customer||empty($customer['phone']))return [200,['success'=>true,'message'=>$generic]];
             $latest=sorted($this->store->find('customerotps',fn($d)=>($d['customerAccount']??null)===$account['_id']&&($purpose==='PASSWORD_RESET'||($d['purpose']??'PASSWORD_RESET')===$purpose)),['createdAt'=>-1])[0]??null;
             if($latest){$created=(float)(new \DateTimeImmutable($latest['createdAt']))->format('U.u');$remaining=(int)ceil($created+60-microtime(true));if($remaining>0){

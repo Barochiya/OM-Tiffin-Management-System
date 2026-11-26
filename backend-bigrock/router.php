@@ -3,9 +3,12 @@ declare(strict_types=1);
 namespace OMT;
 require_once __DIR__.'/security.php';require_once __DIR__.'/store.php';require_once __DIR__.'/auth.php';require_once __DIR__.'/catalog.php';require_once __DIR__.'/read-models.php';
 require_once __DIR__.'/billing.php';
+require_once __DIR__.'/payment-evidence.php';
 require_once __DIR__.'/barcodes.php';
 require_once __DIR__.'/notifications.php';
 require_once __DIR__.'/dashboard.php';
+require_once __DIR__.'/expenses.php';
+require_once __DIR__.'/delivery-locations.php';
 require_once __DIR__.'/profiles.php';
 require_once __DIR__.'/deliveries.php';
 require_once __DIR__.'/recovery.php';
@@ -20,11 +23,20 @@ require_once __DIR__.'/whatsapp.php';
 require_once __DIR__.'/document-notifications.php';
 require_once __DIR__.'/employees.php';
 require_once __DIR__.'/pg.php';
+require_once __DIR__.'/wallet-topups.php';
+require_once __DIR__.'/walk-ins.php';
 require_once __DIR__.'/review-invitations.php';
+require_once __DIR__.'/analytics.php';
+require_once __DIR__.'/ranking.php';
 final class Router {
     private array $routes=[];
     public function __construct(private readonly Store $store,private readonly array $settings){
         $c=new Catalog($store);$r=new ReadModels($store);$a=new Auth($store,$settings['JWT_SECRET']??'',$settings['CUSTOMER_JWT_SECRET']??'');$billing=new Billing($store);
+        $analytics=new VisitorAnalytics($settings,$store);$ranking=new CustomerRanking($store);
+        $this->route('POST','/visitor-analytics/track','visitor',fn($p,$q,$b,$user,$context)=>$analytics->track($b,$context,$user));
+        $this->route('GET','/visitor-analytics/dashboard','admin',fn($p,$q,$b,$user)=>$analytics->dashboard($q,$user));
+        $this->route('GET','/visitor-analytics/logs','admin',fn($p,$q,$b,$user)=>$analytics->logs($q,$user));
+        $this->route('GET','/visitor-analytics/export','admin',fn($p,$q,$b,$user)=>$analytics->logs($q,$user,true));
         $pg=new Pg($store,$settings);
         $this->route('GET','/pg/templates','admin',fn()=>$pg->statuses());
         $this->route('GET','/pg','admin',fn($p,$q)=>$pg->listing($q));
@@ -36,6 +48,12 @@ final class Router {
         $this->route('GET','/pg/payments/:id/pdf','admin',fn($p)=>$pg->receipt($p['id']));
         $announcements=new Announcements($store);
         $reviews=new ReviewInvitations($store,$settings);
+        $walkIns=new WalkIns($store);
+        $this->route('GET','/walk-ins','admin',fn()=>$walkIns->listing());
+        $this->route('POST','/walk-ins','admin',fn($p,$q,$b,$u)=>$walkIns->add($b,$u['_id']));
+        $this->route('POST','/walk-ins/:id/payment','admin',fn($p,$q,$b,$u)=>$walkIns->approve($p['id'],$b,$u['_id']));
+        $this->route('POST','/walk-ins/:id/payment/send','admin',fn($p,$q,$b)=>$walkIns->sendPayment($p['id'],$b));
+        $this->route('POST','/walk-ins/:id/review','admin',fn($p,$q,$b)=>$reviews->send(['customerIds'=>[$p['id']],'requestId'=>$b['requestId']??''],walkIn:true));
         $this->route('GET','/review-invitations','admin',fn()=>$reviews->listing());
         $this->route('GET','/review-invitations/template','admin',fn()=>$reviews->templateStatus());
         $this->route('POST','/review-invitations/send','admin',fn($p,$q,$b)=>$reviews->send($b));
@@ -44,6 +62,7 @@ final class Router {
         $this->route('GET','/review-invitations/public/:token','public',fn($p)=>$reviews->publicView($p['token']));
         $this->route('POST','/review-invitations/public/submit','public',fn($p,$q,$b)=>$reviews->submit($b));
         $wallet=new Wallet($store);
+        $topUps=new WalletTopUps($store,$wallet,$settings);
         $staff=new Employees($store);
         $employeeAccounts=new EmployeeAccounts($store);$employeeRecovery=new EmployeeRecovery($store);$employeeAuth=new EmployeeAuth($store,employeeSecret($settings));
         $this->route('POST','/employee-auth/login','public',fn($p,$q,$b)=>$employeeAuth->employeeLogin($b));
@@ -70,6 +89,11 @@ final class Router {
         $this->route('POST','/employees/:id/cash','admin',fn($p,$q,$b,$u)=>$staff->cash($p['id'],$b,$u['_id']));
         $this->route('GET','/employee-salary-payments/:id/pdf','admin',fn($p)=>$staff->slip($p['id']));
         $this->route('GET','/customer-portal/wallet','customer',fn($p,$q,$b,$user)=>$wallet->statement($user['customer'],$q));
+        $this->route('GET','/customer-portal/wallet/top-ups','customer',fn($p,$q,$b,$user)=>$topUps->listing($user['customer']));
+        $this->route('POST','/customer-portal/wallet/top-ups','customer',fn($p,$q,$b,$user)=>$topUps->create($user['customer'],$b));
+        $this->route('POST','/customer-portal/wallet/top-ups/:id/whatsapp','customer',fn($p,$q,$b,$user)=>$topUps->sendQr($user['customer'],$p['id']));
+        $this->route('GET','/wallet-top-ups','admin',fn()=> $topUps->listing());
+        $this->route('POST','/wallet-top-ups/:id/decision','admin',function($p,$q,$b,$user)use($topUps){unset($b['proofSha256']);if(($b['action']??'')==='approved'){$row=$this->store->get('wallettopups',$p['id'])??throw new HttpError(404,'Top-up not found');$b['proofSha256']=PaymentEvidence::proof($this->store,$this->settings,(string)($b['proofMessageId']??''),$row['customer']);}return $topUps->decide($p['id'],$b,$user['_id']);});
         $this->route('GET','/wallets','admin',fn($p,$q)=>$wallet->customers($q));
         $this->route('GET','/wallets/:id','admin',fn($p,$q)=>$wallet->statement($p['id'],$q));
         $this->route('GET','/wallets/:id/reconciliation','admin',function($p)use($wallet){$proposal=$wallet->preview($p['id']);unset($proposal['basis']);return [200,['success'=>true,'data'=>$proposal]];});
@@ -80,7 +104,7 @@ final class Router {
         $this->route('POST','/bills/send-whatsapp','admin',fn($p,$q,$b)=>$documentNotifications->send('bill',(string)($b['billId']??''),(string)($b['_pdfBytes']??'')));
         $this->route('POST','/bills/retry/:billId','admin',fn($p)=>$documentNotifications->retry($p['billId']));
         $this->route('POST','/payments/send-whatsapp','admin',fn($p,$q,$b)=>$documentNotifications->receipt($b));
-        $this->route('POST','/payments/approve-whatsapp-payment','admin',fn($p,$q,$b)=>$billing->approveWhatsApp($b));
+        $this->route('POST','/payments/approve-whatsapp-payment','admin',function($p,$q,$b,$u)use($billing){$b['proofSha256']=PaymentEvidence::proof($this->store,$this->settings,(string)($b['whatsappMessageId']??''),(string)($b['customerId']??''));return $billing->approveWhatsApp($b,$u['_id']);});
         $webhook=new Webhook($store,$settings);
         $whatsapp=new WhatsApp($store,$settings);
         $this->route('POST','/whatsapp/send','service',fn($p,$q,$b)=>$whatsapp->send($b));
@@ -111,6 +135,7 @@ final class Router {
         $this->route('GET','/bills/:id/pdf','admin',fn($p)=>$documents->bill($p['id']));
         $this->route('GET','/payments/:id/pdf','admin',fn($p)=>$documents->receipt($p['id']));
         $this->route('GET','/customer-portal/bills/:billId/pdf','customer',fn($p,$q,$b,$user)=>$documents->bill($p['billId'],$user['customer']));
+        $this->route('GET','/customer-portal/payments/:id/pdf','customer',fn($p,$q,$b,$user)=>$documents->receipt($p['id'],$user['customer']));
         $this->route('GET','/customer-accounts/login-id-recipients','admin',fn()=>$accounts->recipients());
         $this->route('GET','/customer-accounts/login-id-delivery-status','admin',fn()=>$accounts->deliveryStatus());
         $this->route('POST','/customer-accounts/provision','admin',fn($p,$q,$b)=>$accounts->provision($b));
@@ -139,9 +164,20 @@ final class Router {
         $this->route('POST','/customer-auth/account-setup/verify-otp','public',fn($p,$q,$b)=>$recovery->verify($b,'ACCOUNT_SETUP'));
         $this->route('POST','/customer-auth/account-setup/set-password','public',fn($p,$q,$b)=>$recovery->password($b,true));
         $this->route('POST','/customer-auth/forgot-user-id/verify-otp','public',fn($p,$q,$b)=>$recovery->verify($b,'USER_ID_RECOVERY'));
+        $locations=new DeliveryLocations($store);
+        $this->route('GET','/delivery-locations','admin',fn()=>$locations->listing());
+        $this->route('GET','/delivery-locations/:id','admin',fn($p)=>$locations->get($p['id']));
+        $this->route('PUT','/delivery-locations/:id','admin',fn($p,$q,$b,$user)=>$locations->save($p['id'],$b,$user['_id']));
         $this->route('GET','/meal-deliveries','admin',fn($p,$q)=>$deliveries->get($q));
         $this->route('POST','/meal-deliveries','admin',fn($p,$q,$b,$user)=>$deliveries->mark($b,$user['_id']));
         $this->route('PUT','/customer-portal/profile','customer',fn($p,$q,$b,$user)=>$profiles->update($user['customer'],$b));
+        $expenses=new Expenses($store);
+        $this->route('GET','/expenses','admin',fn($p,$q)=>$expenses->report($q));
+        $this->route('POST','/expenses','admin',fn($p,$q,$b,$u)=>$expenses->save($b,$u['_id']));
+        $this->route('PUT','/expenses/:id','admin',fn($p,$q,$b,$u)=>$expenses->save($b,$u['_id'],$p['id']));
+        $this->route('POST','/expenses/:id/cancel','admin',fn($p,$q,$b,$u)=>$expenses->cancel($p['id'],$b,$u['_id']));
+        $this->route('GET','/dashboard/financial-report/pdf','admin',fn($p,$q)=>(new Documents($this->store))->financialReport($q));
+        $this->route('GET','/dashboard/financial-report','admin',fn($p,$q)=>(new Dashboard($this->store))->financialReport($q));
         $this->route('GET','/dashboard','admin',fn($p,$q)=>$dashboard->get($q));
         $this->route('GET','/dashboard/notifications','admin',fn($p,$q,$b,$user)=>$notifications->get($user['_id']));
         $this->route('POST','/dashboard/notifications/read','admin',fn($p,$q,$b,$user)=>$notifications->markRead($user['_id'],$b));
@@ -179,12 +215,14 @@ final class Router {
         $this->route('POST','/bills/generate','admin',fn($p,$q,$b)=>$billing->generate($b));
         $this->route('GET','/bills/customer/:customerId','admin',fn($p)=>success($r->latestBill($p['customerId'])));
         $this->route('GET','/bills','admin',fn()=>$r->bills());
+        $this->route('POST','/payments/:id/reverse','admin',fn($p,$q,$b,$u)=>$billing->reversePayment($p['id'],$b,$u['_id']));
+        $this->route('POST','/bills/:id/cancel','admin',fn($p,$q,$b,$u)=>$billing->cancel($p['id'],$b,$u['_id']));
         $this->route('GET','/bills/:id','admin',fn($p)=>$r->bill($p['id']));
         $this->route('GET','/payments/customer/:customerId','admin',fn($p)=>$r->billsForPayment($p['customerId']));
         $this->route('GET','/payments/pending/:customerId','admin',fn($p)=>$r->billsForPayment($p['customerId'],true));
         $this->route('GET','/payments/bill/:billId','admin',fn($p)=>$r->payments(null,$p['billId']));
         $this->route('GET','/payments','admin',fn()=>$r->payments());
-        $this->route('POST','/payments','admin',fn($p,$q,$b)=>$billing->addPayment($b));
+        $this->route('POST','/payments','admin',fn($p,$q,$b,$u)=>$billing->addPayment($b,$u['_id']));
         $this->route('GET','/payments/:id','admin',fn($p)=>$r->payment($p['id']));
         $this->route('GET','/daily-entry/customer/:customerId','admin',fn($p,$q)=>$r->meals($p['customerId'],$q,false));
         $this->route('GET','/daily-entry/:date','admin',fn($p)=>$r->entriesByDate($p['date']));
@@ -192,6 +230,7 @@ final class Router {
         $this->route('GET','/customer-accounts/status','admin',fn()=>$r->accountStatuses());
         $this->route('GET','/customer-accounts/users','admin',fn()=>$r->customerUsers());
         $this->route('GET','/customer-portal/profile','customer',fn($p,$q,$b,$user)=>$r->profile($user['customer']));
+        $this->route('GET','/customer-portal/ranking','customer',fn($p,$q,$b,$user)=>$ranking->forCustomer($user['customer'],$q));
         $this->route('GET','/customer-portal/bills','customer',fn($p,$q,$b,$user)=>$r->bills($user['customer']));
         $this->route('GET','/customer-portal/bills/:billId','customer',fn($p,$q,$b,$user)=>$r->bill($p['billId'],$user['customer']));
         $this->route('GET','/customer-portal/payments','customer',fn($p,$q,$b,$user)=>$r->payments($user['customer']));
@@ -205,7 +244,7 @@ final class Router {
         $this->routes[]=['method'=>$method,'path'=>$path,'regex'=>'~^'.$pattern.'/?$~D','names'=>$names,'access'=>$access,'handler'=>$handler];
     }
     public function inventory():array{return array_map(fn($r)=>['method'=>$r['method'],'path'=>$r['path'],'access'=>$r['access']],$this->routes);}
-    public function dispatch(string $method,string $path,array $query=[],array $body=[],?string $token=null,?string $idempotency=null):array {
+    public function dispatch(string $method,string $path,array $query=[],array $body=[],?string $token=null,?string $idempotency=null,array $context=[]):array|CsvResponse {
         $method=strtoupper($method);$path=preg_replace('~^/api(?=/|$)~','',$path)?:'/';
         foreach($this->routes as $route){
             if($route['method']!==$method||!preg_match($route['regex'],$path,$matches))continue;
@@ -214,13 +253,14 @@ final class Router {
             if($route['access']==='employee')$user=requireEmployee($this->store,$this->settings,$token??'');
             if($route['access']==='customer')$user=requireCustomer($this->store,true,$this->settings,$token??'');
             if($route['access']==='customer-first-login')$user=requireCustomer($this->store,false,$this->settings,$token??'');
-            if(!in_array($method,['GET','HEAD','OPTIONS'],true)&&!in_array($path,['/admin/login','/document-design/preview'],true)&&empty($this->settings['migration']['writesEnabled']))throw new HttpError(503,'Migration staging is read-only. Please use the current service.');
-            $call=fn()=>($route['handler'])($params,$query,$body,$user);
+            if($route['access']==='visitor'&&$token){try{$user=requireCustomer($this->store,true,$this->settings,$token);}catch(HttpError){$user=null;}}
+            if(!in_array($method,['GET','HEAD','OPTIONS'],true)&&!in_array($path,['/admin/login','/document-design/preview','/visitor-analytics/track'],true)&&empty($this->settings['migration']['writesEnabled']))throw new HttpError(503,'Migration staging is read-only. Please use the current service.');
+            $call=fn()=>($route['handler'])($params,$query,$body,$user,$context);
             if($idempotency!==null&&!in_array($method,['GET','HEAD','OPTIONS'],true)){
                 if(!preg_match('/^[A-Za-z0-9._:-]{16,100}$/D',$idempotency))throw new HttpError(400,'Invalid idempotency key.');
                 $scope=$user['_id']??$route['access'];$key=hash('sha256',$scope.'|'.$method.'|'.$path.'|'.$idempotency);
                 // Password/session responses must never be cached in operations.
-                if(str_starts_with($path,'/employee-auth/')||str_starts_with($path,'/customer-auth/')||str_starts_with($path,'/admin/')||str_contains($path,'regenerate-password')||str_ends_with($path,'/provision')||$path==='/document-design/preview')return $call();
+                if(str_starts_with($path,'/employee-auth/')||str_starts_with($path,'/customer-auth/')||str_starts_with($path,'/admin/')||str_contains($path,'regenerate-password')||str_ends_with($path,'/provision')||in_array($path,['/document-design/preview','/visitor-analytics/track'],true))return $call();
                 return $this->store->operation($key,hash('sha256',serialize([$query,$body])),$call);
             }
             return $call();

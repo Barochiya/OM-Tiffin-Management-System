@@ -31,4 +31,17 @@ $public=(new OMT\Catalog($s))->reviews(true)[1]['data'][0];check(!isset($public[
 $c2=$s->put('tiffins',['customerName'=>'Synthetic Prior Review','phone'=>'9999999998'],true);$r->mark($c2['_id'],['note'=>'Already reviewed previously.']);check(count($s->all('websitereviews'))===1,'Manual received marker never invents review');denied(fn()=>$r->link($c2['_id']),409);
 $c3=$s->put('tiffins',['customerName'=>'Legacy Reviewer','phone'=>'9999999997'],true);$s->put('websitereviews',['customerName'=>'Legacy Reviewer','rating'=>3,'reviewText'=>'Historical','status'=>'Approved'],true);denied(fn()=>$r->link($c3['_id']),409);
 $router=new OMT\Router($s,[...$settings,'migration'=>['writesEnabled'=>true]]);denied(fn()=>$router->dispatch('POST','/website-reviews/public',[],['customerName'=>'Fake','rating'=>5,'reviewText'=>'No link']),403);
+$walkStore = new ReviewMemory();
+$walkReview = new OMT\ReviewInvitations($walkStore, $settings);
+$walkCustomer = $walkStore->put('walkincustomers', ['customerName'=>'Synthetic Walk-in', 'phone'=>'9999999996'], true);
+$walkReview->send(['customerIds'=>[$walkCustomer['_id']], 'requestId'=>$request], 'APPROVED', true);
+$walkInvite = array_values($walkStore->events)[0];
+parse_str(parse_url($walkInvite['components'][0]['parameters'][1]['text'], PHP_URL_QUERY), $walkQuery);
+$walkBody = [...$body, 'token'=>$walkQuery['review']];
+check($walkReview->submit($walkBody)[0] === 201, 'Walk-in review auto-approved');
+$walkThanks = array_values($walkStore->events)[1];
+check($walkReview->eligibleThanks($walkThanks), 'Walk-in thank-you eligible');
+check($walkThanks['components'][0] === $thanks['components'][0], 'Both review types use the same branded card');
+$walkReview->submit($walkBody);
+check(count($walkStore->events) === 2, 'Walk-in replay creates no duplicate thank-you');
 echo "PASS personal review link privacy/tamper guard, editable name, auto approve, one-use replay/concurrency transaction, no repeat invitations, manual/legacy blocking, public API closed, one approval thank-you/card and public data minimization. Synthetic data; no real messages.\n";

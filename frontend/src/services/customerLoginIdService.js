@@ -5,11 +5,12 @@ export const getLoginIdRecipients = async () => {
   );
   return response.data;
 };
-export const sendLoginIdsWhatsApp = async (customerIds) => {
+export const sendLoginIdsWhatsApp = async (customerIds, selectionMode = "manual") => {
   const response = await api.post(
     "/customer-accounts/send-login-ids",
     {
       customerIds,
+      selectionMode,
     }
   );
   return response.data;

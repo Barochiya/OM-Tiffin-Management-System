@@ -22,6 +22,7 @@ const errors=[],writes=[],notificationReadCategories=new Set();
 async function check(name,fn){await fn();checks++;console.log('PASS '+name);}
 function fixture(url,method){
   const p=url.pathname.replace(/^\/api/,'');
+  if(p==='/whatsapp-inbox/payment-reviews'&&method==='GET')return {success:true,data:[{_id:id,customer:{customerName:'Audit'+ 'Customer'.repeat(24)},message:'Reference'.repeat(38),pendingBills:[{...bill,invoiceNo:'INVOICE-'+ '1234567890'.repeat(12)}]}]};
   if(p==='/whatsapp-inbox'&&method==='GET'){assert.equal(url.searchParams.get('includeOutgoing'),'true');return {success:true,data:chatFixture};}
   if(method!=='GET'){
     if(p==='/dashboard/notifications/read')return {success:true};
@@ -97,6 +98,36 @@ async function context(viewport,authenticated=true){
   server=await vite.createServer({root:path.join(root,'frontend'),server:{host:'127.0.0.1',port:5179,strictPort:true},logLevel:'error'});await server.listen();
   browser=await chromium.launch({channel:process.env.AUDIT_BROWSER_CHANNEL||'chrome',headless:true});
   const base='http://127.0.0.1:5179';
+  for (const width of [320, 375, 390, 430, 768, 1024, 1440]) {
+    await check(`admin header, navigation and WhatsApp review fit at ${width}px`, async () => {
+      const ctx = await context({width, height: 900});
+      try {
+        const page = await ctx.newPage();
+        await page.goto(base + '/whatsapp-payment-approval');
+        const header = page.locator('.om-admin-shell > div > div > header');
+        const card = page.locator('.overflow-hidden.rounded-2xl').filter({has: page.locator('.whitespace-pre-wrap')});
+        const wrapping = card.locator('.whitespace-pre-wrap');
+        await wrapping.waitFor();
+        assert.equal(await wrapping.evaluate(el => getComputedStyle(el).overflowWrap), 'anywhere');
+        for (const locator of [header, header.getByRole('button', {name: 'Sign out'}), card, card.locator('select'), wrapping]) {
+          const box = await locator.boundingBox();
+          assert(box && box.x >= 0 && box.x + box.width <= width + 1, `Control exceeds ${width}px viewport`);
+        }
+        assert(await wrapping.evaluate(el => el.scrollWidth <= el.clientWidth + 1));
+        if (width < 1024) {
+          const menu = header.getByRole('button', {name: 'Open sidebar'});
+          const box = await menu.boundingBox();
+          assert(box && box.width >= 44 && box.height >= 44);
+          await menu.click();
+          await page.getByRole('link', {name: 'WhatsApp Payment Approval'}).waitFor();
+        } else {
+          await page.getByRole('link', {name: 'WhatsApp Payment Approval'}).waitFor();
+        }
+      } finally {
+        await ctx.close();
+      }
+    });
+  }
   await check('admin sidebar and header stay visible while a page module is delayed',async()=>{
     const ctx=await context({width:1440,height:1000}),p=await ctx.newPage();let release;const wait=new Promise(resolve=>{release=resolve});
     await p.route('**/src/pages/PriceSettings.jsx',async route=>{await wait;await route.continue()});
